@@ -1,0 +1,47 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+    USER
+    PROVIDER
+    ADMIN
+}
+
+model User {
+    id            String         @id @default(uuid())
+    email         String         @unique
+    password_hash String
+    role          Role           @default(USER)
+    language_pref String         @default("en")
+    consented_at  DateTime?
+    created_at    DateTime       @default(now())
+    demographics  Demographics?
+
+    @@map("users")
+}
+
+model Demographics {
+    id                      String  @id @default(uuid())
+    user_id                 String  @unique
+    user                    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    race                    String?
+    gender                  String?
+    age                     Int?
+    annual_personal_income  String?
+    annual_household_income String?
+    county                  String?
+    has_children_under_18   Boolean @default(false)
+    has_children_under_5    Boolean @default(false)
+    educational_attainment  String?
+    has_personal_vehicle    Boolean @default(false)
+    is_employed             Boolean @default(false)
+    industry_area           String?
+
+    @@map("demographics")
+}

@@ -1,0 +1,388 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    /* earthy warm palette */
+    --color-primary: #B7714A;
+    --color-primary-dark: #9A5C3A;
+    --color-primary-light: #D4956F;
+    --color-secondary: #7C9070;
+    --color-secondary-dark: #64785A;
+    --color-accent: #D4A853;
+    --color-accent-dark: #B8922F;
+    --color-success: #7C9070;
+    --color-danger: #C44A4A;
+    --color-warning: #D4A853;
+    --color-bg: #FAF7F2;
+    --color-surface: #FFFFFF;
+    --color-surface-hover: #F5F0E8;
+    --color-text: #2C1810;
+    --color-text-secondary: #6B5C52;
+    --color-border: #E8E0D8;
+    --radius: 0.625rem;
+    --shadow-sm: 0 1px 3px rgba(44, 24, 16, 0.06);
+    --shadow-md: 0 4px 12px rgba(44, 24, 16, 0.08);
+    --shadow-lg: 0 8px 24px rgba(44, 24, 16, 0.1);
+
+    /* shadcn/ui tokens — earthy warm */
+    --background: #FAF7F2;
+    --foreground: #2C1810;
+    --card: #FFFFFF;
+    --card-foreground: #2C1810;
+    --popover: #FFFFFF;
+    --popover-foreground: #2C1810;
+    --primary: #B7714A;
+    --primary-foreground: #FFFFFF;
+    --secondary: #7C9070;
+    --secondary-foreground: #FFFFFF;
+    --muted: #F5F0E8;
+    --muted-foreground: #6B5C52;
+    --accent: #D4A853;
+    --accent-foreground: #2C1810;
+    --destructive: #C44A4A;
+    --border: #E8E0D8;
+    --input: #E8E0D8;
+    --ring: #B7714A;
+    --chart-1: #B7714A;
+    --chart-2: #7C9070;
+    --chart-3: #D4A853;
+    --chart-4: #C44A4A;
+    --chart-5: #6B5C52;
+    --sidebar: #F5F0E8;
+    --sidebar-foreground: #2C1810;
+    --sidebar-primary: #B7714A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #E8E0D8;
+    --sidebar-accent-foreground: #2C1810;
+    --sidebar-border: #E8E0D8;
+    --sidebar-ring: #B7714A;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: "Inter", "Segoe UI", sans-serif;
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* component utility classes */
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-accent {
+    background: var(--color-accent);
+    color: white;
+}
+
+.btn-accent:hover {
+    background: var(--color-accent-dark);
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #a33a3a;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.badge-health {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-employment {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-education {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-recreation {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.badge-transit {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.badge-senior {
+    background: #fce7f3;
+    color: #9d174d;
+}
+
+.badge-childcare {
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.badge-community {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    background: var(--color-surface);
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(183, 113, 74, 0.15);
+}
+
+.select,
+select.select {
+    width: 100%;
+    padding: 10px 36px 10px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    cursor: pointer;
+    outline: none;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B5C52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.select:focus,
+select.select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(183, 113, 74, 0.15);
+}
+
+.select:hover,
+select.select:hover {
+    border-color: var(--color-primary-light);
+}
+
+/* checkboxes */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+input[type="checkbox"]:checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+input[type="checkbox"]:hover {
+    border-color: var(--color-primary-light);
+}
+
+input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(183, 113, 74, 0.15);
+}
+
+.dark {
+    --background: #1A1210;
+    --foreground: #FAF7F2;
+    --card: #2C1810;
+    --card-foreground: #FAF7F2;
+    --popover: #2C1810;
+    --popover-foreground: #FAF7F2;
+    --primary: #D4956F;
+    --primary-foreground: #1A1210;
+    --secondary: #7C9070;
+    --secondary-foreground: #FAF7F2;
+    --muted: #3D2A20;
+    --muted-foreground: #A89888;
+    --accent: #D4A853;
+    --accent-foreground: #1A1210;
+    --destructive: #C44A4A;
+    --border: rgba(250, 247, 242, 0.1);
+    --input: rgba(250, 247, 242, 0.15);
+    --ring: #D4956F;
+    --chart-1: #D4956F;
+    --chart-2: #7C9070;
+    --chart-3: #D4A853;
+    --chart-4: #C44A4A;
+    --chart-5: #A89888;
+    --sidebar: #2C1810;
+    --sidebar-foreground: #FAF7F2;
+    --sidebar-primary: #D4956F;
+    --sidebar-primary-foreground: #1A1210;
+    --sidebar-accent: #3D2A20;
+    --sidebar-accent-foreground: #FAF7F2;
+    --sidebar-border: rgba(250, 247, 242, 0.1);
+    --sidebar-ring: #D4956F;
+}
+
+@theme inline {
+    --font-sans: var(--font-sans);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    html {
+        @apply font-sans;
+    }
+}

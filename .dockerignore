@@ -1,0 +1,45 @@
+# dependencies
+node_modules
+npm-debug.log*
+
+# next.js build output
+.next
+out
+
+# env files (never include secrets in the image)
+.env
+.env.local
+.env.production
+.env*.local
+
+# git
+.git
+.gitignore
+
+# docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# docs and reference
+TECH_DOC.md
+PROJECT.md
+README.md
+mock/
+
+# ide
+.vscode
+.idea
+*.swp
+*.swo
+
+# os
+.DS_Store
+Thumbs.db
+
+# nginx (mounted separately, not baked into app image)
+nginx/
+
+# misc
+*.log
+coverage/
