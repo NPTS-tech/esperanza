@@ -1,68 +1,64 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 
-// routes that don't require authentication
-const public_routes = [
-    "/auth/login",
-    "/auth/register",
-    "/api/auth",
-];
-
-// routes restricted to admin role
-const admin_routes = ["/admin"];
-
-// routes restricted to provider or admin role
-const provider_routes = ["/provider"];
+const handleI18nRouting = createMiddleware(routing);
 
 export default auth((req) => {
-    const { pathname } = req.nextUrl;
+    // Strip locale from the pathname for reliable route matching
+    const pathname = req.nextUrl.pathname;
+    const pathWithoutLocale = pathname.replace(
+        new RegExp(`^/(${routing.locales.join('|')})/?`),
+        '/'
+    );
+    // Ensure leading slash if empty string
+    const normalizedPathname = pathWithoutLocale.startsWith('/') ? pathWithoutLocale : `/${pathWithoutLocale}`;
 
-    // allow public routes
-    const is_public = public_routes.some((route) => pathname.startsWith(route));
-    if (is_public) return NextResponse.next();
+    const is_auth_route = normalizedPathname.startsWith("/auth");
 
-    // allow static files and internal next.js routes
-    if (
-        pathname.startsWith("/_next") ||
-        pathname.startsWith("/favicon") ||
-        pathname.includes(".")
-    ) {
-        return NextResponse.next();
+    // Auth route protection handling first
+    if (!req.auth && !is_auth_route) {
+        const url = new URL("/auth/login", req.nextUrl.origin);
+        return NextResponse.redirect(url);
     }
 
-    // redirect unauthenticated users to login
-    if (!req.auth) {
-        const login_url = new URL("/auth/login", req.nextUrl.origin);
-        login_url.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(login_url);
+    if (req.auth && is_auth_route) {
+        const url = new URL("/", req.nextUrl.origin);
+        return NextResponse.redirect(url);
     }
 
-    const user_role = req.auth.user?.role;
+    // Role-based protection
+    if (req.auth) {
+        const role = req.auth.user?.role;
+        const is_admin_route = normalizedPathname.startsWith("/admin");
+        const is_provider_route = normalizedPathname.startsWith("/provider");
 
-    // admin route protection
-    const is_admin_route = admin_routes.some((route) => pathname.startsWith(route));
-    if (is_admin_route && user_role !== "ADMIN") {
-        return NextResponse.json(
-            { error: "Forbidden: Admin access required" },
-            { status: 403 },
-        );
+        if (is_admin_route && role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+        }
+
+        if (is_provider_route && role !== "PROVIDER" && role !== "ADMIN") {
+            return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+        }
     }
 
-    // provider route protection
-    const is_provider_route = provider_routes.some((route) => pathname.startsWith(route));
-    if (is_provider_route && user_role !== "PROVIDER" && user_role !== "ADMIN") {
-        return NextResponse.json(
-            { error: "Forbidden: Provider access required" },
-            { status: 403 },
-        );
+    // Pass to i18n middleware for prefixing and negotiation
+    const response = handleI18nRouting(req);
+
+    // If user is authenticated, force their preferred language cookie
+    // Next-intl middleware will read this NEXT_LOCALE cookie to set the active language
+    if (req.auth?.user?.language_pref) {
+        response.cookies.set("NEXT_LOCALE", req.auth.user.language_pref, {
+            path: '/',
+            sameSite: 'lax',
+        });
     }
 
-    return NextResponse.next();
+    return response;
 });
 
 export const config = {
-    matcher: [
-        // match all routes except static files
-        "/((?!_next/static|_next/image|favicon.ico).*)",
-    ],
+    // Match only internationalized pathnames, skipping API routes, _next, and static files
+    matcher: ['/', '/(es|en)/:path*', '/((?!api|_next|_vercel|.*\\..*).*)']
 };

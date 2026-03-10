@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/routing";
+import { Globe } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import {
     RACE_OPTIONS,
     GENDER_OPTIONS,
@@ -13,11 +14,23 @@ import {
     INDUSTRY_OPTIONS,
 } from "@/lib/constants";
 
+export type Locale = "en" | "es";
+
 export default function RegisterPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const t = useTranslations("Auth");
+    const activeLocale = useLocale();
+
     const [step, set_step] = useState(1);
     const [error, set_error] = useState("");
     const [loading, set_loading] = useState(false);
+
+    function toggle_lang() {
+        const next_lang = activeLocale === "en" ? "es" : "en";
+        // routing.ts handles the path change transparently
+        router.replace(pathname, { locale: next_lang });
+    }
 
     const [account, set_account] = useState({
         email: "",
@@ -43,17 +56,22 @@ export default function RegisterPage() {
 
     const [consent, set_consent] = useState(false);
 
+    // sync the account language pref with the UI language
+    useEffect(() => {
+        set_account((prev) => ({ ...prev, language_pref: activeLocale }));
+    }, [activeLocale]);
+
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
         set_error("");
 
         if (step === 1) {
             if (account.password !== account.confirm_password) {
-                set_error("Passwords do not match");
+                set_error(t("passwords_mismatch"));
                 return;
             }
             if (account.password.length < 8) {
-                set_error("Password must be at least 8 characters");
+                set_error(t("password_too_short"));
                 return;
             }
             set_step(2);
@@ -61,7 +79,7 @@ export default function RegisterPage() {
             set_step(3);
         } else {
             if (!consent) {
-                set_error("You must consent to data collection to register.");
+                set_error(t("consent_required"));
                 return;
             }
 
@@ -85,12 +103,11 @@ export default function RegisterPage() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    set_error(data.error || "Registration failed");
+                    set_error(data.error || t("registration_failed"));
                     set_loading(false);
                     return;
                 }
 
-                // auto sign-in after registration
                 const sign_in_result = await signIn("credentials", {
                     email: account.email,
                     password: account.password,
@@ -100,25 +117,47 @@ export default function RegisterPage() {
                 set_loading(false);
 
                 if (sign_in_result?.error) {
-                    set_error("Account created but sign-in failed. Please log in manually.");
+                    set_error(t("signin_after_register_failed"));
                     return;
                 }
 
                 router.push("/");
                 router.refresh();
             } catch {
-                set_error("Something went wrong. Please try again.");
+                set_error(t("generic_error"));
                 set_loading(false);
             }
         }
     }
 
+    const step_names = [t("step_account"), t("step_demographics"), t("step_consent")];
+
     return (
         <div className="max-w-lg mx-auto mt-8 px-4">
+            {/* language toggle */}
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={toggle_lang}
+                    className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition-colors"
+                    style={{
+                        color: "var(--color-text-secondary)",
+                        background: "var(--color-surface)",
+                        border: "1px solid var(--color-border)",
+                    }}
+                >
+                    <Globe size={14} />
+                    {activeLocale === "en" ? "Español" : "English"}
+                </button>
+            </div>
+
             <div className="text-center mb-8">
                 <span className="text-5xl">🌿</span>
-                <h1 className="text-2xl font-bold text-slate-900 mt-3">Create Account</h1>
-                <p className="text-slate-500 text-sm mt-1">Join the Esperanza community</p>
+                <h1 className="text-2xl font-bold mt-3" style={{ color: "var(--color-text)" }}>
+                    {t("create_account")}
+                </h1>
+                <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                    {t("join_community")}
+                </p>
             </div>
 
             {/* progress bar */}
@@ -126,19 +165,19 @@ export default function RegisterPage() {
                 {[1, 2, 3].map((s) => (
                     <div
                         key={s}
-                        className={`flex-1 h-2 rounded-full transition-colors`}
+                        className="flex-1 h-2 rounded-full transition-colors"
                         style={{ background: s <= step ? "var(--color-primary)" : "var(--color-border)" }}
                     />
                 ))}
             </div>
-            <p className="text-xs text-slate-400 text-center mb-4">
-                Step {step} of 3 — {step === 1 ? "Account" : step === 2 ? "Demographics" : "Consent"}
+            <p className="text-xs text-center mb-4" style={{ color: "var(--color-text-secondary)" }}>
+                {t("step_label")} {step} {t("of")} 3 — {step_names[step - 1]}
             </p>
 
             <div className="card p-6">
                 <form onSubmit={handle_submit} className="space-y-4">
                     {error && (
-                        <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg">
+                        <div className="text-sm p-3 rounded-lg" style={{ background: "#fef2f2", color: "var(--color-danger)" }}>
                             {error}
                         </div>
                     )}
@@ -146,25 +185,31 @@ export default function RegisterPage() {
                     {step === 1 && (
                         <>
                             <div>
-                                <label className="text-sm font-medium text-slate-700 block mb-1">Email</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("email")}</label>
                                 <input type="email" className="input" required placeholder="you@example.com"
                                     value={account.email} onChange={(e) => set_account({ ...account, email: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-700 block mb-1">Password</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("password")}</label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.password} onChange={(e) => set_account({ ...account, password: e.target.value })} />
-                                <p className="text-xs text-slate-400 mt-1">At least 8 characters</p>
+                                <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{t("password_hint")}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-700 block mb-1">Confirm Password</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("confirm_password")}</label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.confirm_password} onChange={(e) => set_account({ ...account, confirm_password: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-700 block mb-1">Preferred Language</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("preferred_language")}</label>
                                 <select className="select"
-                                    value={account.language_pref} onChange={(e) => set_account({ ...account, language_pref: e.target.value })}>
+                                    value={account.language_pref} onChange={(e) => {
+                                        set_account({ ...account, language_pref: e.target.value });
+                                        const new_lang = e.target.value as Locale;
+                                        if (new_lang === "en" || new_lang === "es") {
+                                            router.replace(pathname, { locale: new_lang });
+                                        }
+                                    }}>
                                     <option value="en">English</option>
                                     <option value="es">Español</option>
                                 </select>
@@ -174,93 +219,93 @@ export default function RegisterPage() {
 
                     {step === 2 && (
                         <>
-                            <p className="text-sm text-slate-500 mb-2">
-                                This information helps us connect you with relevant services. All fields are optional.
+                            <p className="text-sm mb-2" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("demographics_info")}
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Race</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")}</label>
                                     <select className="select" value={demographics.race}
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Gender</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")}</label>
                                     <select className="select" value={demographics.gender}
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Age</label>
-                                    <input type="number" className="input" placeholder="Age" min="0" max="120"
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age")}</label>
+                                    <input type="number" className="input" placeholder={t("age")} min="0" max="120"
                                         value={demographics.age} onChange={(e) => set_demographics({ ...demographics, age: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Personal Income</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("personal_income")}</label>
                                     <select className="select" value={demographics.annual_personal_income}
                                         onChange={(e) => set_demographics({ ...demographics, annual_personal_income: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Household Income</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("household_income")}</label>
                                     <select className="select" value={demographics.annual_household_income}
                                         onChange={(e) => set_demographics({ ...demographics, annual_household_income: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">County</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")}</label>
                                     <select className="select" value={demographics.county}
                                         onChange={(e) => set_demographics({ ...demographics, county: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Education</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("education")}</label>
                                     <select className="select" value={demographics.educational_attainment}
                                         onChange={(e) => set_demographics({ ...demographics, educational_attainment: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {EDUCATION_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 block mb-1">Industry</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("industry")}</label>
                                     <select className="select" value={demographics.industry_area}
                                         onChange={(e) => set_demographics({ ...demographics, industry_area: e.target.value })}>
-                                        <option value="">Select...</option>
+                                        <option value="">{t("select_placeholder")}</option>
                                         {INDUSTRY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             <div className="space-y-2 pt-2">
-                                <label className="flex items-center gap-2 text-sm text-slate-700">
+                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
                                     <input type="checkbox" checked={demographics.has_children_under_18}
                                         onChange={(e) => set_demographics({ ...demographics, has_children_under_18: e.target.checked })} />
-                                    I have children under 18
+                                    {t("children_under_18")}
                                 </label>
-                                <label className="flex items-center gap-2 text-sm text-slate-700">
+                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
                                     <input type="checkbox" checked={demographics.has_children_under_5}
                                         onChange={(e) => set_demographics({ ...demographics, has_children_under_5: e.target.checked })} />
-                                    I have children under 5
+                                    {t("children_under_5")}
                                 </label>
-                                <label className="flex items-center gap-2 text-sm text-slate-700">
+                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
                                     <input type="checkbox" checked={demographics.has_personal_vehicle}
                                         onChange={(e) => set_demographics({ ...demographics, has_personal_vehicle: e.target.checked })} />
-                                    I have a personal vehicle
+                                    {t("personal_vehicle")}
                                 </label>
-                                <label className="flex items-center gap-2 text-sm text-slate-700">
+                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
                                     <input type="checkbox" checked={demographics.is_employed}
                                         onChange={(e) => set_demographics({ ...demographics, is_employed: e.target.checked })} />
-                                    I am currently employed
+                                    {t("currently_employed")}
                                 </label>
                             </div>
                         </>
@@ -268,29 +313,27 @@ export default function RegisterPage() {
 
                     {step === 3 && (
                         <>
-                            <div style={{ background: "var(--color-surface-hover)", borderRadius: "0.75rem", padding: "1rem" }} className="text-sm" >
-                                <h3 className="font-semibold mb-2" style={{ color: "var(--color-text)" }}>Data Collection Consent</h3>
+                            <div style={{ background: "var(--color-surface-hover)", borderRadius: "0.75rem", padding: "1rem" }} className="text-sm">
+                                <h3 className="font-semibold mb-2" style={{ color: "var(--color-text)" }}>{t("consent_title")}</h3>
                                 <p className="mb-3" style={{ color: "var(--color-text-secondary)" }}>
-                                    By creating an account, you agree to the following:
+                                    {t("consent_intro")}
                                 </p>
                                 <ul className="space-y-1.5 list-disc list-inside" style={{ color: "var(--color-text-secondary)" }}>
-                                    <li>Your demographic information will be used to connect you with relevant services</li>
-                                    <li>In-app behavior (searches, page views, RSVPs) may be tracked for service improvement</li>
-                                    <li>Your personal identity will not be shared with service providers without your consent</li>
-                                    <li>Only individual social service providers will know your personal information during service delivery</li>
-                                    <li>You can update or delete your information at any time from your profile</li>
+                                    <li>{t("consent_1")}</li>
+                                    <li>{t("consent_2")}</li>
+                                    <li>{t("consent_3")}</li>
+                                    <li>{t("consent_4")}</li>
+                                    <li>{t("consent_5")}</li>
                                 </ul>
                             </div>
-                            <label className="flex items-start gap-3 text-sm text-slate-700 pt-2">
+                            <label className="flex items-start gap-3 text-sm pt-2" style={{ color: "var(--color-text)" }}>
                                 <input
                                     type="checkbox"
                                     checked={consent}
                                     onChange={(e) => set_consent(e.target.checked)}
                                     className="mt-1"
                                 />
-                                <span>
-                                    I understand and consent to the data collection practices described above.
-                                </span>
+                                <span>{t("consent_checkbox")}</span>
                             </label>
                         </>
                     )}
@@ -298,21 +341,21 @@ export default function RegisterPage() {
                     <div className="flex items-center gap-3 pt-2">
                         {step > 1 && (
                             <button type="button" onClick={() => { set_step(step - 1); set_error(""); }} className="btn btn-secondary flex-1" disabled={loading}>
-                                Back
+                                {t("back")}
                             </button>
                         )}
                         <button type="submit" className="btn btn-primary flex-1" disabled={loading}>
-                            {loading ? "Creating account..." : step === 3 ? "Create Account" : "Next"}
+                            {loading ? t("creating_account") : step === 3 ? t("create_account_btn") : t("next")}
                         </button>
                     </div>
                 </form>
 
                 {step === 1 && (
                     <div className="mt-4 text-center">
-                        <p className="text-sm text-slate-500">
-                            Already have an account?{" "}
+                        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                            {t("already_have_account")}{" "}
                             <Link href="/auth/login" className="font-medium hover:underline" style={{ color: "var(--color-primary)" }}>
-                                Sign In
+                                {t("sign_in_link")}
                             </Link>
                         </p>
                     </div>

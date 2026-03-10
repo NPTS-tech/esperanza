@@ -30,25 +30,6 @@ Seed accounts: `admin@esperanza.app` / `admin123`, `provider@esperanza.app` / `p
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Oracle Cloud VM                   │
-│              (ARM, 4 OCPU, 24GB RAM)                │
-│                                                     │
-│  ┌───────────┐   ┌──────────┐   ┌───────────────┐  │
-│  │   Nginx   │──▶│ Next.js  │   │  PostgreSQL   │  │
-│  │  (reverse │   │  (App +  │──▶│  (Database)   │  │
-│  │   proxy)  │   │   API)   │   │               │  │
-│  └───────────┘   └──────────┘   └───────────────┘  │
-│       │                                             │
-│       │ HTTPS (Let's Encrypt)                       │
-└───────┼─────────────────────────────────────────────┘
-        ▲
-   ┌────┴────┐
-   │ Internet│
-   └─────────┘
-```
-
 - **Nginx** — reverse proxy, HTTPS termination, rate limiting, security headers
 - **Next.js** — full-stack app (React frontend + API routes as backend)
 - **PostgreSQL** — stores users, demographics, events, RSVPs, analytics
@@ -146,24 +127,14 @@ docker compose -f docker-compose.prod.yml logs -f             # view logs
 docker compose -f docker-compose.prod.yml exec postgres psql -U esperanza  # connect to DB
 ```
 
-## Git Workflow
-
-```
-master (production — auto-deploys via GitHub Actions)
-  └── feature/event-calendar     (dev 1)
-  └── feature/user-auth          (dev 2)
-  └── feature/admin-dashboard    (dev 3)
-  └── fix/rsvp-validation        (dev 4)
-  └── feature/map-embed          (dev 5)
-  └── feature/i18n-spanish       (dev 6)
-```
-
-**Rules:**
-1. Never push directly to `master` — always use PRs
-2. Branch naming: `feature/short-description` or `fix/short-description`
-3. PRs require at least 1 approval before merge
-4. `master` auto-deploys to the Oracle VM
-5. Squash merge to keep history clean
+## Localization (i18n)
+Esperanza uses `next-intl` for App-Router translations via the `[locale]` dynamic routing segment.
+- String dictionaries are stored centrally in `translations/en.json` and `translations/es.json`.
+- When adding new UI text, **do not hardcode strings**.
+- Add your strings under a logical namespace (e.g., `"Profile": { "title": "My Profile" }`) in both JSON files.
+- In **Client Components**, use `useTranslations("Namespace")`.
+- In **Server Components**, use `await getTranslations("Namespace")`.
+- Route navigation (`Link`, `useRouter`, `usePathname`, `redirect`) should always be imported from `@/i18n/routing` to ensure seamless prefix handling.
 
 ## Security
 
@@ -178,15 +149,3 @@ master (production — auto-deploys via GitHub Actions)
 | Rate Limiting | Nginx: 10r/s on auth endpoints, 30r/s on general API |
 | Input Validation | Zod schemas on all API routes |
 | Data Segregation | Demographics in separate table, role-based DAL |
-
-## Timeline
-
-- **Phase 1 (MVP):** April 2026 — auth, events, RSVP, map, admin/provider dashboards, i18n, PWA
-- **Phase 2:** May–June 2026 — announcements, service recommendations, transit embed, provider analytics, iCal export, kiosk auto-timeout
-
-## Team
-
-- 1 Project Manager
-- 4-5 Developers
-- ACM Faculty Advisor (PI)
-- ~10 hours/week per dev
