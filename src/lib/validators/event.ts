@@ -3,6 +3,8 @@ import { z } from "zod";
 // TODO: Admin UI for managing categories post-MVP? For now, hardcoded in both backend and frontend.
 export const EVENT_CATEGORIES = [
     "Health",
+    "Employment",
+    "Financial",
     "Recreation",
     "Transit",
     "Senior Services",
