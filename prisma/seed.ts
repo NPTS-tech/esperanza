@@ -85,7 +85,7 @@ const sample_announcement = {
 };
 
 async function main() {
-    console.log("\n🌿 Esperanza — Seeding database...\n");
+    console.log("\n Esperanza — Seeding database...\n");
 
     for (const account of seed_accounts) {
         const existing = await db.user.findUnique({
