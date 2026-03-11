@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { login_schema } from "@/lib/validators/auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    trustHost: true,
     session: {
         strategy: "jwt",
         maxAge: 30 * 24 * 60 * 60, // 30 days

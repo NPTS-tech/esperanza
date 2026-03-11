@@ -121,8 +121,7 @@ export default function RegisterPage() {
                     return;
                 }
 
-                router.push("/");
-                router.refresh();
+                window.location.href = "/";
             } catch {
                 set_error(t("generic_error"));
                 set_loading(false);
