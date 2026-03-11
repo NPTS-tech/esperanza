@@ -350,8 +350,8 @@ You don't have one yet. Options:
 
 ### Phase 1 — MVP (Target: April 2026)
 
-- [ ] User registration + login (email/password)
-- [ ] Demographic intake form (Census-aligned questions)
+- [X] User registration + login (email/password)
+- [X] Demographic intake form (Census-aligned questions)
 - [ ] Event listing page (list + calendar view)
 - [ ] Event detail page with RSVP
 - [ ] Embedded map showing event locations (Leaflet)
@@ -359,7 +359,7 @@ You don't have one yet. Options:
 - [ ] Admin dashboard: approve/reject events
 - [ ] Provider dashboard: submit events, view RSVPs
 - [ ] Bilingual toggle (English/Spanish)
-- [ ] PWA manifest (installable on iPad)
+- [X] PWA manifest (installable on iPad)
 - [ ] Basic in-app behavior tracking (analytics_events table)
 - [ ] Role-based access control
 
