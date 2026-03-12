@@ -41,7 +41,11 @@ export default function LoginPage() {
             return;
         }
 
-        window.location.href = "/";
+        try {
+            window.location.href = "/";
+        } catch (err) {
+            console.error("Redirect failed:", err);
+        }
     }
 
     return (
