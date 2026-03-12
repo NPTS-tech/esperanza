@@ -132,26 +132,25 @@ export default function RegisterPage() {
     const step_names = [t("step_account"), t("step_demographics"), t("step_consent")];
 
     return (
-        <div className="max-w-lg mx-auto mt-8 px-4">
-            {/* language toggle */}
+        <div>
+            {/* Language toggle */}
             <div className="flex justify-end mb-4">
                 <button
                     onClick={toggle_lang}
-                    className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition-colors"
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
                     style={{
                         color: "var(--color-text-secondary)",
                         background: "var(--color-surface)",
                         border: "1px solid var(--color-border)",
                     }}
                 >
-                    <Globe size={14} />
+                    <Globe size={13} />
                     {activeLocale === "en" ? "Español" : "English"}
                 </button>
             </div>
 
-            <div className="text-center mb-8">
-                <span className="text-5xl">🌿</span>
-                <h1 className="text-2xl font-bold mt-3" style={{ color: "var(--color-text)" }}>
+            <div className="text-center mb-5">
+                <h1 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
                     {t("create_account")}
                 </h1>
                 <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
@@ -159,14 +158,26 @@ export default function RegisterPage() {
                 </p>
             </div>
 
-            {/* progress bar */}
-            <div className="flex items-center gap-2 mb-6">
-                {[1, 2, 3].map((s) => (
-                    <div
-                        key={s}
-                        className="flex-1 h-2 rounded-full transition-colors"
-                        style={{ background: s <= step ? "var(--color-primary)" : "var(--color-border)" }}
-                    />
+            {/* Step indicator with numbered circles */}
+            <div className="flex items-center mb-6">
+                {[1, 2, 3].map((s, i) => (
+                    <div key={s} className="flex items-center flex-1">
+                        <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors shrink-0"
+                            style={{
+                                background: s <= step ? "var(--color-primary)" : "var(--color-border)",
+                                color: s <= step ? "white" : "var(--color-text-secondary)",
+                            }}
+                        >
+                            {s}
+                        </div>
+                        {i < 2 && (
+                            <div
+                                className="flex-1 h-0.5 mx-1 transition-colors"
+                                style={{ background: s < step ? "var(--color-primary)" : "var(--color-border)" }}
+                            />
+                        )}
+                    </div>
                 ))}
             </div>
             <p className="text-xs text-center mb-4" style={{ color: "var(--color-text-secondary)" }}>
