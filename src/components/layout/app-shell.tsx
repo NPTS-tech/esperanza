@@ -58,6 +58,11 @@ export function AppShell({
 
     return (
         <div className="min-h-screen flex flex-col" style={{ background: "var(--color-bg)" }}>
+            {/* Skip-to-content — visible on :focus for keyboard / screen-reader users */}
+            <a href="#main-content" className="skip-link">
+                Skip to main content
+            </a>
+
             <Header
                 role={role}
                 email={email}
@@ -67,11 +72,15 @@ export function AppShell({
                 language_toggle_label={language_toggle_label}
             />
 
-            <div className="flex flex-1 pt-14">
+            {/* Top padding tracks --header-h which includes iOS safe-area-top in standalone */}
+            <div className="flex flex-1" style={{ paddingTop: "var(--header-h)" }}>
                 <Sidebar {...nav_props} />
 
                 <main
+                    id="main-content"
                     className="flex-1 min-w-0 overflow-auto pb-16 md:pb-0 px-4 py-6 md:px-6"
+                    tabIndex={-1}
+                    aria-label="Main content"
                 >
                     {children}
                 </main>

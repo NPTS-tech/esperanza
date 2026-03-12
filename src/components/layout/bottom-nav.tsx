@@ -57,8 +57,9 @@ export function BottomNav(props: BottomNavProps) {
                 background: "var(--color-surface)",
                 borderTop: "1px solid var(--color-border)",
                 boxShadow: "0 -2px 8px rgba(44,24,16,0.08)",
-                paddingBottom: "env(safe-area-inset-bottom)",
+                paddingBottom: "var(--safe-area-bottom)",
             }}
+            aria-label="Mobile navigation"
         >
             {items.map((item) => {
                 const is_active =
@@ -69,23 +70,22 @@ export function BottomNav(props: BottomNavProps) {
                     <Link
                         key={item.key}
                         href={item.href as any}
-                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors"
+                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
                         style={{
-                            color: is_active
-                                ? "var(--color-primary)"
-                                : "var(--color-text-secondary)",
+                            color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)",
                             textDecoration: "none",
+                            outlineColor: "var(--color-primary)",
                         }}
+                        aria-label={item.label}
+                        aria-current={is_active ? "page" : undefined}
                     >
                         <span
-                            className={cn(
-                                "transition-transform",
-                                is_active && "scale-110"
-                            )}
+                            className={cn("transition-transform", is_active && "scale-110")}
+                            aria-hidden="true"
                         >
                             {item.icon}
                         </span>
-                        {item.label}
+                        <span>{item.label}</span>
                     </Link>
                 );
             })}
