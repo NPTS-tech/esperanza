@@ -1,24 +1,50 @@
 {
+    "id": "/",
     "name": "Esperanza",
     "short_name": "Esperanza",
     "description": "Community services portal for the Esperanza neighborhood",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#FAF7F2",
     "theme_color": "#B7714A",
     "orientation": "portrait-primary",
+    "lang": "en",
+    "categories": ["social", "lifestyle", "utilities"],
     "icons": [
         {
             "src": "/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
         },
         {
             "src": "/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Esperanza home screen"
+        }
+    ],
+    "prefer_related_applications": false
 }

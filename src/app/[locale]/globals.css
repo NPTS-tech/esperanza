@@ -27,6 +27,14 @@
     --shadow-md: 0 4px 12px rgba(44, 24, 16, 0.08);
     --shadow-lg: 0 8px 24px rgba(44, 24, 16, 0.1);
 
+    /* PWA / safe-area geometry ------------------------------------------- */
+    /* env() falls back to 0px in non-standalone browsers — no side effects   */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    /* Header height = 56 px + iOS status bar when running as installed PWA   */
+    --header-h: calc(3.5rem + var(--safe-area-top));
+    /* -------------------------------------------------------------------- */
+
     /* shadcn/ui tokens — earthy warm */
     --background: #FAF7F2;
     --foreground: #2C1810;
@@ -394,5 +402,55 @@ input[type="checkbox"]:focus {
 
     html {
         @apply font-sans;
+    }
+}
+
+/* ==========================================================================
+   Accessibility — focus-visible rings
+   Only show for keyboard navigation; pointer clicks stay ring-free.
+   ========================================================================== */
+.btn:focus-visible,
+.input:focus-visible,
+.select:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Skip-to-content link (screen reader / keyboard shortcut) */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+.skip-link:focus {
+    position: fixed;
+    top: calc(var(--safe-area-top) + 0.5rem);
+    left: 0.5rem;
+    z-index: 9999;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background: var(--color-primary);
+    color: white;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   PWA standalone mode — adjust app shell geometry for iOS safe areas
+   ========================================================================== */
+@media (display-mode: standalone) {
+    /* Status-bar gap is already baked into --header-h via --safe-area-top.
+       Prevent double-counting by resetting any legacy pt-14 utility in <main>. */
+    body {
+        /* Ensure the very bottom of the viewport is always accessible */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 }
