@@ -70,16 +70,19 @@ export function Sidebar(props: SidebarProps) {
     return (
         <aside
             className={cn(
-                "hidden md:flex flex-col sticky top-14 h-[calc(100vh-3.5rem)] shrink-0 transition-all duration-200 border-r",
+                "hidden md:flex flex-col sticky shrink-0 transition-all duration-200 border-r",
                 collapsed ? "w-16" : "w-60"
             )}
             style={{
+                top: "var(--header-h)",
+                height: "calc(100vh - var(--header-h))",
                 background: "var(--sidebar)",
                 borderColor: "var(--color-border)",
             }}
+            aria-label="Sidebar navigation"
         >
             {/* Nav items */}
-            <nav className="flex flex-col gap-1 p-2 flex-1 mt-2">
+            <nav className="flex flex-col gap-1 p-2 flex-1 mt-2" aria-label="Main navigation">
                 {items.map((item) => {
                     const is_active =
                         item.href === "/"
@@ -90,20 +93,21 @@ export function Sidebar(props: SidebarProps) {
                             key={item.key}
                             href={item.href as any}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
                                 is_active
                                     ? "bg-[var(--color-surface-hover)] border-l-2 border-[var(--color-primary)] pl-[10px]"
                                     : "hover:bg-[var(--color-surface-hover)] border-l-2 border-transparent pl-[10px]"
                             )}
                             style={{
-                                color: is_active
-                                    ? "var(--color-primary)"
-                                    : "var(--color-text-secondary)",
+                                color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)",
                                 textDecoration: "none",
+                                outlineColor: "var(--color-primary)",
                             }}
+                            aria-label={item.label}
+                            aria-current={is_active ? "page" : undefined}
                             title={collapsed ? item.label : undefined}
                         >
-                            <span className="shrink-0">{item.icon}</span>
+                            <span className="shrink-0" aria-hidden="true">{item.icon}</span>
                             {!collapsed && <span className="truncate">{item.label}</span>}
                         </Link>
                     );
@@ -113,14 +117,16 @@ export function Sidebar(props: SidebarProps) {
             {/* Collapse toggle */}
             <button
                 onClick={() => set_collapsed((v) => !v)}
-                className="flex items-center justify-center p-3 border-t transition-colors hover:bg-[var(--color-surface-hover)]"
+                className="flex items-center justify-center p-3 border-t transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                 style={{
                     borderColor: "var(--color-border)",
                     color: "var(--color-text-secondary)",
+                    outlineColor: "var(--color-primary)",
                 }}
-                title={collapsed ? "Expand" : "Collapse"}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!collapsed}
             >
-                {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                {collapsed ? <ChevronRight size={16} aria-hidden="true" /> : <ChevronLeft size={16} aria-hidden="true" />}
             </button>
         </aside>
     );

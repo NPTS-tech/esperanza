@@ -48,27 +48,33 @@ function Toast({
                 "flex items-start gap-3 px-4 py-3 rounded-lg shadow-md min-w-[260px] max-w-sm",
                 VARIANT_STYLES[variant]
             )}
-            style={{ background: undefined }}
+            role={variant === "error" ? "alert" : "status"}
+            aria-live={variant === "error" ? "assertive" : "polite"}
+            aria-atomic="true"
         >
-            <div className="mt-0.5 flex-shrink-0">{VARIANT_ICONS[variant]}</div>
+            <div className="mt-0.5 flex-shrink-0" aria-hidden="true">{VARIANT_ICONS[variant]}</div>
             <p className="text-sm flex-1" style={{ color: "var(--color-text)" }}>
                 {message}
             </p>
             <button
                 onClick={onDismiss}
-                className="flex-shrink-0 p-0.5 rounded hover:opacity-70 transition-opacity"
-                aria-label="Dismiss"
+                className="flex-shrink-0 p-0.5 rounded hover:opacity-70 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ outlineColor: "var(--color-primary)" }}
+                aria-label="Dismiss notification"
             >
-                <X size={14} style={{ color: "var(--color-text-secondary)" }} />
+                <X size={14} style={{ color: "var(--color-text-secondary)" }} aria-hidden="true" />
             </button>
         </div>
     );
 }
 
 export function ToastContainer({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (id: string) => void }) {
-    if (toasts.length === 0) return null;
+    // Always render the region so the live region is in the DOM when toasts arrive
     return (
-        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex flex-col gap-2">
+        <div
+            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex flex-col gap-2"
+            aria-label="Notifications"
+        >
             {toasts.map((t) => (
                 <Toast
                     key={t.id}
