@@ -45,26 +45,25 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="max-w-md mx-auto mt-12 px-4">
-            {/* language toggle */}
+        <div>
+            {/* Language toggle */}
             <div className="flex justify-end mb-4">
                 <button
                     onClick={toggle_lang}
-                    className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition-colors"
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
                     style={{
                         color: "var(--color-text-secondary)",
                         background: "var(--color-surface)",
                         border: "1px solid var(--color-border)",
                     }}
                 >
-                    <Globe size={14} />
+                    <Globe size={13} />
                     {activeLocale === "en" ? "Español" : "English"}
                 </button>
             </div>
 
-            <div className="text-center mb-8">
-                <span className="text-5xl">🌿</span>
-                <h1 className="text-2xl font-bold mt-3" style={{ color: "var(--color-text)" }}>
+            <div className="text-center mb-6">
+                <h1 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
                     {t("welcome_back")}
                 </h1>
                 <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
