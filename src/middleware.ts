@@ -20,7 +20,26 @@ export default auth((req) => {
     // Auth route protection handling first
     if (!req.auth && !is_auth_route) {
         const url = new URL("/auth/login", req.nextUrl.origin);
-        return NextResponse.redirect(url);
+        const response = NextResponse.redirect(url);
+        // nuke all stale auth cookies to prevent redirect loops and CSRF mismatches
+        const stale_cookies = [
+            "authjs.session-token",
+            "__Secure-authjs.session-token",
+            "next-auth.session-token",
+            "__Secure-next-auth.session-token",
+            "authjs.csrf-token",
+            "__Host-authjs.csrf-token",
+            "next-auth.csrf-token",
+            "__Host-next-auth.csrf-token",
+            "authjs.callback-url",
+            "__Secure-authjs.callback-url",
+            "next-auth.callback-url",
+            "__Secure-next-auth.callback-url",
+        ];
+        for (const name of stale_cookies) {
+            response.cookies.delete(name);
+        }
+        return response;
     }
 
     if (req.auth && is_auth_route) {
