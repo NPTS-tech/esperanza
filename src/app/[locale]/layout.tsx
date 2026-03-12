@@ -13,6 +13,9 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const viewport: Viewport = {
     themeColor: "#B7714A",
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -21,8 +24,31 @@ export const metadata: Metadata = {
     manifest: "/manifest.json",
     appleWebApp: {
         capable: true,
-        statusBarStyle: "default",
+        // "black-translucent" lets the app render under the iOS status bar;
+        // combined with safe-area-inset padding in CSS this gives a native feel.
+        statusBarStyle: "black-translucent",
         title: "Esperanza",
+        startupImage: [
+            // 12 Pro Max / 13 Pro Max / 14 Plus / 15 Plus (430×932 pt @3x)
+            {
+                url: "/icons/icon-512.png",
+                media: "(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)",
+            },
+            // 12 / 13 / 14 / 15 (390×844 pt @3x)
+            {
+                url: "/icons/icon-512.png",
+                media: "(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)",
+            },
+            // SE 3rd gen / 8 (375×667 pt @2x)
+            {
+                url: "/icons/icon-512.png",
+                media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
+            },
+        ],
+    },
+    other: {
+        // Chromium-family PWA install banner — not covered by Next.js Metadata
+        "mobile-web-app-capable": "yes",
     },
 };
 
