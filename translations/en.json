@@ -164,7 +164,20 @@
         "role": "Role",
         "created": "Created",
         "no_pending": "No pending events to review",
-        "deactivated": "Deactivated"
+        "deactivated": "Deactivated",
+        "loading_events": "Loading events...",
+        "error_loading_events": "Failed to load events. Please try again.",
+        "retry": "Retry",
+        "status_update_success": "Event status updated successfully.",
+        "status_update_error": "Failed to update event status.",
+        "user_management_read_only": "User management is currently read-only until user admin APIs are integrated.",
+        "status_cancelled": "Cancelled",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "delete_confirm": "Are you sure you want to delete this event? This action cannot be undone.",
+        "delete_success": "Event deleted successfully.",
+        "delete_error": "Failed to delete event."
     },
     "Nav": {
         "app_name": "Esperanza",

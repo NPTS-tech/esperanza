@@ -164,7 +164,20 @@
         "role": "Rol",
         "created": "Creado",
         "no_pending": "No hay eventos pendientes para revisar",
-        "deactivated": "Desactivado"
+        "deactivated": "Desactivado",
+        "loading_events": "Cargando eventos...",
+        "error_loading_events": "Error al cargar eventos. Por favor, inténtalo de nuevo.",
+        "retry": "Reintentar",
+        "status_update_success": "Estado del evento actualizado correctamente.",
+        "status_update_error": "No se pudo actualizar el estado del evento.",
+        "user_management_read_only": "La gestión de usuarios está en modo solo lectura hasta integrar las APIs de administración de usuarios.",
+        "status_cancelled": "Cancelado",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "deleting": "Eliminando...",
+        "delete_confirm": "¿Seguro que quieres eliminar este evento? Esta acción no se puede deshacer.",
+        "delete_success": "Evento eliminado correctamente.",
+        "delete_error": "No se pudo eliminar el evento."
     },
     "Nav": {
         "app_name": "Esperanza",
