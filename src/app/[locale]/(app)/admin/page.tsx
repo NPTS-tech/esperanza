@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { signOut } from "@/lib/auth";
 import { Shield } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { AdminDashboard } from "./admin_dashboard";
@@ -52,16 +51,6 @@ export default async function AdminPage() {
               {session.user.email}
             </span>
           </p>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/auth/login" });
-            }}
-          >
-            <button type="submit" className="btn btn-secondary">
-              {t_dashboard("sign_out")}
-            </button>
-          </form>
         </div>
       </div>
 

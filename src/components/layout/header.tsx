@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Sprout, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Link } from "@/i18n/routing";
@@ -16,6 +17,17 @@ type HeaderProps = {
 
 export function Header({ email, locale, app_name, sign_out_label }: HeaderProps) {
     const initials = email ? email[0].toUpperCase() : "?";
+    const [signing_out, set_signing_out] = useState(false);
+
+    async function handle_sign_out() {
+        if (signing_out) return;
+        set_signing_out(true);
+        try {
+            await signOut({ callbackUrl: "/auth/login" });
+        } catch {
+            set_signing_out(false);
+        }
+    }
 
     return (
         <header
@@ -59,7 +71,7 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
 
                 {/* Sign out */}
                 <button
-                    onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                    onClick={handle_sign_out}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                     style={{
                         color: "var(--color-text-secondary)",
@@ -67,9 +79,13 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
                         outlineColor: "var(--color-primary)",
                     }}
                     aria-label={sign_out_label}
+                    aria-busy={signing_out}
+                    disabled={signing_out}
                 >
                     <LogOut size={13} aria-hidden="true" />
-                    <span className="hidden sm:inline">{sign_out_label}</span>
+                    <span className="hidden sm:inline">
+                        {signing_out ? `${sign_out_label}...` : sign_out_label}
+                    </span>
                 </button>
             </div>
         </header>
