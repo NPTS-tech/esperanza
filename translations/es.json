@@ -128,7 +128,18 @@
         "cat_financial": "Finanzas",
         "cat_community": "Comunidad",
         "cat_other": "Otro",
-        "forbidden": "No tienes permiso para realizar esta acción."
+        "forbidden": "No tienes permiso para realizar esta acción.",
+        "heading": "Eventos Comunitarios",
+        "all_categories": "Todos",
+        "no_results": "No se encontraron eventos",
+        "view_details": "Ver Detalles",
+        "rsvps": "RSVPs",
+        "rsvp_event": "Confirmar asistencia",
+        "cancel_rsvp": "Cancelar RSVP",
+        "map_coming_soon": "Mapa próximamente",
+        "description": "Descripción",
+        "event_details": "Detalles del evento",
+        "provider_label": "Organizador"
     },
     "Admin": {
         "title": "Panel de Administrador",
@@ -167,22 +178,6 @@
         "analytics": "Analíticas",
         "sign_out": "Cerrar sesión",
         "language_toggle": "English"
-    },
-    "Events": {
-        "heading": "Eventos Comunitarios",
-        "search_placeholder": "Buscar eventos…",
-        "all_categories": "Todos",
-        "no_results": "No se encontraron eventos",
-        "view_details": "Ver Detalles",
-        "rsvps": "RSVPs",
-        "rsvp_event": "Confirmar asistencia",
-        "cancel_rsvp": "Cancelar RSVP",
-        "back_to_events": "Volver a eventos",
-        "location": "Lugar",
-        "map_coming_soon": "Mapa próximamente",
-        "description": "Descripción",
-        "event_details": "Detalles del evento",
-        "provider_label": "Organizador"
     },
     "Map": {
         "heading": "Mapa de Eventos",
