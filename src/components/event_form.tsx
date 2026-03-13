@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { EVENT_CATEGORIES } from "@/lib/validators/event";
 import type { EventData } from "@/components/event_card";
 
@@ -13,6 +13,8 @@ interface EventFormProps {
     data: Record<string, unknown>,
   ) => Promise<{ id?: string; error?: string }>;
   on_delete?: () => Promise<void>;
+  on_submit_redirect?: string;
+  on_delete_redirect?: string;
 }
 
 // convert a Date/ISO string to `datetime-local` input value (YYYY-MM-DDTHH:mm)
@@ -30,9 +32,15 @@ export default function EventForm({
   initial_data,
   on_submit,
   on_delete,
+  on_submit_redirect,
+  on_delete_redirect,
 }: EventFormProps) {
   const t = useTranslations("Events");
   const router = useRouter();
+  const pathname = usePathname();
+
+  const is_admin_edit_context =
+    mode === "edit" && pathname.includes("/admin/events/");
 
   const [form, set_form] = useState({
     title_en: initial_data?.title_en ?? "",
@@ -101,7 +109,13 @@ export default function EventForm({
       if (result.error) {
         set_error(result.error);
       } else if (result.id) {
-        router.push(`/events/${result.id}`);
+        if (on_submit_redirect) {
+          router.push(on_submit_redirect);
+        } else if (is_admin_edit_context) {
+          router.push("/admin");
+        } else {
+          router.push(`/events/${result.id}`);
+        }
       }
     } catch {
       set_error(t("error_loading"));
@@ -117,7 +131,13 @@ export default function EventForm({
     set_deleting(true);
     try {
       await on_delete();
-      router.push("/events");
+      if (on_delete_redirect) {
+        router.push(on_delete_redirect);
+      } else if (is_admin_edit_context) {
+        router.push("/admin");
+      } else {
+        router.push("/events");
+      }
     } catch {
       set_error(t("error_loading"));
       set_deleting(false);
