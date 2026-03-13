@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge, get_role_badge_variant } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
@@ -24,6 +24,8 @@ type ProfileClientProps = {
     label_cancel: string;
     msg_password_updated: string;
     msg_password_error: string;
+    label_rsvp_history: string;
+    label_no_rsvps: string;
 };
 
 export function ProfileClient({
@@ -43,10 +45,15 @@ export function ProfileClient({
     label_cancel,
     msg_password_updated,
     msg_password_error,
+    label_rsvp_history,
+    label_no_rsvps,
 }: ProfileClientProps) {
     const [modal_open, set_modal_open] = useState(false);
     const [pw_form, set_pw_form] = useState({ current: "", new_pw: "", confirm: "" });
     const [loading, set_loading] = useState(false);
+    const [language_modal_open, set_language_modal_open] = useState(false);
+    const [new_language, set_new_language] = useState(language_pref);
+    const [rsvp_history, set_rsvp_history] = useState<any[]>([]); // Placeholder for RSVP history
     const { toasts, show_toast, dismiss } = useToast();
 
     const initials = email ? email[0].toUpperCase() : "?";
@@ -77,6 +84,44 @@ export function ProfileClient({
             set_loading(false);
         }
     }
+
+    async function handle_change_language() {
+        set_loading(true);
+        try {
+            // TODO: Attach endpoint here for updating language preference
+            // const res = await fetch("/api/auth/language", {
+            //   method: "PUT",
+            //   headers: { "Content-Type": "application/json" },
+            //   body: JSON.stringify({ language_pref: new_language }),
+            // });
+            // if (res.ok) {
+            //   // Update local state or reload
+            //   window.location.reload(); // Or update session
+            // } else {
+            //   show_toast("Failed to update language", "error");
+            // }
+            show_toast("Language updated (placeholder)", "success"); // Placeholder
+            set_language_modal_open(false);
+        } catch {
+            show_toast("Failed to update language", "error");
+        } finally {
+            set_loading(false);
+        }
+    }
+
+    // Fetch RSVP history
+    useEffect(() => {
+        // TODO: Attach endpoint here for fetching RSVP history
+        // const fetchRsvps = async () => {
+        //   const res = await fetch("/api/auth/rsvps");
+        //   if (res.ok) {
+        //     const data = await res.json();
+        //     set_rsvp_history(data.rsvps);
+        //   }
+        // };
+        // fetchRsvps();
+        set_rsvp_history([]); // Placeholder
+    }, []);
 
     return (
         <div className="space-y-4">
@@ -120,9 +165,13 @@ export function ProfileClient({
                         <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-secondary)" }}>
                             {label_language}
                         </p>
-                        <p style={{ color: "var(--color-text)" }}>
+                        <button
+                            onClick={() => set_language_modal_open(true)}
+                            className="text-left hover:underline"
+                            style={{ color: "var(--color-text)" }}
+                        >
                             {language_pref === "es" ? label_lang_es : label_lang_en}
-                        </p>
+                        </button>
                     </div>
                 </div>
 
@@ -133,6 +182,28 @@ export function ProfileClient({
                 >
                     {label_change_password}
                 </button>
+            </div>
+
+            {/* RSVP History */}
+            <div className="card p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
+                    {label_rsvp_history}
+                </h2>
+                {rsvp_history.length === 0 ? (
+                    <p style={{ color: "var(--color-text-secondary)" }}>{label_no_rsvps}</p>
+                ) : (
+                    <div className="space-y-2">
+                        {rsvp_history.map((rsvp: any) => (
+                            <div key={rsvp.id} className="flex justify-between items-center p-3 rounded-lg" style={{ background: "var(--color-surface-hover)" }}>
+                                <div>
+                                    <p className="font-medium" style={{ color: "var(--color-text)" }}>{rsvp.event.title_en}</p>
+                                    <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{new Date(rsvp.event.start_time).toLocaleDateString()}</p>
+                                </div>
+                                <span className="badge badge-approved">RSVP'd</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Change password modal */}
@@ -204,6 +275,46 @@ export function ProfileClient({
                         />
                     </FormField>
                 </form>
+            </Modal>
+
+            {/* Change language modal */}
+            <Modal
+                open={language_modal_open}
+                onClose={() => set_language_modal_open(false)}
+                title="Change Language"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => set_language_modal_open(false)}
+                            className="btn btn-secondary"
+                            disabled={loading}
+                        >
+                            {label_cancel}
+                        </button>
+                        <button
+                            onClick={handle_change_language}
+                            className="btn btn-primary"
+                            disabled={loading}
+                        >
+                            {loading ? "…" : label_save}
+                        </button>
+                    </>
+                }
+            >
+                <div className="space-y-4">
+                    <FormField label={label_language} required>
+                        <select
+                            value={new_language}
+                            onChange={(e) => set_new_language(e.target.value)}
+                            className="input"
+                        >
+                            <option value="en">{label_lang_en}</option>
+                            <option value="es">{label_lang_es}</option>
+                        </select>
+                    </FormField>
+                </div>
             </Modal>
         </div>
     );

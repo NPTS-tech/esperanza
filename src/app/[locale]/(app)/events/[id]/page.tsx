@@ -5,7 +5,10 @@ import { useParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/routing";
+import dynamic from "next/dynamic";
 import type { EventData } from "@/components/event_card";
+
+const EventMap = dynamic(() => import("@/components/event_map"), { ssr: false });
 
 function format_date(date_string: string, locale: string) {
   return new Date(date_string).toLocaleDateString(
@@ -41,6 +44,8 @@ export default function EventDetailPage() {
   const [loading, set_loading] = useState(true);
   const [error, set_error] = useState<string | null>(null);
   const [deleting, set_deleting] = useState(false);
+  const [rsvped, set_rsvped] = useState(false);
+  const [rsvp_loading, set_rsvp_loading] = useState(false);
 
   const fetch_event = useCallback(async () => {
     set_loading(true);
@@ -54,6 +59,15 @@ export default function EventDetailPage() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data: EventData = await res.json();
       set_event(data);
+
+      // Fetch RSVP status
+      // TODO: Attach endpoint here to check if user has RSVPed
+      // Example: const rsvpRes = await fetch(`/api/events/${event_id}/rsvp`);
+      // if (rsvpRes.ok) {
+      //   const rsvpData = await rsvpRes.json();
+      //   set_rsvped(rsvpData.hasRsvp);
+      // }
+      set_rsvped(false); // Placeholder
     } catch {
       set_error(t("error_loading"));
     } finally {
@@ -80,6 +94,27 @@ export default function EventDetailPage() {
     } catch {
       set_error(t("error_loading"));
       set_deleting(false);
+    }
+  }
+
+  async function handle_rsvp() {
+    set_rsvp_loading(true);
+    try {
+      // TODO: Attach endpoint here for RSVP
+      // const method = rsvped ? "DELETE" : "POST";
+      // const res = await fetch(`/api/events/${event_id}/rsvp`, { method });
+      // if (res.ok) {
+      //   set_rsvped(!rsvped);
+      //   // Update event rsvp count
+      //   set_event(prev => prev ? { ...prev, _count: { ...prev._count, rsvps: prev._count.rsvps + (rsvped ? -1 : 1) } } : null);
+      // } else {
+      //   set_error("Failed to RSVP");
+      // }
+      set_rsvped(!rsvped); // Placeholder
+    } catch {
+      set_error("Failed to RSVP");
+    } finally {
+      set_rsvp_loading(false);
     }
   }
 
@@ -258,8 +293,22 @@ export default function EventDetailPage() {
           </p>
         </div>
 
+        {/* Map */}
+        <div className="mb-6">
+          <EventMap latitude={event.latitude} longitude={event.longitude} locationName={event.location_name} />
+        </div>
+
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
+          {session?.user && (
+            <button
+              onClick={handle_rsvp}
+              disabled={rsvp_loading}
+              className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
+            >
+              {rsvp_loading ? t("rsvp_loading") : rsvped ? `✅ ${t("rsvped")}` : `🤝 ${t("rsvp")}`}
+            </button>
+          )}
           <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
             target="_blank"
