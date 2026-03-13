@@ -79,7 +79,7 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
                         outlineColor: "var(--color-primary)",
                     }}
                     aria-label={sign_out_label}
-                    aria-busy={signing_out}
+                    aria-busy={signing_out ? "true" : undefined}
                     disabled={signing_out}
                 >
                     <LogOut size={13} aria-hidden="true" />
