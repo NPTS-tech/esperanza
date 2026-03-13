@@ -106,17 +106,7 @@ function format_date(iso_string: string, locale: string): string {
   }).format(d);
 }
 
-function ClientDate({ iso, locale }: { iso: string; locale: string }) {
-  const [mounted, set_mounted] = useState(false);
 
-  useEffect(() => {
-    set_mounted(true);
-  }, []);
-
-  if (!mounted) return <span />;
-
-  return <span>{format_date(iso, locale)}</span>;
-}
 
 export function AdminDashboard(props: AdminDashboardProps) {
   const locale = useLocale();
@@ -187,6 +177,8 @@ export function AdminDashboard(props: AdminDashboardProps) {
     fetch_events();
   }, [fetch_events]);
 
+
+
   async function handle_status_update(
     event_id: string,
     status: "APPROVED" | "REJECTED",
@@ -240,6 +232,8 @@ export function AdminDashboard(props: AdminDashboardProps) {
       set_delete_action_loading_id(null);
     }
   }
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -441,7 +435,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                       className="px-4 py-2 text-sm"
                       style={{ color: "var(--color-text)" }}
                     >
-                      <ClientDate iso={evt.start_time} locale={locale} />
+                      <span>{format_date(evt.start_time, locale)}</span>
                     </td>
                     <td className="px-4 py-2">
                       <span className={get_status_badge_class(evt.status)}>
@@ -583,7 +577,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                       className="px-4 py-2 text-sm"
                       style={{ color: "var(--color-text)" }}
                     >
-                      <ClientDate iso={evt.start_time} locale={locale} />
+                      <span>{format_date(evt.start_time, locale)}</span>
                     </td>
                   <td className="px-4 py-2">
                     <span className={get_status_badge_class(evt.status)}>
@@ -692,7 +686,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                     className="px-4 py-2 text-sm"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
-                    <ClientDate iso={u.created_at} locale={locale} />
+                    <span>{format_date(u.created_at, locale)}</span>
                   </td>
                   <td className="px-4 py-2">
                     <span
