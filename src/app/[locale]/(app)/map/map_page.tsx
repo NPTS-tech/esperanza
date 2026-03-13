@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Map } from "lucide-react";
 import { EventCard } from "@/components/ui/event-card";
 import { Tabs } from "@/components/ui/tabs";
-import type { MockEvent } from "@/lib/mock_data";
-import { EVENT_CATEGORIES } from "@/lib/mock_data";
+import dynamic from "next/dynamic";
+import type { EventData } from "@/components/event_card";
+import { EVENT_CATEGORIES } from "@/lib/validators/event";
+
+const MapView = dynamic(() => import("@/components/map_view"), { ssr: false });
 
 type MapPageClientProps = {
-    events: MockEvent[];
+    events: EventData[];
     locale: "en" | "es";
     sidebar_count_label: string;
     placeholder_title: string;
@@ -16,11 +19,10 @@ type MapPageClientProps = {
     placeholder_area: string;
     filter_all: string;
     view_details: string;
-    rsvps: string;
 };
 
 export function MapPageClient({
-    events,
+    events: initialEvents,
     locale,
     sidebar_count_label,
     placeholder_title,
@@ -28,10 +30,28 @@ export function MapPageClient({
     placeholder_area,
     filter_all,
     view_details,
-    rsvps,
 }: MapPageClientProps) {
     const [active_category, set_active_category] = useState("all");
     const [selected_id, set_selected_id] = useState<string | null>(null);
+    const [events, set_events] = useState(initialEvents);
+    const [loading, set_loading] = useState(true);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const res = await fetch("/api/events?status=APPROVED&limit=100");
+                if (res.ok) {
+                    const data = await res.json();
+                    set_events(data.events);
+                }
+            } catch (error) {
+                console.error("Failed to fetch events:", error);
+            } finally {
+                set_loading(false);
+            }
+        };
+        fetchEvents();
+    }, []);
 
     const category_tabs = [
         { key: "all", label: filter_all },
@@ -41,6 +61,14 @@ export function MapPageClient({
     const filtered = events.filter(
         (e) => active_category === "all" || e.category === active_category
     );
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-lg">Loading events...</div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -59,41 +87,8 @@ export function MapPageClient({
                     />
                 </div>
 
-                {/* Placeholder map */}
-                <div
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-                    style={{ background: "var(--color-surface-hover)" }}
-                >
-                    <Map size={56} style={{ color: "var(--color-primary)" }} opacity={0.4} />
-                    <p
-                        className="text-lg font-semibold"
-                        style={{ color: "var(--color-text-secondary)" }}
-                    >
-                        {placeholder_title}
-                    </p>
-                    <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                        {placeholder_subtitle}
-                    </p>
-                    <p
-                        className="text-xs px-3 py-1 rounded-full"
-                        style={{
-                            color: "var(--color-text-secondary)",
-                            background: "var(--color-border)",
-                        }}
-                    >
-                        {placeholder_area}
-                    </p>
-
-                    {/* Event pins summary */}
-                    {filtered.length > 0 && (
-                        <p
-                            className="text-xs mt-2 font-medium"
-                            style={{ color: "var(--color-primary)" }}
-                        >
-                            {filtered.length} {sidebar_count_label}
-                        </p>
-                    )}
-                </div>
+                {/* Interactive map */}
+                <MapView events={filtered} onEventClick={set_selected_id} />
             </div>
 
             {/* Event sidebar */}
@@ -116,7 +111,6 @@ export function MapPageClient({
                             event={evt}
                             locale={locale}
                             view_details_label={view_details}
-                            rsvp_label={rsvps}
                             compact
                             onClick={() => set_selected_id(evt.id === selected_id ? null : evt.id)}
                         />

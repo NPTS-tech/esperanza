@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Link } from "@/i18n/routing";
 import EventCard from "@/components/event_card";
+import CalendarView from "@/components/calendar_view";
 import type { EventData } from "@/components/event_card";
 import { EVENT_CATEGORIES } from "@/lib/validators/event";
 
@@ -35,6 +36,7 @@ export default function EventsPage() {
   const [loading, set_loading] = useState(true);
   const [error, set_error] = useState<string | null>(null);
   const [page, set_page] = useState(1);
+  const [view, set_view] = useState<"list" | "calendar">("list");
 
   // debounce search input
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function EventsPage() {
 
     const params = new URLSearchParams();
     params.set("page", page.toString());
-    params.set("limit", "20");
+    params.set("limit", view === "calendar" ? "100" : "20");
     if (category) params.set("category", category);
     if (debounced_search.trim()) params.set("search", debounced_search.trim());
 
@@ -73,7 +75,7 @@ export default function EventsPage() {
     } finally {
       set_loading(false);
     }
-  }, [page, category, debounced_search, t]);
+  }, [page, category, debounced_search, t, view]);
 
   useEffect(() => {
     fetch_events();
@@ -118,6 +120,22 @@ export default function EventsPage() {
           placeholder={t("search_placeholder")}
           className="input max-w-md"
         />
+      </div>
+
+      {/* View toggle */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => set_view("list")}
+          className={`btn ${view === "list" ? "btn-primary" : "btn-secondary"}`}
+        >
+          📋 {t("view_list")}
+        </button>
+        <button
+          onClick={() => set_view("calendar")}
+          className={`btn ${view === "calendar" ? "btn-primary" : "btn-secondary"}`}
+        >
+          📅 {t("view_calendar")}
+        </button>
       </div>
 
       {/* Category filter chips */}
@@ -175,13 +193,26 @@ export default function EventsPage() {
         </div>
       )}
 
-      {/* Events grid */}
+      {/* Events display */}
       {!loading && !error && events.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} show_status={show_status} />
-          ))}
-        </div>
+        <>
+          {view === "list" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} show_status={show_status} />
+              ))}
+            </div>
+          )}
+          {view === "calendar" && (
+            <CalendarView events={events.map(e => ({
+              id: e.id,
+              title_en: e.title_en,
+              title_es: e.title_es,
+              start_time: e.start_time,
+              end_time: e.end_time,
+            }))} />
+          )}
+        </>
       )}
 
       {/* Empty state */}
@@ -197,7 +228,7 @@ export default function EventsPage() {
       )}
 
       {/* Pagination */}
-      {!loading && pagination.total_pages > 1 && (
+      {!loading && view === "list" && pagination.total_pages > 1 && (
         <div className="flex items-center justify-center gap-4 mt-8">
           <button
             onClick={() => set_page((p) => Math.max(1, p - 1))}

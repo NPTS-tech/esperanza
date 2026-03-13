@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
-import { mock_events } from "@/lib/mock_data";
 import { MapPageClient } from "./map_page";
 
 export default async function MapPage() {
@@ -12,6 +11,9 @@ export default async function MapPage() {
     const t = await getTranslations("Map");
     const t_events = await getTranslations("Events");
 
+    // Events will be fetched client-side
+    const events: any[] = [];
+
     return (
         <div className="max-w-full">
             <div className="mb-4">
@@ -20,7 +22,7 @@ export default async function MapPage() {
                 </h1>
             </div>
             <MapPageClient
-                events={mock_events.filter((e) => e.status === "APPROVED")}
+                events={events}
                 locale={locale}
                 sidebar_count_label={t("sidebar_count")}
                 placeholder_title={t("placeholder_title")}
@@ -28,7 +30,6 @@ export default async function MapPage() {
                 placeholder_area={t("placeholder_area")}
                 filter_all={t("filter_all")}
                 view_details={t_events("view_details")}
-                rsvps={t_events("rsvps")}
             />
         </div>
     );
