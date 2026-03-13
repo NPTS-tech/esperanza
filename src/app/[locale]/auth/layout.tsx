@@ -33,7 +33,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             {/* Footer */}
             <footer className="mt-10 text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                © {new Date().getFullYear()} Esperanza Community Services
+            © 2026 Esperanza Community Services
             </footer>
         </div>
     );

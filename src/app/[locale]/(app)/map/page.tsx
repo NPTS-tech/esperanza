@@ -1,12 +1,8 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { mock_events } from "@/lib/mock_data";
 import { MapPageClient } from "./map_page";
 
 export default async function MapPage() {
-    const session = await auth();
-    if (!session) redirect("/auth/login");
 
     const locale = (await getLocale()) as "en" | "es";
     const t = await getTranslations("Map");

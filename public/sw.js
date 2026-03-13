@@ -1,64 +1,64 @@
-const CACHE_NAME = "esperanza-v2";
-const STATIC_ASSETS = [
-    "/manifest.json",
-];
+const CACHE_VERSION = "esperanza-v3";
+const PRECACHE = ["/manifest.json"];
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS);
-        })
+        caches.open(CACHE_VERSION).then((cache) => cache.addAll(PRECACHE))
     );
     self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
     event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys
-                    .filter((key) => key !== CACHE_NAME)
-                    .map((key) => caches.delete(key))
-            );
-        })
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))
+            )
+        )
     );
     self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-    // network-first for API routes and HTML pages
-    // only use cache-first for truly static assets (images, fonts, css, js bundles)
-    const url = new URL(event.request.url);
-    const is_static_asset = /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff2?|ttf|eot)$/i.test(url.pathname);
+function shouldSkipInterception(request, url) {
+    if (request.method !== "GET") return true;
+    const path = url.pathname;
+    if (path.startsWith("/api") || path.startsWith("/auth")) return true;
+    if (path.startsWith("/_next/data")) return true;
+    if (request.mode === "navigate") return true;
+    const rsc = request.headers.get("RSC");
+    const accept = request.headers.get("Accept") || "";
+    const nextRouter = request.headers.get("Next-Router-State-Tree");
+    if (rsc || accept.includes("text/x-component") || nextRouter) return true;
+    return false;
+}
 
-    if (!is_static_asset) {
-        // network-first: always try fresh content, fall back to cache offline
-        event.respondWith(
-            fetch(event.request)
-                .then(function handle_response(response) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(function update_cache(cache) {
-                        cache.put(event.request, clone);
-                    });
-                    return response;
-                })
-                .catch(function use_cache() {
-                    return caches.match(event.request);
-                })
-        );
+function isLowRiskStatic(path) {
+    return (
+        path === "/manifest.json" ||
+        /^\/icons?\//.test(path) ||
+        /\.(png|jpg|jpeg|svg|gif|ico|webp)$/i.test(path) ||
+        /\.(woff2?|ttf|eot)$/i.test(path)
+    );
+}
+
+self.addEventListener("fetch", (event) => {
+    const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin) return;
+    if (shouldSkipInterception(event.request, url)) return;
+
+    if (!isLowRiskStatic(url.pathname)) {
+        event.respondWith(fetch(event.request));
         return;
     }
 
-    // cache-first for static assets only
     event.respondWith(
-        caches.match(event.request).then(function check_cache(cached) {
-            return cached || fetch(event.request).then(function cache_new(response) {
+        fetch(event.request)
+            .then((response) => {
+                if (!response || response.status !== 200 || response.type === "error") return response;
                 const clone = response.clone();
-                caches.open(CACHE_NAME).then(function store(cache) {
-                    cache.put(event.request, clone);
-                });
+                caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
                 return response;
-            });
-        })
+            })
+            .catch(() => caches.match(event.request))
     );
 });

@@ -1,12 +1,9 @@
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ProviderDashboard } from "./provider_dashboard";
 
 export default async function ProviderPage() {
-    const session = await auth();
-    if (!session) redirect("/auth/login");
-    if (session.user.role !== "PROVIDER" && session.user.role !== "ADMIN") redirect("/");
+    const session = (await auth())!;
 
     const t = await getTranslations("Provider");
 
