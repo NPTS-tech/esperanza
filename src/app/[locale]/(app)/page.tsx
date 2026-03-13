@@ -1,15 +1,10 @@
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { CalendarDays, Map, User } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
 export default async function HomePage() {
-    const session = await auth();
-    if (!session) redirect("/auth/login");
-
-    if (session.user.role === "ADMIN") redirect("/admin");
-    if (session.user.role === "PROVIDER") redirect("/provider");
+    const session = (await auth())!;
 
     const locale = await getLocale();
     const t = await getTranslations("Home");

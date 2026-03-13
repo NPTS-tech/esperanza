@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Sprout, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/ui/language-toggle";
+import { sign_out_action } from "@/app/actions/sign_out_action";
 
 type HeaderProps = {
     role: string;
@@ -22,10 +22,16 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
     async function handle_sign_out() {
         if (signing_out) return;
         set_signing_out(true);
+        const loginUrl = `/${locale}/auth/login`;
+        const redirect = () => window.location.replace(loginUrl);
+        const timeout = window.setTimeout(redirect, 3000);
         try {
-            await signOut({ callbackUrl: "/auth/login" });
+            await sign_out_action();
         } catch {
-            set_signing_out(false);
+            // still redirect so UI never stays stuck
+        } finally {
+            window.clearTimeout(timeout);
+            redirect();
         }
     }
 
