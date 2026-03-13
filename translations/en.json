@@ -128,8 +128,19 @@
         "cat_financial": "Financial",
         "cat_community": "Community",
         "cat_other": "Other",
-        "forbidden": "You do not have permission to perform this action."
-        },
+        "forbidden": "You do not have permission to perform this action.",
+        "heading": "Community Events",
+        "all_categories": "All",
+        "no_results": "No events found",
+        "view_details": "View Details",
+        "rsvps": "RSVPs",
+        "rsvp_event": "RSVP to Event",
+        "cancel_rsvp": "Cancel RSVP",
+        "map_coming_soon": "Map coming soon",
+        "description": "Description",
+        "event_details": "Event Details",
+        "provider_label": "Organizer"
+    },
     "Admin": {
         "title": "Admin Dashboard",
         "subtitle": "Manage users, events, and platform settings",
@@ -167,22 +178,6 @@
         "analytics": "Analytics",
         "sign_out": "Sign Out",
         "language_toggle": "Español"
-    },
-    "Events": {
-        "heading": "Community Events",
-        "search_placeholder": "Search events…",
-        "all_categories": "All",
-        "no_results": "No events found",
-        "view_details": "View Details",
-        "rsvps": "RSVPs",
-        "rsvp_event": "RSVP to Event",
-        "cancel_rsvp": "Cancel RSVP",
-        "back_to_events": "Back to Events",
-        "location": "Location",
-        "map_coming_soon": "Map coming soon",
-        "description": "Description",
-        "event_details": "Event Details",
-        "provider_label": "Organizer"
     },
     "Map": {
         "heading": "Events Map",
