@@ -195,7 +195,11 @@
         "cannot_change_own_role": "No puedes cambiar tu propio rol.",
         "role_user": "Usuario",
         "role_provider": "Proveedor",
-        "role_admin": "Administrador"
+        "role_admin": "Administrador",
+        "events_management": "Gestión de eventos",
+        "events_management_subtitle": "Gestionar aprobaciones y listados de eventos",
+        "analytics_title": "Analíticas",
+        "analytics_subtitle": "Resumen y métricas de la plataforma"
     },
     "Nav": {
         "app_name": "Esperanza",

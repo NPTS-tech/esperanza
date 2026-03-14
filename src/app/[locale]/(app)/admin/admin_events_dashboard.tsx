@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, AlertCircle, Ticket, Users } from "lucide-react";
+import { CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
@@ -11,7 +11,6 @@ export type AdminEventsDashboardProps = {
   subtitle: string;
   pending_events: string;
   all_events: string;
-  user_management: string;
   approve: string;
   reject: string;
   deactivate: string;
@@ -223,16 +222,6 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <Link
-          href="/admin/users"
-          className="btn btn-secondary no-underline inline-flex items-center gap-2"
-        >
-          <Users size={18} />
-          {props.user_management}
-        </Link>
-      </div>
-
       {loading && (
         <div
           className="card p-4 text-sm"

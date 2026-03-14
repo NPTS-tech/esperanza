@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 
 export type AdminUsersDashboardProps = {
@@ -149,15 +148,6 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <Link
-          href="/admin"
-          className="btn btn-secondary no-underline"
-        >
-          ← {props.title}
-        </Link>
-      </div>
-
       {action_message && (
         <div
           className="card p-3 text-sm"
