@@ -44,7 +44,12 @@ export function AppShell({
 
     const nav_props = {
         role,
+        email,
+        locale,
         currentPath,
+        app_name,
+        sign_out_label,
+        language_toggle_label,
         nav_home,
         nav_events,
         nav_map,
@@ -53,27 +58,33 @@ export function AppShell({
         nav_submit_event,
         nav_users,
         nav_analytics,
-        app_name,
     };
 
     return (
         <div className="min-h-screen flex flex-col" style={{ background: "var(--color-bg)" }}>
-            {/* Skip-to-content — visible on :focus for keyboard / screen-reader users */}
             <a href="#main-content" className="skip-link">
                 Skip to main content
             </a>
 
-            <Header
-                role={role}
-                email={email}
-                locale={locale}
-                app_name={app_name}
-                sign_out_label={sign_out_label}
-                language_toggle_label={language_toggle_label}
-            />
+            {/* Header — mobile only. Desktop navigation lives entirely in the sidebar. */}
+            <div className="md:hidden">
+                <Header
+                    role={role}
+                    email={email}
+                    locale={locale}
+                    app_name={app_name}
+                    sign_out_label={sign_out_label}
+                    language_toggle_label={language_toggle_label}
+                />
+            </div>
 
-            {/* Top padding tracks --header-h which includes iOS safe-area-top in standalone */}
-            <div className="flex flex-1" style={{ paddingTop: "var(--header-h)" }}>
+            {/*
+                Mobile:  paddingTop clears the fixed header.
+                Desktop: no header → no padding needed (md:pt-0).
+            */}
+            <div
+                className="flex flex-1 [padding-top:var(--header-h)] md:pt-0"
+            >
                 <Sidebar {...nav_props} />
 
                 <main
