@@ -74,7 +74,7 @@ export default async function RootLayout({
         <html lang={locale} className={cn("font-sans", geist.variable)}>
             <body>
                 <AuthSessionProvider>
-                    <NextIntlClientProvider messages={messages}>
+                    <NextIntlClientProvider locale={locale} messages={messages}>
                         <PWASetup />
                         {children}
                     </NextIntlClientProvider>

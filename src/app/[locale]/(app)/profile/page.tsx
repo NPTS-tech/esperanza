@@ -1,11 +1,9 @@
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ProfileClient } from "./profile_client";
 
 export default async function ProfilePage() {
-    const session = await auth();
-    if (!session) redirect("/auth/login");
+    const session = (await auth())!;
 
     const t = await getTranslations("Profile");
 
