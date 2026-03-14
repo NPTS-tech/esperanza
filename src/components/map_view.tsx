@@ -41,7 +41,7 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
     // Fit bounds if there are events
     if (events.length > 0) {
-      const group = new L.featureGroup(markers);
+      const group = L.featureGroup(markers);
       map.fitBounds(group.getBounds().pad(0.1));
     }
 
