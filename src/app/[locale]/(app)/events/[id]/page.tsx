@@ -8,7 +8,9 @@ import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
 import type { EventData } from "@/components/event_card";
 
-const EventMap = dynamic(() => import("@/components/event_map"), { ssr: false });
+const EventMap = dynamic(() => import("@/components/event_map"), {
+  ssr: false,
+});
 
 function format_date(date_string: string, locale: string) {
   return new Date(date_string).toLocaleDateString(
@@ -60,20 +62,23 @@ export default function EventDetailPage() {
       const data: EventData = await res.json();
       set_event(data);
 
-      // Fetch RSVP status
-      // TODO: Attach endpoint here to check if user has RSVPed
-      // Example: const rsvpRes = await fetch(`/api/events/${event_id}/rsvp`);
-      // if (rsvpRes.ok) {
-      //   const rsvpData = await rsvpRes.json();
-      //   set_rsvped(rsvpData.hasRsvp);
-      // }
-      set_rsvped(false); // Placeholder
+      if (!session?.user) {
+        set_rsvped(false);
+      } else {
+        const rsvp_res = await fetch(`/api/events/${event_id}/rsvp`);
+        if (rsvp_res.ok) {
+          const rsvp_data: { hasRsvp: boolean } = await rsvp_res.json();
+          set_rsvped(rsvp_data.hasRsvp);
+        } else {
+          set_rsvped(false);
+        }
+      }
     } catch {
       set_error(t("error_loading"));
     } finally {
       set_loading(false);
     }
-  }, [event_id, t]);
+  }, [event_id, session?.user?.id, t]);
 
   useEffect(() => {
     fetch_event();
@@ -100,19 +105,27 @@ export default function EventDetailPage() {
   async function handle_rsvp() {
     set_rsvp_loading(true);
     try {
-      // TODO: Attach endpoint here for RSVP
-      // const method = rsvped ? "DELETE" : "POST";
-      // const res = await fetch(`/api/events/${event_id}/rsvp`, { method });
-      // if (res.ok) {
-      //   set_rsvped(!rsvped);
-      //   // Update event rsvp count
-      //   set_event(prev => prev ? { ...prev, _count: { ...prev._count, rsvps: prev._count.rsvps + (rsvped ? -1 : 1) } } : null);
-      // } else {
-      //   set_error("Failed to RSVP");
-      // }
-      set_rsvped(!rsvped); // Placeholder
+      const method = rsvped ? "DELETE" : "POST";
+      const res = await fetch(`/api/events/${event_id}/rsvp`, { method });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        set_error(data?.error || t("error_loading"));
+        return;
+      }
+
+      const data: { hasRsvp: boolean; rsvp_count: number } = await res.json();
+      set_rsvped(data.hasRsvp);
+      set_event((prev) =>
+        prev
+          ? {
+              ...prev,
+              _count: { ...prev._count, rsvps: data.rsvp_count },
+            }
+          : prev,
+      );
     } catch {
-      set_error("Failed to RSVP");
+      set_error(t("error_loading"));
     } finally {
       set_rsvp_loading(false);
     }
@@ -295,7 +308,11 @@ export default function EventDetailPage() {
 
         {/* Map */}
         <div className="mb-6">
-          <EventMap latitude={event.latitude} longitude={event.longitude} locationName={event.location_name} />
+          <EventMap
+            latitude={event.latitude}
+            longitude={event.longitude}
+            locationName={event.location_name}
+          />
         </div>
 
         {/* Actions */}
@@ -306,7 +323,11 @@ export default function EventDetailPage() {
               disabled={rsvp_loading}
               className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
             >
-              {rsvp_loading ? t("rsvp_loading") : rsvped ? `✅ ${t("rsvped")}` : `🤝 ${t("rsvp")}`}
+              {rsvp_loading
+                ? t("rsvp_loading")
+                : rsvped
+                  ? `✅ ${t("rsvped")}`
+                  : `🤝 ${t("rsvp")}`}
             </button>
           )}
           <a
