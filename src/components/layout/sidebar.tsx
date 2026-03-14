@@ -60,17 +60,10 @@ function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
     if (role === "ADMIN") {
         return [
             {
-                section_label: "PLATFORM",
                 items: [
-                    { key: "home",     label: labels.nav_home,      href: "/",      icon: <Home size={SZ} /> },
-                    { key: "events",   label: labels.nav_events,     href: "/admin", icon: <CalendarDays size={SZ} /> },
-                    { key: "analytics",label: labels.nav_analytics,  href: "/admin", icon: <BarChart3 size={SZ} /> },
-                ],
-            },
-            {
-                section_label: "ORGANIZATION",
-                items: [
-                    { key: "users", label: labels.nav_users, href: "/admin/users", icon: <Users size={SZ} /> },
+                    { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
+                    { key: "events",    label: labels.nav_events,    href: "/admin/events",    icon: <CalendarDays size={SZ} /> },
+                    { key: "users",     label: labels.nav_users,     href: "/admin/users",   icon: <Users size={SZ} /> },
                 ],
             },
         ];
@@ -111,10 +104,20 @@ function NavLink({
     item: NavItem;
     currentPath: string;
 }) {
-    const is_active =
-        item.href === "/"
-            ? currentPath === "/"
-            : item.href !== "#" && currentPath.startsWith(item.href);
+    let is_active: boolean;
+    if (item.href === "/") {
+        is_active = currentPath === "/";
+    } else if (item.href === "/admin/users") {
+        is_active = currentPath.startsWith("/admin/users");
+    } else if (item.href === "/admin/events") {
+        is_active = currentPath.startsWith("/admin/events");
+    } else if (item.href === "/admin/analytics") {
+        is_active = currentPath.startsWith("/admin/analytics");
+    } else if (item.href === "/admin") {
+        is_active = currentPath === "/admin" || (currentPath.startsWith("/admin") && !currentPath.startsWith("/admin/events") && !currentPath.startsWith("/admin/analytics") && !currentPath.startsWith("/admin/users"));
+    } else {
+        is_active = item.href !== "#" && currentPath.startsWith(item.href);
+    }
 
     return (
         <Link
