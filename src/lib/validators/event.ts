@@ -141,7 +141,7 @@ export const update_event_status_schema = z.object({
 // event_query_schema, used by GET /api/events for validating query parameters.
 export const event_query_schema = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
+    limit: z.coerce.number().int().min(1).max(1000).default(20),
     category: z.enum(EVENT_CATEGORIES).optional(),
     status: z
         .enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"])
