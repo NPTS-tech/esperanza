@@ -5,6 +5,7 @@ import { Users, CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { mock_users, type MockUser } from "@/lib/mock_data";
+import { useLocale } from "next-intl";
 
 export type AdminDashboardProps = {
   title: string;
@@ -94,18 +95,21 @@ function get_status_label(
   return status;
 }
 
-function format_date(iso_string: string): string {
+function format_date(iso_string: string, locale: string): string {
   const d = new Date(iso_string);
-  return d.toLocaleDateString(undefined, {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  }).format(d);
 }
 
+
+
 export function AdminDashboard(props: AdminDashboardProps) {
+  const locale = useLocale();
   const [users] = useState<MockUser[]>(() => [...mock_users]);
   const [events, set_events] = useState<ApiEvent[]>([]);
   const [pending_events, set_pending_events] = useState<ApiEvent[]>([]);
@@ -173,6 +177,8 @@ export function AdminDashboard(props: AdminDashboardProps) {
     fetch_events();
   }, [fetch_events]);
 
+
+
   async function handle_status_update(
     event_id: string,
     status: "APPROVED" | "REJECTED",
@@ -226,6 +232,8 @@ export function AdminDashboard(props: AdminDashboardProps) {
       set_delete_action_loading_id(null);
     }
   }
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -427,7 +435,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                       className="px-4 py-2 text-sm"
                       style={{ color: "var(--color-text)" }}
                     >
-                      {format_date(evt.start_time)}
+                      <span>{format_date(evt.start_time, locale)}</span>
                     </td>
                     <td className="px-4 py-2">
                       <span className={get_status_badge_class(evt.status)}>
@@ -565,12 +573,12 @@ export function AdminDashboard(props: AdminDashboardProps) {
                       {evt.category}
                     </span>
                   </td>
-                  <td
-                    className="px-4 py-2 text-sm"
-                    style={{ color: "var(--color-text)" }}
-                  >
-                    {format_date(evt.start_time)}
-                  </td>
+                    <td
+                      className="px-4 py-2 text-sm"
+                      style={{ color: "var(--color-text)" }}
+                    >
+                      <span>{format_date(evt.start_time, locale)}</span>
+                    </td>
                   <td className="px-4 py-2">
                     <span className={get_status_badge_class(evt.status)}>
                       {get_status_label(evt.status, props)}
@@ -678,7 +686,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                     className="px-4 py-2 text-sm"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
-                    {format_date(u.created_at)}
+                    <span>{format_date(u.created_at, locale)}</span>
                   </td>
                   <td className="px-4 py-2">
                     <span

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Sprout, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/ui/language-toggle";
+import { sign_out_action } from "@/app/actions/sign_out_action";
 
 type HeaderProps = {
     role: string;
@@ -16,6 +17,23 @@ type HeaderProps = {
 
 export function Header({ email, locale, app_name, sign_out_label }: HeaderProps) {
     const initials = email ? email[0].toUpperCase() : "?";
+    const [signing_out, set_signing_out] = useState(false);
+
+    async function handle_sign_out() {
+        if (signing_out) return;
+        set_signing_out(true);
+        const loginUrl = `/${locale}/auth/login`;
+        const redirect = () => window.location.replace(loginUrl);
+        const timeout = window.setTimeout(redirect, 3000);
+        try {
+            await sign_out_action();
+        } catch {
+            // still redirect so UI never stays stuck
+        } finally {
+            window.clearTimeout(timeout);
+            redirect();
+        }
+    }
 
     return (
         <header
@@ -59,7 +77,7 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
 
                 {/* Sign out */}
                 <button
-                    onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                    onClick={handle_sign_out}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                     style={{
                         color: "var(--color-text-secondary)",
@@ -67,9 +85,13 @@ export function Header({ email, locale, app_name, sign_out_label }: HeaderProps)
                         outlineColor: "var(--color-primary)",
                     }}
                     aria-label={sign_out_label}
+                    aria-busy={signing_out ? "true" : undefined}
+                    disabled={signing_out}
                 >
                     <LogOut size={13} aria-hidden="true" />
-                    <span className="hidden sm:inline">{sign_out_label}</span>
+                    <span className="hidden sm:inline">
+                        {signing_out ? `${sign_out_label}...` : sign_out_label}
+                    </span>
                 </button>
             </div>
         </header>

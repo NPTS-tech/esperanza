@@ -116,12 +116,12 @@ export default function RegisterPage() {
 
                 set_loading(false);
 
-                if (sign_in_result?.error) {
+                if (!sign_in_result?.ok) {
                     set_error(t("signin_after_register_failed"));
                     return;
                 }
 
-                window.location.href = "/";
+                window.location.href = `/${activeLocale}`;
             } catch {
                 set_error(t("generic_error"));
                 set_loading(false);

@@ -36,16 +36,12 @@ export default function LoginPage() {
 
         set_loading(false);
 
-        if (result?.error) {
+        if (!result?.ok) {
             set_error(t("invalid_credentials"));
             return;
         }
 
-        try {
-            window.location.href = "/";
-        } catch (err) {
-            console.error("Redirect failed:", err);
-        }
+        window.location.href = `/${activeLocale}`;
     }
 
     return (

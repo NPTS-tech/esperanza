@@ -14,12 +14,13 @@ export default auth((req) => {
     );
     // Ensure leading slash if empty string
     const normalizedPathname = pathWithoutLocale.startsWith('/') ? pathWithoutLocale : `/${pathWithoutLocale}`;
+    const locale = routing.locales.includes(pathname.split("/")[1] as "en" | "es") ? pathname.split("/")[1] : routing.defaultLocale;
 
     const is_auth_route = normalizedPathname.startsWith("/auth");
 
-    // Auth route protection handling first
+    // Auth route protection handling first — redirect to locale-aware public auth page
     if (!req.auth && !is_auth_route) {
-        const url = new URL("/auth/login", req.nextUrl.origin);
+        const url = new URL(`/${locale}/auth/login`, req.nextUrl.origin);
         const response = NextResponse.redirect(url);
         // nuke all stale auth cookies to prevent redirect loops and CSRF mismatches
         const stale_cookies = [
@@ -43,22 +44,22 @@ export default auth((req) => {
     }
 
     if (req.auth && is_auth_route) {
-        const url = new URL("/", req.nextUrl.origin);
+        const url = new URL(`/${locale}`, req.nextUrl.origin);
         return NextResponse.redirect(url);
     }
 
-    // Role-based protection
+    // Role-based protection — redirect to locale-aware home
     if (req.auth) {
         const role = req.auth.user?.role;
         const is_admin_route = normalizedPathname.startsWith("/admin");
         const is_provider_route = normalizedPathname.startsWith("/provider");
 
         if (is_admin_route && role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+            return NextResponse.redirect(new URL(`/${locale}`, req.nextUrl.origin));
         }
 
         if (is_provider_route && role !== "PROVIDER" && role !== "ADMIN") {
-            return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+            return NextResponse.redirect(new URL(`/${locale}`, req.nextUrl.origin));
         }
     }
 
