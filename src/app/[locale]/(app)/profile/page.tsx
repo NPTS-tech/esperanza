@@ -33,6 +33,8 @@ export default async function ProfilePage() {
                 label_cancel={t("cancel")}
                 msg_password_updated={t("password_updated")}
                 msg_password_error={t("password_error")}
+                label_rsvp_history={t("rsvp_history")}
+                label_no_rsvps={t("no_rsvps")}
             />
         </div>
     );

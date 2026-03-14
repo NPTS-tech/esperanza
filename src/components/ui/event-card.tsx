@@ -2,10 +2,10 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Badge, get_category_badge_variant } from "@/components/ui/badge";
 import { format_date } from "@/lib/utils";
-import type { MockEvent } from "@/lib/mock_data";
+import type { EventData } from "@/components/event_card";
 
 type EventCardProps = {
-    event: MockEvent;
+    event: EventData;
     locale: "en" | "es";
     view_details_label: string;
     rsvp_label?: string;
