@@ -58,7 +58,7 @@ export default function EventsPage() {
 
     const params = new URLSearchParams();
     params.set("page", page.toString());
-    params.set("limit", view === "calendar" ? "100" : "20");
+    params.set("limit", view === "calendar" ? "500" : "20");
     if (category) params.set("category", category);
     if (debounced_search.trim()) params.set("search", debounced_search.trim());
 
