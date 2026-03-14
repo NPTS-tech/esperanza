@@ -70,7 +70,7 @@ function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
             {
                 section_label: "ORGANIZATION",
                 items: [
-                    { key: "users", label: labels.nav_users, href: "/admin", icon: <Users size={SZ} /> },
+                    { key: "users", label: labels.nav_users, href: "/admin/users", icon: <Users size={SZ} /> },
                 ],
             },
         ];

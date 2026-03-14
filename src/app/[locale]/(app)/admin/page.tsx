@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { Shield } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { AdminDashboard } from "./admin_dashboard";
+import { AdminEventsDashboard } from "./admin_events_dashboard";
 
 export default async function AdminPage() {
     const session = (await auth())!;
@@ -45,7 +45,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <AdminDashboard
+      <AdminEventsDashboard
         title={t_admin("title")}
         subtitle={t_admin("subtitle")}
         pending_events={t_admin("pending_events")}
@@ -54,7 +54,6 @@ export default async function AdminPage() {
         approve={t_admin("approve")}
         reject={t_admin("reject")}
         deactivate={t_admin("deactivate")}
-        total_users={t_admin("total_users")}
         total_events={t_admin("total_events")}
         pending_approvals={t_admin("pending_approvals")}
         total_rsvps={t_admin("total_rsvps")}
@@ -64,17 +63,12 @@ export default async function AdminPage() {
         date={t_admin("date")}
         status={t_admin("status")}
         actions={t_admin("actions")}
-        email={t_admin("email")}
-        role={t_admin("role")}
-        created={t_admin("created")}
         no_pending={t_admin("no_pending")}
-        deactivated={t_admin("deactivated")}
         loading_events={t_admin("loading_events")}
         error_loading_events={t_admin("error_loading_events")}
         retry={t_admin("retry")}
         status_update_success={t_admin("status_update_success")}
         status_update_error={t_admin("status_update_error")}
-        user_management_read_only={t_admin("user_management_read_only")}
         status_cancelled={t_admin("status_cancelled")}
         edit={t_admin("edit")}
         delete={t_admin("delete")}
