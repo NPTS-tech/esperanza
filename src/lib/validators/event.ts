@@ -42,6 +42,7 @@ export const create_event_schema = z
             .min(1, "Spanish description is required")
             .max(5000),
         location_name: z.string().min(1, "Location name is required").max(300),
+        location_address: z.string().min(1, "Location address is required").max(500),
         latitude: z.coerce.number().min(-90).max(90),
         longitude: z.coerce.number().min(-180).max(180),
         start_time: z.coerce.date().refine((d) => d > new Date(), {
@@ -93,6 +94,7 @@ export const update_event_schema = z
         description_en: z.string().min(1).max(5000).optional(),
         description_es: z.string().min(1).max(5000).optional(),
         location_name: z.string().min(1).max(300).optional(),
+        location_address: z.string().min(1).max(500).optional(),
         latitude: z.coerce.number().min(-90).max(90).optional(),
         longitude: z.coerce.number().min(-180).max(180).optional(),
         start_time: z.coerce.date().optional(),

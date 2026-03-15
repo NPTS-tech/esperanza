@@ -81,6 +81,7 @@ export function EventCard({
                         >
                             <MapPin size={12} />
                             {event.location_name}
+                            {event.location_address ? ` · ${event.location_address}` : ""}
                         </span>
                     </div>
                 )}

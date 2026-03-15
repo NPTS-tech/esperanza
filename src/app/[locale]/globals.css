@@ -99,6 +99,15 @@ body {
     transform: translateY(-1px);
 }
 
+.card-no-hover {
+    transition: none;
+}
+
+.card-no-hover:hover {
+    box-shadow: var(--shadow-sm);
+    transform: none;
+}
+
 .btn {
     display: inline-flex;
     align-items: center;

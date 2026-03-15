@@ -118,6 +118,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             "description_en",
             "description_es",
             "location_name",
+            "location_address",
             "latitude",
             "longitude",
             "start_time",

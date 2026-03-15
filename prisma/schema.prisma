@@ -77,6 +77,7 @@ model Event {
     description_en String
     description_es String
     location_name  String
+    location_address String?
     latitude       Float
     longitude      Float
     start_time     DateTime
