@@ -3,7 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Clock3 } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { EVENT_CATEGORIES } from "@/lib/validators/event";
 import type { EventData } from "@/components/event_card";
@@ -35,25 +35,67 @@ interface EventFormProps {
   on_delete_redirect?: string;
 }
 
-// convert a Date/ISO string to `datetime-local` input value (YYYY-MM-DDTHH:mm)
-function to_datetime_local(value: string | Date | undefined): string {
+function to_date_input(value: string | Date | undefined): string {
   if (!value) return "";
   const d = new Date(value);
-  // offset to local time
   const offset = d.getTimezoneOffset();
   const local = new Date(d.getTime() - offset * 60 * 1000);
-  return local.toISOString().slice(0, 16);
+  return local.toISOString().slice(0, 10);
 }
 
-function add_minutes_to_datetime_local(
-  value: string,
-  minutes: number,
-): string {
+function to_time_input(value: string | Date | undefined): string {
   if (!value) return "";
   const d = new Date(value);
-  d.setMinutes(d.getMinutes() + minutes);
-  return to_datetime_local(d);
+  const offset = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(11, 16);
 }
+
+function to_minutes(time: string): number {
+  const [hh, mm] = time.split(":").map(Number);
+  return hh * 60 + mm;
+}
+
+function from_minutes(total: number): string {
+  const clamped = Math.max(0, Math.min(23 * 60 + 45, total));
+  const hh = String(Math.floor(clamped / 60)).padStart(2, "0");
+  const mm = String(clamped % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function add_minutes_to_time(time: string, minutes: number): string {
+  return from_minutes(to_minutes(time) + minutes);
+}
+
+function round_up_to_next_quarter(date: Date): string {
+  const total = date.getHours() * 60 + date.getMinutes();
+  const rounded = Math.ceil(total / 15) * 15;
+  return from_minutes(rounded);
+}
+
+function get_default_start_time(date: Date): string {
+  const rounded = round_up_to_next_quarter(date);
+  if (to_minutes(rounded) >= 23 * 60 + 45) {
+    return "22:45";
+  }
+  return rounded;
+}
+
+function combine_date_and_time_to_iso(date_str: string, time_str: string): string {
+  return new Date(`${date_str}T${time_str}:00`).toISOString();
+}
+
+function to_12h_label(time: string): string {
+  const [hh_raw, mm] = time.split(":").map(Number);
+  const am_pm = hh_raw >= 12 ? "PM" : "AM";
+  const hh_12 = hh_raw % 12 === 0 ? 12 : hh_raw % 12;
+  return `${hh_12}:${String(mm).padStart(2, "0")} ${am_pm}`;
+}
+
+const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
+  const total = i * 15;
+  return from_minutes(total);
+});
 
 export default function EventForm({
   mode,
@@ -71,6 +113,10 @@ export default function EventForm({
   const is_admin_edit_context =
     mode === "edit" && pathname.includes("/admin/events/");
 
+  const default_date = to_date_input(new Date());
+  const default_start_time = get_default_start_time(new Date());
+  const default_end_time = add_minutes_to_time(default_start_time, 60);
+
   const [form, set_form] = useState<{
     title_en: string;
     title_es: string;
@@ -80,6 +126,7 @@ export default function EventForm({
     location_address: string;
     latitude: number | null;
     longitude: number | null;
+    event_date: string;
     start_time: string;
     end_time: string;
     category: string;
@@ -93,8 +140,9 @@ export default function EventForm({
     location_address: initial_data?.location_address ?? "",
     latitude: initial_data?.latitude ?? null,
     longitude: initial_data?.longitude ?? null,
-    start_time: to_datetime_local(initial_data?.start_time),
-    end_time: to_datetime_local(initial_data?.end_time),
+    event_date: to_date_input(initial_data?.start_time) || default_date,
+    start_time: to_time_input(initial_data?.start_time) || default_start_time,
+    end_time: to_time_input(initial_data?.end_time) || default_end_time,
     category: initial_data?.category ?? "",
     image_url: initial_data?.image_url ?? "",
   });
@@ -105,6 +153,9 @@ export default function EventForm({
   const [error, set_error] = useState<string | null>(null);
   const [field_errors, set_field_errors] = useState<Record<string, string[]>>(
     {},
+  );
+  const end_time_options = TIME_OPTIONS.filter(
+    (time) => to_minutes(time) > to_minutes(form.start_time),
   );
 
   async function handle_image_file_change(
@@ -154,12 +205,27 @@ export default function EventForm({
   ) {
     const { name, value } = e.target;
 
+    if (name === "event_date") {
+      set_form((prev) => ({ ...prev, event_date: value }));
+      if (field_errors.event_date) {
+        set_field_errors((prev) => {
+          const next = { ...prev };
+          delete next.event_date;
+          return next;
+        });
+      }
+      return;
+    }
+
     if (name === "start_time") {
       set_form((prev) => {
         const next = { ...prev, start_time: value };
+        const next_valid_end = TIME_OPTIONS.find(
+          (time) => to_minutes(time) > to_minutes(value),
+        );
 
-        if (!prev.end_time || new Date(prev.end_time) <= new Date(value)) {
-          next.end_time = add_minutes_to_datetime_local(value, 60);
+        if (!prev.end_time || to_minutes(prev.end_time) <= to_minutes(value)) {
+          next.end_time = next_valid_end ?? "";
         }
 
         return next;
@@ -208,11 +274,14 @@ export default function EventForm({
       return;
     }
 
-    if (new Date(form.end_time) <= new Date(form.start_time)) {
+    if (to_minutes(form.end_time) <= to_minutes(form.start_time)) {
       set_field_errors({ end_time: [t("end_time_after_start_error")] });
       set_loading(false);
       return;
     }
+
+    const start_iso = combine_date_and_time_to_iso(form.event_date, form.start_time);
+    const end_iso = combine_date_and_time_to_iso(form.event_date, form.end_time);
 
     // build payload
     const payload: Record<string, unknown> = {
@@ -224,8 +293,8 @@ export default function EventForm({
       location_address: form.location_address,
       latitude: form.latitude,
       longitude: form.longitude,
-      start_time: new Date(form.start_time).toISOString(),
-      end_time: new Date(form.end_time).toISOString(),
+      start_time: start_iso,
+      end_time: end_iso,
       category: form.category,
     };
 
@@ -471,29 +540,57 @@ export default function EventForm({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label
               className="block text-sm font-medium mb-1"
               style={{ color: "var(--color-text)" }}
             >
-              {t("form_start_time")} *
+              {t("date")} *
             </label>
             <input
-              type="datetime-local"
+              type="date"
+              name="event_date"
+              value={form.event_date}
+              onChange={handle_change}
+              required
+              className="input"
+            />
+            {field_errors.event_date && (
+              <p
+                className="text-xs mt-1"
+                style={{ color: "var(--color-danger)" }}
+              >
+                {field_errors.event_date[0]}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              className="text-sm font-medium mb-1 flex items-center gap-1.5"
+              style={{ color: "var(--color-text)" }}
+            >
+              <Clock3 size={14} style={{ color: "var(--color-primary)" }} />
+              {t("form_start_time")} *
+            </label>
+            <select
               name="start_time"
               value={form.start_time}
               onChange={handle_change}
               required
-              step={900}
-              className="input"
-            />
-            <p
-              className="text-xs mt-1"
-              style={{ color: "var(--color-text-secondary)" }}
+              className="select"
+              style={{
+                borderWidth: 1.5,
+                fontWeight: 600,
+                background: "var(--color-surface)",
+              }}
             >
-              {t("form_start_time_hint")}
-            </p>
+              {TIME_OPTIONS.map((time) => (
+                <option key={time} value={time}>
+                  {to_12h_label(time)}
+                </option>
+              ))}
+            </select>
             {field_errors.start_time && (
               <p
                 className="text-xs mt-1"
@@ -505,27 +602,30 @@ export default function EventForm({
           </div>
           <div>
             <label
-              className="block text-sm font-medium mb-1"
+              className="text-sm font-medium mb-1 flex items-center gap-1.5"
               style={{ color: "var(--color-text)" }}
             >
+              <Clock3 size={14} style={{ color: "var(--color-primary)" }} />
               {t("form_end_time")} *
             </label>
-            <input
-              type="datetime-local"
+            <select
               name="end_time"
               value={form.end_time}
               onChange={handle_change}
               required
-              min={form.start_time || undefined}
-              step={900}
-              className="input"
-            />
-            <p
-              className="text-xs mt-1"
-              style={{ color: "var(--color-text-secondary)" }}
+              className="select"
+              style={{
+                borderWidth: 1.5,
+                fontWeight: 600,
+                background: "var(--color-surface)",
+              }}
             >
-              {t("form_end_time_hint")}
-            </p>
+              {end_time_options.map((time) => (
+                <option key={time} value={time}>
+                  {to_12h_label(time)}
+                </option>
+              ))}
+            </select>
             {field_errors.end_time && (
               <p
                 className="text-xs mt-1"

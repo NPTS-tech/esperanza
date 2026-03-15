@@ -130,6 +130,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
         const update_data: typeof parsed.data & { status?: EventStatus } = { ...parsed.data };
 
+        // Admin edits should never force a re-review.
+        // Keep whatever current status the event already has.
+        if (role === "ADMIN") {
+            update_data.status = existing.status;
+        }
+
         if (role === "PROVIDER" && existing.status === "APPROVED") {
             const has_content_change = CONTENT_FIELDS.some(
                 (field) => update_data[field] !== undefined,
