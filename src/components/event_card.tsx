@@ -120,15 +120,20 @@ export default function EventCard({ event, show_status = false }: EventCardProps
         </div>
 
         {/* Google Maps link */}
-        
-          href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary text-sm no-underline mt-3"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          className="btn btn-secondary text-sm no-underline mt-3 text-left"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(
+              `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }}
         >
           {t("get_directions")}
-        </a>
+        </button>
 
         {/* Status — providers/admins only */}
         {show_status && (
