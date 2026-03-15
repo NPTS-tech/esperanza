@@ -1,6 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { get_approved_events } from "@/lib/mock_data";
+
+const EventsMapbox = dynamic(() => import("@/components/events_mapbox"), {
+    ssr: false,
+    loading: () => (
+        <div className="h-96 w-full bg-slate-100 animate-pulse" />
+    ),
+});
 
 export default function MapPage() {
     const events = get_approved_events();
@@ -14,20 +22,9 @@ export default function MapPage() {
                 </p>
             </div>
 
-            {/* map placeholder — will be replaced with Leaflet */}
+            {/* map */}
             <div className="card overflow-hidden mb-6">
-                <div className="bg-gradient-to-br from-green-100 via-blue-50 to-green-50 h-96 flex flex-col items-center justify-center relative">
-                    <div className="text-6xl mb-4">🗺️</div>
-                    <p className="text-slate-600 font-medium text-lg">Interactive Map</p>
-                    <p className="text-slate-400 text-sm mt-1">
-                        Leaflet + OpenStreetMap will be embedded here
-                    </p>
-
-                    {/* mock pins */}
-                    <div className="absolute top-8 left-[30%] text-2xl animate-bounce">📍</div>
-                    <div className="absolute top-20 right-[25%] text-2xl animate-bounce" style={{ animationDelay: "0.2s" }}>📍</div>
-                    <div className="absolute bottom-16 left-[45%] text-2xl animate-bounce" style={{ animationDelay: "0.4s" }}>📍</div>
-                </div>
+                <EventsMapbox events={events} />
             </div>
 
             {/* event locations list */}

@@ -28,10 +28,16 @@ export default async function ProviderPage() {
                 description_en={t("description_en")}
                 description_es={t("description_es")}
                 location_name={t("location_name")}
-                latitude={t("latitude")}
-                longitude={t("longitude")}
+                location_address={t("location_address")}
+                location_drag_hint={t("location_drag_hint")}
+                location_address_required={t("location_address_required")}
+                location_pick_required={t("location_pick_required")}
                 start_time={t("start_time")}
+                time_section_label={t("time_section_label")}
+                time_section_hint={t("time_section_hint")}
+                start_time_hint={t("start_time_hint")}
                 end_time={t("end_time")}
+                end_time_hint={t("end_time_hint")}
                 category={t("category")}
                 category_placeholder={t("category_placeholder")}
                 image_url={t("image_url")}
@@ -43,6 +49,7 @@ export default async function ProviderPage() {
                 rsvp_count={t("rsvp_count")}
                 reapproval_warning={t("reapproval_warning")}
                 event_submitted={t("event_submitted")}
+                end_time_after_start_error={t("end_time_after_start_error")}
                 no_events={t("no_events")}
                 table_title={t("table_title")}
                 date={t("date")}

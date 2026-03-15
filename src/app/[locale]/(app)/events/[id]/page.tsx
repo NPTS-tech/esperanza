@@ -279,6 +279,14 @@ export default function EventDetailPage() {
                 style={{ color: "var(--color-text)" }}
               >
                 {event.location_name}
+                {event.location_address ? (
+                  <>
+                    <br />
+                    <span style={{ color: "var(--color-text-secondary)" }}>
+                      {event.location_address}
+                    </span>
+                  </>
+                ) : null}
               </p>
             </div>
           </div>

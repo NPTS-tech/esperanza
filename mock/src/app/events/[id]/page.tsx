@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
     get_event_by_id,
     format_date,
@@ -9,6 +10,13 @@ import {
     mock_current_user,
     is_user_rsvped,
 } from "@/lib/mock_data";
+
+const EventMapbox = dynamic(() => import("@/components/event_mapbox"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-80 rounded-xl border border-slate-200 bg-slate-100 animate-pulse" />
+    ),
+});
 
 export default function EventDetailPage() {
     const params = useParams();
@@ -81,6 +89,15 @@ export default function EventDetailPage() {
                     <h2 className="text-lg font-semibold mb-2">About This Event</h2>
                     <p className="text-slate-600 leading-relaxed">{event.description_en}</p>
                     <p className="text-slate-400 text-sm mt-3 italic">{event.description_es}</p>
+                </div>
+
+                <div className="mb-6">
+                    <h2 className="text-lg font-semibold mb-2">Location Map</h2>
+                    <EventMapbox
+                        latitude={event.latitude}
+                        longitude={event.longitude}
+                        location_name={event.location_name}
+                    />
                 </div>
 
                 <div className="flex flex-wrap gap-3">

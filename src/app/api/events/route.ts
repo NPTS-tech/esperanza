@@ -101,6 +101,7 @@ export async function GET(request: NextRequest) {
           { description_en: { contains: search, mode: "insensitive" } },
           { description_es: { contains: search, mode: "insensitive" } },
           { location_name: { contains: search, mode: "insensitive" } },
+          { location_address: { contains: search, mode: "insensitive" } },
         ],
       };
 

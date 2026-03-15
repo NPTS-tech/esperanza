@@ -20,6 +20,8 @@ export default function ProviderDashboard() {
         description_en: "",
         description_es: "",
         location_name: "",
+        latitude: null as number | null,
+        longitude: null as number | null,
         category: "",
         date: "",
         start_time: "",
@@ -31,7 +33,8 @@ export default function ProviderDashboard() {
         alert("Mock: Event submitted for admin review!");
         set_new_event({
             title_en: "", title_es: "", description_en: "", description_es: "",
-            location_name: "", category: "", date: "", start_time: "", end_time: "",
+            location_name: "", latitude: null, longitude: null,
+            category: "", date: "", start_time: "", end_time: "",
         });
     }
 
@@ -132,9 +135,12 @@ export default function ProviderDashboard() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700 block mb-1">Location</label>
+                                    <label className="text-sm font-medium text-slate-700 block mb-1">Location (address)</label>
                                     <input className="input" required value={new_event.location_name}
                                         onChange={(e) => set_new_event({ ...new_event, location_name: e.target.value })} />
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        In production, this uses Mapbox address autocomplete + a draggable pin map.
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-slate-700 block mb-1">Category</label>

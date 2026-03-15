@@ -11,6 +11,7 @@ export interface EventData {
   description_en: string;
   description_es: string;
   location_name: string;
+  location_address?: string | null;
   latitude: number;
   longitude: number;
   start_time: string;
@@ -79,7 +80,7 @@ export default function EventCard({ event, show_status = false }: EventCardProps
           {title}
         </h3>
 
-        {/* Category — plain muted label, no color badge */}
+        {/* Category */}
         <p
           className="text-[10px] font-semibold uppercase tracking-widest mb-3"
           style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
@@ -101,6 +102,7 @@ export default function EventCard({ event, show_status = false }: EventCardProps
             <MapPin size={11} strokeWidth={2} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
             <span className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
               {event.location_name}
+              {event.location_address ? ` · ${event.location_address}` : ""}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -116,6 +118,17 @@ export default function EventCard({ event, show_status = false }: EventCardProps
             </span>
           </div>
         </div>
+
+        {/* Google Maps link */}
+        
+          href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary text-sm no-underline mt-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {t("get_directions")}
+        </a>
 
         {/* Status — providers/admins only */}
         {show_status && (

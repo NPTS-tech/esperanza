@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
-import "leaflet/dist/leaflet.css";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import type { EventData } from "@/components/event_card";
 
 // ── Exported so map_page can reuse the same colors/emojis ──
@@ -32,45 +33,59 @@ interface MapViewProps {
   onBoundsChange: (bounds: MapBounds) => void;
 }
 
-// Build a circle + downward-pointer divIcon for each category
-function make_icon(L: any, category: string, selected: boolean) {
+const DALLAS_CENTER: [number, number] = [-96.797, 32.7767];
+
+function escape_html(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+// Build a custom category marker (emoji + colored pin)
+function make_marker_element(category: string, selected: boolean) {
   const cfg = CATEGORY_CONFIG[category] ?? CATEGORY_CONFIG["Other"];
-  const size   = selected ? 42 : 32;
-  const tri    = selected ? 9  : 7;
-  const total  = size + tri;
+  const size = selected ? 42 : 32;
+  const tri = selected ? 9 : 7;
   const shadow = selected ? 12 : 5;
-  const alpha  = selected ? 0.45 : 0.28;
-  const fs     = selected ? 19 : 14;
+  const alpha = selected ? 0.45 : 0.28;
+  const fs = selected ? 19 : 14;
 
-  const html = `
-    <div style="text-align:center;">
-      <div style="
-        background:${cfg.color};
-        width:${size}px;height:${size}px;
-        border-radius:50%;
-        border:2.5px solid white;
-        box-shadow:0 2px ${shadow}px rgba(0,0,0,${alpha});
-        display:flex;align-items:center;justify-content:center;
-        font-size:${fs}px;
-        margin:0 auto;
-        ${selected ? `outline:3px solid ${cfg.color}38;outline-offset:2px;` : ""}
-      ">${cfg.emoji}</div>
-      <div style="
-        width:0;height:0;
-        border-left:${tri - 2}px solid transparent;
-        border-right:${tri - 2}px solid transparent;
-        border-top:${tri}px solid ${cfg.color};
-        margin:-1px auto 0;
-      "></div>
-    </div>`;
+  const root = document.createElement("div");
+  root.style.textAlign = "center";
+  root.style.cursor = "pointer";
 
-  return L.divIcon({
-    html,
-    className: "",
-    iconSize:     [size, total],
-    iconAnchor:   [size / 2, total],
-    popupAnchor:  [0, -(total + 4)],
-  });
+  const circle = document.createElement("div");
+  circle.style.background = cfg.color;
+  circle.style.width = `${size}px`;
+  circle.style.height = `${size}px`;
+  circle.style.borderRadius = "50%";
+  circle.style.border = "2.5px solid white";
+  circle.style.boxShadow = `0 2px ${shadow}px rgba(0,0,0,${alpha})`;
+  circle.style.display = "flex";
+  circle.style.alignItems = "center";
+  circle.style.justifyContent = "center";
+  circle.style.fontSize = `${fs}px`;
+  circle.style.margin = "0 auto";
+  if (selected) {
+    circle.style.outline = `3px solid ${cfg.color}38`;
+    circle.style.outlineOffset = "2px";
+  }
+  circle.textContent = cfg.emoji;
+
+  const pointer = document.createElement("div");
+  pointer.style.width = "0";
+  pointer.style.height = "0";
+  pointer.style.borderLeft = `${tri - 2}px solid transparent`;
+  pointer.style.borderRight = `${tri - 2}px solid transparent`;
+  pointer.style.borderTop = `${tri}px solid ${cfg.color}`;
+  pointer.style.margin = "-1px auto 0";
+
+  root.appendChild(circle);
+  root.appendChild(pointer);
+  return root;
 }
 
 export default function MapView({
@@ -80,10 +95,11 @@ export default function MapView({
   onBoundsChange,
 }: MapViewProps) {
   const locale        = useLocale();
+  const token         = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
   const container_ref = useRef<HTMLDivElement>(null);
-  const map_ref       = useRef<any>(null);
-  const markers_ref   = useRef<any[]>([]);
-  const marker_map    = useRef<Map<string, any>>(new Map());
+  const map_ref       = useRef<mapboxgl.Map | null>(null);
+  const markers_ref   = useRef<mapboxgl.Marker[]>([]);
+  const marker_map    = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const has_fit       = useRef(false);
 
   // Keep callback refs fresh without re-running effects
@@ -94,30 +110,22 @@ export default function MapView({
 
   // ── Init map once ──
   useEffect(() => {
-    if (!container_ref.current || map_ref.current) return;
+    if (!token || !container_ref.current || map_ref.current) return;
 
-    const L = require("leaflet");
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    mapboxgl.accessToken = token;
 
-    const map = L.map(container_ref.current, {
-      zoomControl: true,
-      attributionControl: true,
-    }).setView([32.7767, -96.797], 11);
+    const map = new mapboxgl.Map({
+      container: container_ref.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: DALLAS_CENTER,
+      zoom: 11,
+    });
 
-    // CartoDB Light — clean, minimal, readable
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
-          '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 19,
-      },
-    ).addTo(map);
+    map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
     const fire_bounds = () => {
       const b = map.getBounds();
+      if (!b) return;
       bounds_cb.current({
         north: b.getNorth(),
         south: b.getSouth(),
@@ -128,23 +136,23 @@ export default function MapView({
 
     map.on("moveend", fire_bounds);
     map.on("zoomend", fire_bounds);
-    // Give tiles a moment to load before first bounds fire
-    map.whenReady(() => setTimeout(fire_bounds, 250));
+    map.on("load", () => setTimeout(fire_bounds, 100));
 
     map_ref.current = map;
 
     return () => {
+      markers_ref.current.forEach((m) => m.remove());
+      markers_ref.current = [];
+      marker_map.current.clear();
       map.remove();
       map_ref.current = null;
       has_fit.current = false;
     };
-  }, []);
+  }, [token]);
 
   // ── Update markers whenever events / selection / locale changes ──
   useEffect(() => {
     if (!map_ref.current) return;
-
-    const L   = require("leaflet");
     const map = map_ref.current;
 
     // Clear old markers
@@ -164,6 +172,10 @@ export default function MapView({
       const time_str = new Date(event.start_time).toLocaleTimeString(loc, {
         hour: "numeric", minute: "2-digit",
       });
+      const safe_title = escape_html(title);
+      const safe_cat = escape_html(event.category);
+      const safe_loc = escape_html(event.location_name);
+      const safe_id = encodeURIComponent(event.id);
 
       const popup_html = `
         <div style="width:215px;font-family:system-ui,-apple-system,sans-serif;padding:2px 0;">
@@ -172,12 +184,12 @@ export default function MapView({
             background:${cfg.color}15;color:${cfg.color};
             font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
             padding:3px 9px;border-radius:999px;margin-bottom:8px;
-          ">${cfg.emoji} ${event.category}</div>
+          ">${cfg.emoji} ${safe_cat}</div>
 
           <div style="
             font-size:13.5px;font-weight:700;color:#111827;
             line-height:1.35;margin-bottom:7px;
-          ">${title}</div>
+          ">${safe_title}</div>
 
           <div style="font-size:11px;color:#6b7280;margin-bottom:3px;">
             📅 ${date_str} &middot; ${time_str}
@@ -185,9 +197,9 @@ export default function MapView({
           <div style="
             font-size:11px;color:#6b7280;margin-bottom:11px;
             overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-          ">📍 ${event.location_name}</div>
+          ">📍 ${safe_loc}</div>
 
-          <a href="/events/${event.id}" style="
+          <a href="/events/${safe_id}" style="
             display:block;text-align:center;
             background:${cfg.color};color:#fff;
             font-size:12px;font-weight:600;
@@ -196,17 +208,18 @@ export default function MapView({
           ">View Details →</a>
         </div>`;
 
-      const marker = L.marker([event.latitude, event.longitude], {
-        icon:        make_icon(L, event.category, is_sel),
-        zIndexOffset: is_sel ? 1000 : 0,
+      const marker = new mapboxgl.Marker({
+        element: make_marker_element(event.category, is_sel),
+        anchor: "bottom",
       })
-        .addTo(map)
-        .bindPopup(popup_html, { maxWidth: 240, closeButton: false })
-        .on("click", () => click_cb.current(event.id));
+        .setLngLat([event.longitude, event.latitude])
+        .setPopup(new mapboxgl.Popup({ closeButton: false, offset: 16 }).setHTML(popup_html))
+        .addTo(map);
+
+      marker.getElement().addEventListener("click", () => click_cb.current(event.id));
 
       if (is_sel) {
-        // Small delay so the marker renders before popup opens
-        setTimeout(() => marker.openPopup(), 60);
+        setTimeout(() => marker.togglePopup(), 60);
       }
 
       marker_map.current.set(event.id, marker);
@@ -215,13 +228,37 @@ export default function MapView({
 
     // Fit bounds once on first data load only
     if (!has_fit.current && events.length > 0) {
-      try {
-        const group = require("leaflet").featureGroup(markers_ref.current);
-        map.fitBounds(group.getBounds().pad(0.15));
-      } catch {}
+      const bounds = new mapboxgl.LngLatBounds();
+      events.forEach((event) => bounds.extend([event.longitude, event.latitude]));
+      map.fitBounds(bounds, { padding: 60, maxZoom: 14 });
       has_fit.current = true;
     }
+    if (events.length === 0) {
+      map.flyTo({ center: DALLAS_CENTER, zoom: 11 });
+    }
   }, [events, selected_id, locale]);
+
+  if (!token) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--color-surface-hover, #f1f5f9)",
+          borderRadius: "var(--radius)",
+          color: "var(--color-text-secondary)",
+          fontSize: 13,
+          textAlign: "center",
+          padding: 16,
+        }}
+      >
+        Missing NEXT_PUBLIC_MAPBOX_TOKEN
+      </div>
+    );
+  }
 
   return (
     <div

@@ -7,7 +7,7 @@ import type { EventData } from "@/components/event_card";
 import { EVENT_CATEGORIES } from "@/lib/validators/event";
 import { CATEGORY_CONFIG, type MapBounds } from "@/components/map_view";
 
-// Loaded client-only — no SSR for Leaflet
+// Loaded client-only — no SSR for Mapbox
 const MapView = dynamic(() => import("@/components/map_view"), {
   ssr: false,
   loading: () => (
@@ -99,6 +99,7 @@ export function MapPageClient({
       return (
         title.toLowerCase().includes(q) ||
         e.location_name.toLowerCase().includes(q) ||
+        (e.location_address ?? "").toLowerCase().includes(q) ||
         e.category.toLowerCase().includes(q)
       );
     });
@@ -461,6 +462,7 @@ function MiniEventCard({
         style={{ fontSize: 10.5, color: "var(--color-text-secondary)" }}
       >
         📍 {event.location_name}
+        {event.location_address ? ` · ${event.location_address}` : ""}
       </div>
 
       {/* View details link — stopPropagation so card click doesn't fire too */}
