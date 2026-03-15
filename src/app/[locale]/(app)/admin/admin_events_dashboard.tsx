@@ -106,13 +106,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
   const [pending_count, set_pending_count] = useState(0);
   const [loading, set_loading] = useState(true);
   const [error, set_error] = useState<string | null>(null);
-  const [status_action_loading_id, set_status_action_loading_id] = useState<
-    string | null
-  >(null);
-  const [delete_action_loading_id, set_delete_action_loading_id] = useState<
-    string | null
-  >(null);
-  const [action_message, set_action_message] = useState<string | null>(null);
+  const review_label = locale === "es" ? "Revisar" : "Review";
 
   const approved_count = useMemo(
     () => events.filter((e) => e.status === "APPROVED").length,
@@ -135,7 +129,6 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
   const fetch_events = useCallback(async () => {
     set_loading(true);
     set_error(null);
-    set_action_message(null);
 
     try {
       const [all_res, pending_res] = await Promise.all([
@@ -166,60 +159,6 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
     fetch_events();
   }, [fetch_events]);
 
-  async function handle_status_update(
-    event_id: string,
-    status: "APPROVED" | "REJECTED",
-  ) {
-    set_status_action_loading_id(event_id);
-    set_action_message(null);
-
-    try {
-      const response = await fetch(`/api/events/${event_id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Status update failed");
-      }
-
-      await fetch_events();
-      set_action_message(props.status_update_success);
-    } catch {
-      set_action_message(props.status_update_error);
-    } finally {
-      set_status_action_loading_id(null);
-    }
-  }
-
-  async function handle_delete_event(event_id: string) {
-    const confirmed = window.confirm(props.delete_confirm);
-    if (!confirmed) return;
-
-    set_delete_action_loading_id(event_id);
-    set_action_message(null);
-
-    try {
-      const response = await fetch(`/api/events/${event_id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Delete failed");
-      }
-
-      await fetch_events();
-      set_action_message(props.delete_success);
-    } catch {
-      set_action_message(props.delete_error);
-    } finally {
-      set_delete_action_loading_id(null);
-    }
-  }
-
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       {loading && (
@@ -239,15 +178,6 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
           <Button size="sm" variant="secondary" onClick={fetch_events}>
             {props.retry}
           </Button>
-        </div>
-      )}
-
-      {action_message && (
-        <div
-          className="card p-3 text-sm"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          {action_message}
         </div>
       )}
 
@@ -384,7 +314,13 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                       className="px-4 py-2 text-sm"
                       style={{ color: "var(--color-text)" }}
                     >
-                      {evt.title_en}
+                        <Link
+                          href={`/events/${evt.id}`}
+                          className="font-medium underline underline-offset-2 decoration-transparent hover:decoration-current"
+                          style={{ color: "var(--color-text)" }}
+                        >
+                          {evt.title_en}
+                        </Link>
                     </td>
                     <td
                       className="px-4 py-2 text-sm"
@@ -410,42 +346,12 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() =>
-                            handle_status_update(evt.id, "APPROVED")
-                          }
-                          disabled={status_action_loading_id === evt.id}
-                        >
-                          {props.approve}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            handle_status_update(evt.id, "REJECTED")
-                          }
-                          disabled={status_action_loading_id === evt.id}
-                        >
-                          {props.reject}
-                        </Button>
                         <Link
-                          href={`/admin/events/${evt.id}/edit`}
+                          href={`/events/${evt.id}`}
                           className="inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground"
                         >
-                          {props.edit}
+                          {review_label}
                         </Link>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handle_delete_event(evt.id)}
-                          disabled={delete_action_loading_id === evt.id}
-                        >
-                          {delete_action_loading_id === evt.id
-                            ? props.deleting
-                            : props.delete}
-                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -553,21 +459,11 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                   <td className="px-4 py-2">
                     <div className="flex gap-2">
                       <Link
-                        href={`/admin/events/${evt.id}/edit`}
+                        href={`/events/${evt.id}`}
                         className="inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground"
                       >
-                        {props.edit}
+                        {review_label}
                       </Link>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handle_delete_event(evt.id)}
-                        disabled={delete_action_loading_id === evt.id}
-                      >
-                        {delete_action_loading_id === evt.id
-                          ? props.deleting
-                          : props.delete}
-                      </Button>
                     </div>
                   </td>
                 </tr>

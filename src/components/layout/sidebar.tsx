@@ -61,8 +61,8 @@ function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
         return [
             {
                 items: [
-                    { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
                     { key: "events",    label: labels.nav_events,    href: "/admin/events",    icon: <CalendarDays size={SZ} /> },
+                    { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
                     { key: "users",     label: labels.nav_users,     href: "/admin/users",   icon: <Users size={SZ} /> },
                 ],
             },

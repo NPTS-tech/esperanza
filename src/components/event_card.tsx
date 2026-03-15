@@ -28,7 +28,6 @@ export interface EventData {
 
 interface EventCardProps {
   event: EventData;
-  show_status?: boolean;
 }
 
 function format_date(date_string: string, locale: string) {
@@ -45,7 +44,7 @@ function format_time(date_string: string, locale: string) {
   );
 }
 
-export default function EventCard({ event, show_status = false }: EventCardProps) {
+export default function EventCard({ event }: EventCardProps) {
   const t = useTranslations("Events");
   const locale = useLocale();
 
@@ -119,30 +118,6 @@ export default function EventCard({ event, show_status = false }: EventCardProps
           </div>
         </div>
 
-        {/* Google Maps link */}
-        <button
-          className="btn btn-secondary text-sm no-underline mt-3 text-left"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.open(
-              `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`,
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }}
-        >
-          {t("get_directions")}
-        </button>
-
-        {/* Status — providers/admins only */}
-        {show_status && (
-          <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--color-border)" }}>
-            <span className={`badge badge-${event.status.toLowerCase()} text-[10px]`}>
-              {t(`status_${event.status.toLowerCase()}` as any)}
-            </span>
-          </div>
-        )}
       </div>
     </Link>
   );

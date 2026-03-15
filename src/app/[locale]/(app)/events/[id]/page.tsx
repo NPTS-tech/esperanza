@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
+import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X } from "lucide-react";
 import type { EventData } from "@/components/event_card";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
@@ -45,9 +46,10 @@ export default function EventDetailPage() {
   const [event, set_event] = useState<EventData | null>(null);
   const [loading, set_loading] = useState(true);
   const [error, set_error] = useState<string | null>(null);
-  const [deleting, set_deleting] = useState(false);
   const [rsvped, set_rsvped] = useState(false);
   const [rsvp_loading, set_rsvp_loading] = useState(false);
+  const [admin_status_loading, set_admin_status_loading] = useState(false);
+  const [admin_delete_loading, set_admin_delete_loading] = useState(false);
 
   const fetch_event = useCallback(async () => {
     set_loading(true);
@@ -84,24 +86,6 @@ export default function EventDetailPage() {
     fetch_event();
   }, [fetch_event]);
 
-  async function handle_delete() {
-    if (!window.confirm(t("delete_confirm"))) return;
-    set_deleting(true);
-    try {
-      const res = await fetch(`/api/events/${event_id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json();
-        set_error(data.error || t("error_loading"));
-        set_deleting(false);
-        return;
-      }
-      router.push("/events");
-    } catch {
-      set_error(t("error_loading"));
-      set_deleting(false);
-    }
-  }
-
   async function handle_rsvp() {
     set_rsvp_loading(true);
     try {
@@ -128,6 +112,47 @@ export default function EventDetailPage() {
       set_error(t("error_loading"));
     } finally {
       set_rsvp_loading(false);
+    }
+  }
+
+  async function handle_admin_status_update(status: "APPROVED" | "REJECTED") {
+    set_admin_status_loading(true);
+    set_error(null);
+    try {
+      const res = await fetch(`/api/events/${event_id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!res.ok) throw new Error("Status update failed");
+
+      const updated: EventData = await res.json();
+      set_event(updated);
+    } catch {
+      set_error(t("error_loading"));
+    } finally {
+      set_admin_status_loading(false);
+    }
+  }
+
+  async function handle_admin_delete() {
+    const confirm_text =
+      locale === "es"
+        ? "¿Seguro que deseas eliminar este evento?"
+        : "Are you sure you want to delete this event?";
+
+    if (!window.confirm(confirm_text)) return;
+
+    set_admin_delete_loading(true);
+    set_error(null);
+    try {
+      const res = await fetch(`/api/events/${event_id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      router.push("/admin/events");
+    } catch {
+      set_error(t("error_loading"));
+      set_admin_delete_loading(false);
     }
   }
 
@@ -171,200 +196,275 @@ export default function EventDetailPage() {
     locale === "es" ? event.description_es : event.description_en;
   const description_alt =
     locale === "es" ? event.description_en : event.description_es;
-  const category_class = `badge badge-${event.category.toLowerCase().replace(/\s+/g, "")}`;
+  const category_label = t(`cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any);
+  const manage_event_label = locale === "es" ? "Gestionar evento" : "Manage event";
 
   const is_own = session?.user?.id === event.provider_id;
   const is_admin = session?.user?.role === "ADMIN";
   const can_edit = is_own || is_admin;
+  const back_href = is_admin ? "/admin/events" : "/events";
+  const approve_label = locale === "es" ? "Aprobar" : "Approve";
+  const reject_label = locale === "es" ? "Rechazar" : "Reject";
+  const delete_label = locale === "es" ? "Eliminar" : "Delete";
+  const admin_options_label = locale === "es" ? "Opciones de admin" : "Admin options";
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      {/* Back link */}
       <Link
-        href="/events"
-        className="text-sm mb-4 inline-block no-underline"
-        style={{ color: "var(--color-primary)" }}
+        href={back_href}
+        className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-5"
+        style={{ color: "var(--color-text-secondary)" }}
       >
-        ← {t("back_to_events")}
+        <span style={{ fontSize: 16, lineHeight: 1 }}>‹</span>
+        {t("back_to_events")}
       </Link>
 
-      <div className="card p-6 sm:p-8">
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className={category_class}>
-            {t(
-              `cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any,
-            )}
-          </span>
-          <span className={`badge badge-${event.status.toLowerCase()}`}>
-            {t(`status_${event.status.toLowerCase()}` as any)}
-          </span>
-          {event._count.rsvps > 0 && (
+      <div className="card card-no-hover overflow-hidden">
+
+        {/* Hero image or color band */}
+        {event.image_url ? (
+          <div style={{ height: 240, overflow: "hidden" }}>
+            <img
+              src={event.image_url}
+              alt={title}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              height: 8,
+              background: "linear-gradient(90deg, var(--color-primary), var(--color-accent))",
+            }}
+          />
+        )}
+
+        <div className="p-6 sm:p-8">
+          {/* Category pill */}
+          <div className="mb-4">
             <span
-              className="badge"
               style={{
-                background: "var(--color-surface-hover)",
-                color: "var(--color-text-secondary)",
+                display: "inline-block",
+                padding: "3px 10px",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                borderRadius: 999,
+                background: "var(--color-primary-light)",
+                color: "#fff",
               }}
             >
-              {t("rsvp_count", { count: event._count.rsvps })}
+              {category_label}
             </span>
-          )}
-        </div>
-
-        {/* Title */}
-        <h1
-          className="text-2xl sm:text-3xl font-bold mb-2"
-          style={{ color: "var(--color-text)" }}
-        >
-          {title}
-        </h1>
-        <p
-          className="text-sm mb-6 italic"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          {title_alt}
-        </p>
-
-        {/* Info box */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 rounded-xl"
-          style={{ background: "var(--color-surface-hover)" }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-xl">📅</span>
-            <div>
-              <p
-                className="text-xs uppercase font-semibold"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("date")}
-              </p>
-              <p
-                className="text-sm font-medium"
-                style={{ color: "var(--color-text)" }}
-              >
-                {format_date(event.start_time, locale)}
-              </p>
-            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🕐</span>
-            <div>
-              <p
-                className="text-xs uppercase font-semibold"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("time")}
-              </p>
-              <p
-                className="text-sm font-medium"
-                style={{ color: "var(--color-text)" }}
-              >
-                {format_time(event.start_time, locale)} –{" "}
-                {format_time(event.end_time, locale)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 sm:col-span-2">
-            <span className="text-xl">📍</span>
-            <div>
-              <p
-                className="text-xs uppercase font-semibold"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("location")}
-              </p>
-              <p
-                className="text-sm font-medium"
-                style={{ color: "var(--color-text)" }}
-              >
-                {event.location_name}
-                {event.location_address ? (
-                  <>
-                    <br />
-                    <span style={{ color: "var(--color-text-secondary)" }}>
-                      {event.location_address}
-                    </span>
-                  </>
-                ) : null}
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* Description */}
-        <div className="mb-6">
-          <h2
-            className="text-lg font-semibold mb-2"
+          {/* Title */}
+          <h1
+            className="text-2xl sm:text-3xl font-bold leading-tight mb-1"
             style={{ color: "var(--color-text)" }}
           >
-            {t("about_event")}
-          </h2>
-          <p
-            className="leading-relaxed"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {description}
-          </p>
-          <p
-            className="text-sm mt-3 italic"
-            style={{ color: "var(--color-text-secondary)", opacity: 0.7 }}
-          >
-            {description_alt}
-          </p>
-        </div>
-
-        {/* Map */}
-        <div className="mb-6">
-          <EventMap
-            latitude={event.latitude}
-            longitude={event.longitude}
-            locationName={event.location_name}
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3">
-          {session?.user && (
-            <button
-              onClick={handle_rsvp}
-              disabled={rsvp_loading}
-              className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
+            {title}
+          </h1>
+          {title_alt && title_alt !== title && (
+            <p
+              className="text-sm italic mb-6"
+              style={{ color: "var(--color-text-secondary)", opacity: 0.65 }}
             >
-              {rsvp_loading
-                ? t("rsvp_loading")
-                : rsvped
-                  ? `✅ ${t("rsvped")}`
-                  : `🤝 ${t("rsvp")}`}
-            </button>
-          )}
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-secondary no-underline"
-          >
-            🧭 {t("get_directions")}
-          </a>
-
-          {can_edit && (
-            <Link
-              href={`/events/${event.id}/edit`}
-              className="btn btn-accent no-underline"
-            >
-              ✏️ {t("edit_event")}
-            </Link>
+              {title_alt}
+            </p>
           )}
 
-          {can_edit && (
-            <button
-              onClick={handle_delete}
-              disabled={deleting}
-              className="btn btn-danger"
-            >
-              {deleting ? t("deleting") : `🗑️ ${t("delete_event")}`}
-            </button>
+          {/* Divider */}
+          <div style={{ height: 1, background: "var(--color-border)", margin: "20px 0" }} />
+
+          {/* Info grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: "var(--color-surface-hover)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <CalendarDays size={16} style={{ color: "var(--color-primary)" }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+                  {t("date")}
+                </p>
+                <p className="text-sm font-medium mt-0.5" style={{ color: "var(--color-text)" }}>
+                  {format_date(event.start_time, locale)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: "var(--color-surface-hover)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <Clock size={16} style={{ color: "var(--color-primary)" }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+                  {t("time")}
+                </p>
+                <p className="text-sm font-medium mt-0.5" style={{ color: "var(--color-text)" }}>
+                  {format_time(event.start_time, locale)} – {format_time(event.end_time, locale)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: "var(--color-surface-hover)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <MapPin size={16} style={{ color: "var(--color-primary)" }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+                  {t("location")}
+                </p>
+                <p className="text-sm font-medium mt-0.5" style={{ color: "var(--color-text)" }}>
+                  {event.location_name}
+                </p>
+                {event.location_address && (
+                  <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                    {event.location_address}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "var(--color-border)", margin: "20px 0" }} />
+
+          {/* Description */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold mb-3" style={{ color: "var(--color-text)" }}>
+              {t("about_event")}
+            </h2>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+              {description}
+            </p>
+            {description_alt && description_alt !== description && (
+              <p
+                className="text-sm mt-3 italic leading-relaxed"
+                style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
+              >
+                {description_alt}
+              </p>
+            )}
+          </div>
+
+          {/* Map */}
+          <div className="mb-6 rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
+            <EventMap
+              latitude={event.latitude}
+              longitude={event.longitude}
+              locationName={event.location_name}
+            />
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "var(--color-border)", margin: "20px 0" }} />
+
+          {/* Admin moderation */}
+          {is_admin && (
+            <>
+              <div
+                className="mb-6 p-4 rounded-xl"
+                style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-border)" }}
+              >
+                <p className="text-xs uppercase font-semibold tracking-wider mb-3" style={{ color: "var(--color-text-secondary)" }}>
+                  {admin_options_label}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {event.status !== "APPROVED" && (
+                    <button
+                      onClick={() => handle_admin_status_update("APPROVED")}
+                      disabled={admin_status_loading || admin_delete_loading}
+                      className="btn btn-primary"
+                    >
+                      <Check size={15} />
+                      {approve_label}
+                    </button>
+                  )}
+                  {event.status === "PENDING" && (
+                    <button
+                      onClick={() => handle_admin_status_update("REJECTED")}
+                      disabled={admin_status_loading || admin_delete_loading}
+                      className="btn btn-secondary"
+                    >
+                      <X size={15} />
+                      {reject_label}
+                    </button>
+                  )}
+                  <Link
+                    href={`/events/${event.id}/edit`}
+                    className="btn btn-accent no-underline"
+                  >
+                    <Pencil size={15} />
+                    {manage_event_label}
+                  </Link>
+                  <button
+                    onClick={handle_admin_delete}
+                    disabled={admin_status_loading || admin_delete_loading}
+                    className="btn btn-danger"
+                  >
+                    <Trash2 size={15} />
+                    {admin_delete_loading ? t("loading") : delete_label}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: "var(--color-border)", margin: "20px 0" }} />
+            </>
           )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2">
+            {session?.user && (
+              <button
+                onClick={handle_rsvp}
+                disabled={rsvp_loading}
+                className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
+              >
+                {rsvped ? <CheckCircle2 size={15} /> : <CalendarPlus size={15} />}
+                {rsvp_loading ? t("rsvp_loading") : rsvped ? t("rsvped") : t("rsvp")}
+              </button>
+            )}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary no-underline"
+            >
+              <Navigation size={15} />
+              {t("get_directions")}
+            </a>
+
+            {can_edit && !is_admin && (
+              <Link
+                href={`/events/${event.id}/edit`}
+                className="btn btn-accent no-underline"
+              >
+                <Pencil size={15} />
+                {manage_event_label}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

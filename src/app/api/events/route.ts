@@ -60,13 +60,16 @@ export async function GET(request: NextRequest) {
       // Hardcoded to APPROVED regardless of any status query param
       where.status = "APPROVED";
     } else if (role === "PROVIDER") {
-      if (status && status !== "APPROVED") {
+      if (status === "APPROVED") {
+        // Explicit approved filter — show only approved events (same as USER)
+        where.status = "APPROVED";
+      } else if (status && status !== "APPROVED") {
         // Provider is filtering by a non-public status (e.g. PENDING)
-        // Return only their own events with that status 
+        // Return only their own events with that status
         where.provider_id = user_id;
         where.status = status;
       } else {
-        // show all approved public events plus all of their own events
+        // No status filter — show all approved public events plus all of their own events
         where.OR = [{ status: "APPROVED" }, { provider_id: user_id }];
       }
     } else if (role === "ADMIN") {
