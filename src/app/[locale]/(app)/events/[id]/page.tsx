@@ -446,7 +446,9 @@ export default function EventDetailPage() {
               </button>
             )}
             <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                event.location_address || event.location_name,
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary no-underline"
