@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 
 type ApiEvent = {
     id: string;
@@ -85,7 +86,8 @@ export function AdminAnalyticsDashboard(props: AdminAnalyticsDashboardProps) {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="card p-4">
+            <Link href="/events" className="no-underline block">
+            <div className="card p-4" style={{ cursor: "pointer" }}>
                 <div className="flex items-center gap-3">
                     <CalendarDays
                         size={20}
@@ -107,7 +109,9 @@ export function AdminAnalyticsDashboard(props: AdminAnalyticsDashboardProps) {
                     </div>
                 </div>
             </div>
-            <div className="card p-4">
+            </Link>
+            <Link href="/admin/events" className="no-underline block">
+            <div className="card p-4" style={{ cursor: "pointer" }}>
                 <div className="flex items-center gap-3">
                     <AlertCircle size={20} style={{ color: "var(--color-warning)" }} />
                     <div>
@@ -126,6 +130,7 @@ export function AdminAnalyticsDashboard(props: AdminAnalyticsDashboardProps) {
                     </div>
                 </div>
             </div>
+            </Link>
             <div className="card p-4">
                 <div className="flex items-center gap-3">
                     <Ticket size={20} style={{ color: "var(--color-accent)" }} />

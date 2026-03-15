@@ -611,20 +611,28 @@ export default function EventForm({
                   className="text-xs"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
-                  PNG, JPG, WEBP • Max 5MB
+                  PNG, JPG, WEBP • Max 5MB • Landscape (16:9) recommended
                 </p>
               </div>
             </div>
           </label>
 
+          <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+            Square and portrait images are accepted and will be center-cropped to fit a horizontal frame.
+          </p>
+
           {form.image_url && (
             <div className="space-y-2">
-              <img
-                src={form.image_url}
-                alt="Uploaded event"
-                className="w-full max-w-sm rounded-lg"
-                style={{ border: "1px solid var(--color-border)" }}
-              />
+              <div
+                className="w-full max-w-sm rounded-lg overflow-hidden"
+                style={{ border: "1px solid var(--color-border)", aspectRatio: "16 / 9" }}
+              >
+                <img
+                  src={form.image_url}
+                  alt="Uploaded event"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
+                />
+              </div>
               <div className="flex gap-2">
                 <a
                   href={form.image_url}
