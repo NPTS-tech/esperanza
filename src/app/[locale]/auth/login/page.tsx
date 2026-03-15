@@ -41,7 +41,13 @@ export default function LoginPage() {
             return;
         }
 
-        window.location.href = `/${activeLocale}`;
+        const session_res = await fetch("/api/auth/session");
+        const session_data = await session_res.json();
+        if (session_data?.user?.role === "ADMIN") {
+            window.location.href = `/${activeLocale}/admin/analytics`;
+        } else {
+            window.location.href = `/${activeLocale}`;
+        }
     }
 
     return (
