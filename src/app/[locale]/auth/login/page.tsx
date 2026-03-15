@@ -43,10 +43,12 @@ export default function LoginPage() {
 
         const session_res = await fetch("/api/auth/session");
         const session_data = await session_res.json();
+        const is_kiosk = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("kiosk") === "true";
         if (session_data?.user?.role === "ADMIN") {
             window.location.href = `/${activeLocale}/admin/analytics`;
         } else {
-            window.location.href = `/${activeLocale}`;
+            const user_base = `/${activeLocale}`;
+            window.location.href = is_kiosk ? `${user_base}?kiosk=true` : user_base;
         }
     }
 
