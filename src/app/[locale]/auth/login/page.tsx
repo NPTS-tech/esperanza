@@ -41,7 +41,15 @@ export default function LoginPage() {
             return;
         }
 
-        window.location.href = `/${activeLocale}`;
+        const session_res = await fetch("/api/auth/session");
+        const session_data = await session_res.json();
+        const is_kiosk = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("kiosk") === "true";
+        if (session_data?.user?.role === "ADMIN") {
+            window.location.href = `/${activeLocale}/admin/analytics`;
+        } else {
+            const user_base = `/${activeLocale}`;
+            window.location.href = is_kiosk ? `${user_base}?kiosk=true` : user_base;
+        }
     }
 
     return (

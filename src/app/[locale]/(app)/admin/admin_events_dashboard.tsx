@@ -1,22 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Users, CalendarDays, AlertCircle, Ticket } from "lucide-react";
+import { CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
-import { mock_users, type MockUser } from "@/lib/mock_data";
 import { useLocale } from "next-intl";
 
-export type AdminDashboardProps = {
+export type AdminEventsDashboardProps = {
   title: string;
   subtitle: string;
   pending_events: string;
   all_events: string;
-  user_management: string;
   approve: string;
   reject: string;
   deactivate: string;
-  total_users: string;
   total_events: string;
   pending_approvals: string;
   total_rsvps: string;
@@ -26,17 +23,12 @@ export type AdminDashboardProps = {
   date: string;
   status: string;
   actions: string;
-  email: string;
-  role: string;
-  created: string;
   no_pending: string;
-  deactivated: string;
   loading_events: string;
   error_loading_events: string;
   retry: string;
   status_update_success: string;
   status_update_error: string;
-  user_management_read_only: string;
   status_cancelled: string;
   edit: string;
   delete: string;
@@ -87,7 +79,7 @@ function get_category_badge_class(category: string): string {
 
 function get_status_label(
   status: EventStatus,
-  props: AdminDashboardProps,
+  props: AdminEventsDashboardProps,
 ): string {
   if (status === "CANCELLED") {
     return props.status_cancelled;
@@ -106,11 +98,8 @@ function format_date(iso_string: string, locale: string): string {
   }).format(d);
 }
 
-
-
-export function AdminDashboard(props: AdminDashboardProps) {
+export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
   const locale = useLocale();
-  const [users] = useState<MockUser[]>(() => [...mock_users]);
   const [events, set_events] = useState<ApiEvent[]>([]);
   const [pending_events, set_pending_events] = useState<ApiEvent[]>([]);
   const [total_events_count, set_total_events_count] = useState(0);
@@ -177,8 +166,6 @@ export function AdminDashboard(props: AdminDashboardProps) {
     fetch_events();
   }, [fetch_events]);
 
-
-
   async function handle_status_update(
     event_id: string,
     status: "APPROVED" | "REJECTED",
@@ -233,8 +220,6 @@ export function AdminDashboard(props: AdminDashboardProps) {
     }
   }
 
-
-
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       {loading && (
@@ -266,26 +251,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <div className="flex items-center gap-3">
-            <Users size={20} style={{ color: "var(--color-primary)" }} />
-            <div>
-              <p
-                className="text-xs font-medium"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {props.total_users}
-              </p>
-              <p
-                className="text-xl font-bold"
-                style={{ color: "var(--color-text)" }}
-              >
-                {users.length}
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <CalendarDays
@@ -573,12 +539,12 @@ export function AdminDashboard(props: AdminDashboardProps) {
                       {evt.category}
                     </span>
                   </td>
-                    <td
-                      className="px-4 py-2 text-sm"
-                      style={{ color: "var(--color-text)" }}
-                    >
-                      <span>{format_date(evt.start_time, locale)}</span>
-                    </td>
+                  <td
+                    className="px-4 py-2 text-sm"
+                    style={{ color: "var(--color-text)" }}
+                  >
+                    <span>{format_date(evt.start_time, locale)}</span>
+                  </td>
                   <td className="px-4 py-2">
                     <span className={get_status_badge_class(evt.status)}>
                       {get_status_label(evt.status, props)}
@@ -603,98 +569,6 @@ export function AdminDashboard(props: AdminDashboardProps) {
                           : props.delete}
                       </Button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="card p-4 md:p-6">
-        <h2
-          className="text-lg font-semibold mb-4"
-          style={{ color: "var(--color-text)" }}
-        >
-          {props.user_management}
-        </h2>
-        <p
-          className="text-sm mb-4"
-          style={{ color: "var(--color-text-secondary)" }}
-        >
-          {props.user_management_read_only}
-        </p>
-        <div className="overflow-x-auto">
-          <table
-            className="w-full min-w-120"
-            style={{ borderCollapse: "collapse" }}
-          >
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                <th
-                  className="text-left text-xs font-semibold px-4 py-2"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  {props.email}
-                </th>
-                <th
-                  className="text-left text-xs font-semibold px-4 py-2"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  {props.role}
-                </th>
-                <th
-                  className="text-left text-xs font-semibold px-4 py-2"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  {props.created}
-                </th>
-                <th
-                  className="text-left text-xs font-semibold px-4 py-2"
-                  style={{ color: "var(--color-text-secondary)" }}
-                >
-                  {props.actions}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  style={{ borderBottom: "1px solid var(--color-border)" }}
-                >
-                  <td
-                    className="px-4 py-2 text-sm"
-                    style={{ color: "var(--color-text)" }}
-                  >
-                    {u.email}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className={`badge ${
-                        u.role === "ADMIN"
-                          ? "badge-approved"
-                          : u.role === "PROVIDER"
-                            ? "badge-health"
-                            : "badge-pending"
-                      }`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td
-                    className="px-4 py-2 text-sm"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
-                    <span>{format_date(u.created_at, locale)}</span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--color-text-secondary)" }}
-                    >
-                      {props.deactivated}
-                    </span>
                   </td>
                 </tr>
               ))}
