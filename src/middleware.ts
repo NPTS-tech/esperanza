@@ -48,18 +48,18 @@ export default auth((req) => {
         return NextResponse.redirect(url);
     }
 
-    // Role-based protection — redirect to locale-aware home
+    // Role-based protection — redirect to locale-aware unauthorized page
     if (req.auth) {
         const role = req.auth.user?.role;
         const is_admin_route = normalizedPathname.startsWith("/admin");
         const is_provider_route = normalizedPathname.startsWith("/provider");
 
         if (is_admin_route && role !== "ADMIN") {
-            return NextResponse.redirect(new URL(`/${locale}`, req.nextUrl.origin));
+            return NextResponse.redirect(new URL(`/${locale}/unauthorized`, req.nextUrl.origin));
         }
 
         if (is_provider_route && role !== "PROVIDER" && role !== "ADMIN") {
-            return NextResponse.redirect(new URL(`/${locale}`, req.nextUrl.origin));
+            return NextResponse.redirect(new URL(`/${locale}/unauthorized`, req.nextUrl.origin));
         }
     }
 
