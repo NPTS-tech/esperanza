@@ -71,6 +71,32 @@ export default function EventCard({ event }: EventCardProps) {
           el.style.boxShadow = "";
         }}
       >
+        {/* Image */}
+        <div
+          className="mb-3 rounded-lg overflow-hidden"
+          style={{
+            aspectRatio: "16 / 9",
+            background: "var(--color-surface-hover)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          {event.image_url ? (
+            <img
+              src={event.image_url}
+              alt={title}
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "linear-gradient(90deg, var(--color-surface-hover), var(--color-border))",
+              }}
+            />
+          )}
+        </div>
+
         {/* Title */}
         <h3
           className="text-sm font-semibold mb-1 leading-snug"

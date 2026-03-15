@@ -224,11 +224,11 @@ export default function EventDetailPage() {
 
         {/* Hero image or color band */}
         {event.image_url ? (
-          <div style={{ height: 240, overflow: "hidden" }}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", overflow: "hidden" }}>
             <img
               src={event.image_url}
               alt={title}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
             />
           </div>
         ) : (

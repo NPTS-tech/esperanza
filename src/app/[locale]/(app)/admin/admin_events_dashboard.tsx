@@ -182,7 +182,8 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card p-4">
+        <Link href="/events" className="no-underline block">
+        <div className="card p-4" style={{ cursor: "pointer" }}>
           <div className="flex items-center gap-3">
             <CalendarDays
               size={20}
@@ -204,6 +205,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
             </div>
           </div>
         </div>
+        </Link>
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <AlertCircle size={20} style={{ color: "var(--color-warning)" }} />
