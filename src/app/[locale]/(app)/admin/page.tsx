@@ -3,5 +3,5 @@ import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
     const locale = await getLocale();
-    redirect(`/${locale}/admin/analytics`);
+    redirect(`/${locale}/admin/events`);
 }

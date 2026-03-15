@@ -62,9 +62,13 @@ export function MapPageClient({
 
   // Fetch approved events on mount
   useEffect(() => {
-    fetch("/api/events?limit=100")
+    fetch("/api/events?limit=100&status=APPROVED")
       .then(r => (r.ok ? r.json() : null))
-      .then(data => { if (data?.events) set_events(data.events); })
+      .then(data => {
+        if (data?.events) {
+          set_events(data.events.filter((e: EventData) => e.status === "APPROVED"));
+        }
+      })
       .catch(console.error)
       .finally(() => set_loading(false));
   }, []);

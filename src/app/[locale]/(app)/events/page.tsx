@@ -250,6 +250,7 @@ export default function EventsPage() {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     params.set("limit", view === "calendar" ? "100" : "20");
+    params.set("status", "APPROVED");
     if (category) params.set("category", category);
     if (debounced_search.trim()) params.set("search", debounced_search.trim());
 
@@ -269,7 +270,6 @@ export default function EventsPage() {
   useEffect(() => { fetch_events(); }, [fetch_events]);
 
   const can_create = session?.user?.role === "PROVIDER" || session?.user?.role === "ADMIN";
-  const show_status = session?.user?.role === "PROVIDER" || session?.user?.role === "ADMIN";
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -346,7 +346,7 @@ export default function EventsPage() {
           {view === "list" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {events.map((event) => (
-                <EventCard key={event.id} event={event} show_status={show_status} />
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
           )}
