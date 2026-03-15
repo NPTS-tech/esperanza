@@ -2,8 +2,8 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { MapPin, Clock, CalendarDays } from "lucide-react";
 
-// matches the shape returned by GET /api/events and GET /api/events/[id]
 export interface EventData {
   id: string;
   title_en: string;
@@ -33,105 +33,99 @@ interface EventCardProps {
 function format_date(date_string: string, locale: string) {
   return new Date(date_string).toLocaleDateString(
     locale === "es" ? "es-US" : "en-US",
-    {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    },
+    { weekday: "short", month: "short", day: "numeric", year: "numeric" },
   );
 }
 
 function format_time(date_string: string, locale: string) {
   return new Date(date_string).toLocaleTimeString(
     locale === "es" ? "es-US" : "en-US",
-    {
-      hour: "numeric",
-      minute: "2-digit",
-    },
+    { hour: "numeric", minute: "2-digit" },
   );
 }
 
-export default function EventCard({
-  event,
-  show_status = false,
-}: EventCardProps) {
+export default function EventCard({ event, show_status = false }: EventCardProps) {
   const t = useTranslations("Events");
   const locale = useLocale();
 
   const title = locale === "es" ? event.title_es : event.title_en;
-  const description =
-    locale === "es" ? event.description_es : event.description_en;
-  const category_class = `badge badge-${event.category.toLowerCase().replace(/\s+/g, "")}`;
+  const description = locale === "es" ? event.description_es : event.description_en;
 
   return (
-    <div className="card p-5">
-      <div className="flex items-start justify-between mb-3">
-        <span className={category_class}>
-          {t(`cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any)}
-        </span>
-        {show_status && (
-          <span className={`badge badge-${event.status.toLowerCase()}`}>
-            {t(`status_${event.status.toLowerCase()}` as any)}
-          </span>
-        )}
-      </div>
-
-      <Link href={`/events/${event.id}`} className="no-underline">
+    <Link href={`/events/${event.id}`} className="block no-underline group">
+      <div
+        className="card p-4 h-full flex flex-col"
+        style={{
+          cursor: "pointer",
+          border: "1px solid var(--color-border)",
+          transition: "border-color .15s, box-shadow .15s",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.borderColor = "var(--color-primary)";
+          el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.borderColor = "var(--color-border)";
+          el.style.boxShadow = "";
+        }}
+      >
+        {/* Title */}
         <h3
-          className="text-lg font-semibold mb-2 hover:opacity-80 transition-opacity"
+          className="text-sm font-semibold mb-1 leading-snug"
           style={{ color: "var(--color-text)" }}
         >
           {title}
         </h3>
-      </Link>
 
-      <p
-        className="text-sm mb-3 line-clamp-2"
-        style={{ color: "var(--color-text-secondary)" }}
-      >
-        {description}
-      </p>
-
-      <div
-        className="flex flex-col gap-1.5 text-sm mb-4"
-        style={{ color: "var(--color-text-secondary)" }}
-      >
-        <div className="flex items-center gap-2">
-          <span>📍</span>
-          <span>{event.location_name}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>📅</span>
-          <span>{format_date(event.start_time, locale)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>🕐</span>
-          <span>
-            {format_time(event.start_time, locale)} –{" "}
-            {format_time(event.end_time, locale)}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary text-sm no-underline"
+        {/* Category — plain muted label, no color badge */}
+        <p
+          className="text-[10px] font-semibold uppercase tracking-widest mb-3"
+          style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
         >
-          🧭 {t("directions")}
-        </a>
-        {event._count.rsvps > 0 && (
-          <span
-            className="text-xs ml-auto"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("rsvp_count", { count: event._count.rsvps })}
-          </span>
+          {t(`cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any)}
+        </p>
+
+        {/* Description */}
+        <p
+          className="text-xs mb-4 line-clamp-2 flex-1 leading-relaxed"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          {description}
+        </p>
+
+        {/* Meta */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <MapPin size={11} strokeWidth={2} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
+            <span className="text-xs truncate" style={{ color: "var(--color-text-secondary)" }}>
+              {event.location_name}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CalendarDays size={11} strokeWidth={2} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
+            <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+              {format_date(event.start_time, locale)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock size={11} strokeWidth={2} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
+            <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+              {format_time(event.start_time, locale)} – {format_time(event.end_time, locale)}
+            </span>
+          </div>
+        </div>
+
+        {/* Status — providers/admins only */}
+        {show_status && (
+          <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--color-border)" }}>
+            <span className={`badge badge-${event.status.toLowerCase()} text-[10px]`}>
+              {t(`status_${event.status.toLowerCase()}` as any)}
+            </span>
+          </div>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
