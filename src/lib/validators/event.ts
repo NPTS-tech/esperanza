@@ -16,15 +16,7 @@ export const EVENT_CATEGORIES = [
 export type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
 // Custom refinements for event validation
-const age_range_refinement = (data: {
-    target_age_min?: number | null;
-    target_age_max?: number | null;
-}) => {
-    if (data.target_age_min != null && data.target_age_max != null) {
-        return data.target_age_max > data.target_age_min;
-    }
-    return true;
-};
+// (Reserved for future use when age targeting is added to database schema)
 
 
 // create_event_schema, used by POST /api/events.
@@ -50,33 +42,11 @@ export const create_event_schema = z
         }),
         end_time: z.coerce.date(),
         category: z.enum(EVENT_CATEGORIES),
-
-        // Optional demographic age targeting.
-        // Drives senior service notifications (65+) and any other age-gated recommendations.
-        target_age_min: z.coerce
-            .number()
-            .int()
-            .min(0)
-            .max(120)
-            .optional()
-            .nullable(),
-        target_age_max: z.coerce
-            .number()
-            .int()
-            .min(0)
-            .max(120)
-            .optional()
-            .nullable(),
-
         image_url: z.string().url("Must be a valid URL").optional().nullable(),
     })
     .refine((data) => data.end_time > data.start_time, {
         message: "End time must be after start time",
         path: ["end_time"],
-    })
-    .refine(age_range_refinement, {
-        message: "target_age_max must be greater than target_age_min",
-        path: ["target_age_max"],
     });
 
 // update_event_schema, used by PATCH /api/events/[id].
@@ -100,20 +70,6 @@ export const update_event_schema = z
         start_time: z.coerce.date().optional(),
         end_time: z.coerce.date().optional(),
         category: z.enum(EVENT_CATEGORIES).optional(),
-        target_age_min: z.coerce
-            .number()
-            .int()
-            .min(0)
-            .max(120)
-            .optional()
-            .nullable(),
-        target_age_max: z.coerce
-            .number()
-            .int()
-            .min(0)
-            .max(120)
-            .optional()
-            .nullable(),
         image_url: z.string().url("Must be a valid URL").optional().nullable(),
     })
     .refine(
@@ -127,11 +83,7 @@ export const update_event_schema = z
             message: "End time must be after start time",
             path: ["end_time"],
         },
-    )
-    .refine(age_range_refinement, {
-        message: "target_age_max must be greater than target_age_min",
-        path: ["target_age_max"],
-    });
+    );
 
 // update_event_status_schema, used by PATCH /api/events/[id]/status for admin-only status updates.
 export const update_event_status_schema = z.object({

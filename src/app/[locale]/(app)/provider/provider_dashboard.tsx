@@ -281,7 +281,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     const pending_count = events.filter((e) => e.status === "PENDING").length;
     const total_rsvp_sum = events.reduce((sum, e) => sum + e.rsvp_count, 0);
 
-    function handle_submit(e: React.FormEvent) {
+    async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
         if (!form.title_en.trim() || !form.title_es.trim()) return;
         if (!form.location_address.trim()) {
@@ -298,30 +298,46 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             return;
         }
 
-        const new_event: MockEvent = {
-            id: `evt-${Date.now()}`,
-            title_en: form.title_en.trim(),
-            title_es: form.title_es.trim(),
-            description_en: form.description_en.trim(),
-            description_es: form.description_es.trim(),
-            location_name:
-                form.location_name.trim() || form.location_address.trim() || "TBD",
-            latitude: form.latitude ?? 0,
-            longitude: form.longitude ?? 0,
-            start_time: new Date(form.start_time).toISOString(),
-            end_time: new Date(form.end_time).toISOString(),
-            provider_id: props.provider_id,
-            provider_email: props.provider_email,
-            status: "PENDING",
-            category: form.category || "Community",
-            image_url: form.image_url.trim() || null,
-            created_at: new Date().toISOString(),
-            rsvp_count: 0,
-        };
+        try {
+            // Send to API
+            const response = await fetch("/api/events", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title_en: form.title_en.trim(),
+                    title_es: form.title_es.trim(),
+                    description_en: form.description_en.trim(),
+                    description_es: form.description_es.trim(),
+                    location_name: form.location_name.trim() || form.location_address.trim() || "TBD",
+                    location_address: form.location_address.trim(),
+                    latitude: form.latitude,
+                    longitude: form.longitude,
+                    start_time: new Date(form.start_time).toISOString(),
+                    end_time: new Date(form.end_time).toISOString(),
+                    category: form.category || "Community",
+                    image_url: form.image_url.trim() || null,
+                }),
+            });
 
-        set_events((prev) => [new_event, ...prev]);
-        set_form(INITIAL_FORM);
-        show_toast(props.event_submitted, "success");
+            if (!response.ok) {
+                const error_data = await response.json();
+                throw new Error(error_data.details || "Failed to submit event");
+            }
+
+            const created_event = (await response.json()) as Record<string, unknown>;
+
+            // Convert API response to MockEvent for display
+            const new_event = to_provider_event(created_event, props.provider_email);
+            if (new_event) {
+                set_events((prev) => [new_event, ...prev]);
+            }
+
+            set_form(INITIAL_FORM);
+            show_toast(props.event_submitted, "success");
+        } catch (err) {
+            const error_message = err instanceof Error ? err.message : "Failed to submit event";
+            show_toast(error_message, "error");
+        }
     }
 
     function update_form(field: keyof FormState, value: string) {

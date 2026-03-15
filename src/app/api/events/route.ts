@@ -195,7 +195,18 @@ export async function POST(request: NextRequest) {
 
     const event = await db.event.create({
       data: {
-        ...parsed.data,
+        title_en: parsed.data.title_en,
+        title_es: parsed.data.title_es,
+        description_en: parsed.data.description_en,
+        description_es: parsed.data.description_es,
+        location_name: parsed.data.location_name,
+        location_address: parsed.data.location_address,
+        latitude: parsed.data.latitude,
+        longitude: parsed.data.longitude,
+        start_time: parsed.data.start_time,
+        end_time: parsed.data.end_time,
+        category: parsed.data.category,
+        image_url: parsed.data.image_url,
         provider_id: session.user.id,
         status: initial_status,
       },

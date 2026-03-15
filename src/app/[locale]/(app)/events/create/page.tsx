@@ -47,18 +47,26 @@ export default function CreateEventPage() {
   async function handle_create(
     data: Record<string, unknown>,
   ): Promise<{ id?: string; error?: string }> {
+    console.log("[CreateEventPage] Sending to API:", data);
+    
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
+    console.log("[CreateEventPage] API response status:", res.status);
+    
     const json = await res.json();
+    console.log("[CreateEventPage] API response body:", json);
 
     if (!res.ok) {
-      return { error: json.error || t("error_loading") };
+      const errorMsg = json.error || json.details || t("error_loading");
+      console.error("[CreateEventPage] API error:", errorMsg);
+      return { error: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg) };
     }
 
+    console.log("[CreateEventPage] Event created with ID:", json.id);
     return { id: json.id };
   }
 

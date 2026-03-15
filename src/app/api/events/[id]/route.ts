@@ -111,7 +111,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         // Note: Image-only changes (image_url) are excluded from this rule
         // as they do not affect the accuracy of event information.
 
-        // Todo: hardcoded for now, change to a more scalable solution.
+        // Content fields that trigger re-review when modified by providers
         const CONTENT_FIELDS = [
             "title_en",
             "title_es",
@@ -124,8 +124,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             "start_time",
             "end_time",
             "category",
-            "target_age_min",
-            "target_age_max",
         ] as const;
 
         const update_data: typeof parsed.data & { status?: EventStatus } = { ...parsed.data };

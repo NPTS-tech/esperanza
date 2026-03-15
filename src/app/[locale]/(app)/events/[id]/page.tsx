@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
-import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3 } from "lucide-react";
 import type { EventData } from "@/components/event_card";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
@@ -434,27 +434,58 @@ export default function EventDetailPage() {
           )}
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-2">
-            {session?.user && (
-              <button
-                onClick={handle_rsvp}
-                disabled={rsvp_loading}
-                className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
-              >
-                {rsvped ? <CheckCircle2 size={15} /> : <CalendarPlus size={15} />}
-                {rsvp_loading ? t("rsvp_loading") : rsvped ? t("rsvped") : t("rsvp")}
-              </button>
-            )}
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary no-underline"
-            >
-              <Navigation size={15} />
-              {t("get_directions")}
-            </a>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Left side buttons */}
+            <div className="flex flex-wrap gap-2">
+              {/* For providers: show Event Analytics */}
+              {is_own && !is_admin && (
+                <Link
+                  href={`/analytics/${event.id}`}
+                  className="btn btn-primary no-underline"
+                >
+                  <BarChart3 size={15} />
+                  {locale === "es" ? "Analíticas" : "Event Analytics"}
+                </Link>
+              )}
+              
+              {/* For regular users: show RSVP + Get Directions */}
+              {!is_own && session?.user && (
+                <>
+                  <button
+                    onClick={handle_rsvp}
+                    disabled={rsvp_loading}
+                    className={`btn ${rsvped ? "btn-secondary" : "btn-primary"}`}
+                  >
+                    {rsvped ? <CheckCircle2 size={15} /> : <CalendarPlus size={15} />}
+                    {rsvp_loading ? t("rsvp_loading") : rsvped ? t("rsvped") : t("rsvp")}
+                  </button>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary no-underline"
+                  >
+                    <Navigation size={15} />
+                    {t("get_directions")}
+                  </a>
+                </>
+              )}
+              
+              {/* For unauthenticated users: just Get Directions */}
+              {!session?.user && (
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary no-underline"
+                >
+                  <Navigation size={15} />
+                  {t("get_directions")}
+                </a>
+              )}
+            </div>
 
+            {/* Right side: Manage Event button */}
             {can_edit && !is_admin && (
               <Link
                 href={`/events/${event.id}/edit`}
