@@ -1,9 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "@/i18n/routing";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { KioskIdleHandler } from "@/components/layout/kiosk-idle-handler";
 
 type AppShellProps = {
     children: React.ReactNode;
@@ -98,6 +100,9 @@ export function AppShell({
             </div>
 
             <BottomNav {...nav_props} />
+            <Suspense fallback={null}>
+                <KioskIdleHandler role={role} locale={locale} />
+            </Suspense>
         </div>
     );
 }

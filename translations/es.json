@@ -137,7 +137,13 @@
         "view_list": "Vista de Lista",
         "view_calendar": "Vista de Calendario",
         "event_details": "Detalles del evento",
-        "provider_label": "Organizador"
+        "provider_label": "Organizador",
+        "add_to_calendar": "Agregar al Calendario"
+    },
+    "Unauthorized": {
+        "title": "Acceso Denegado",
+        "message": "No tienes permiso para acceder a esta página. Contacta a un administrador si crees que esto es un error.",
+        "go_home": "Ir al Inicio"
     },
     "Admin": {
         "title": "Panel de Administrador",
@@ -175,7 +181,25 @@
         "deleting": "Eliminando...",
         "delete_confirm": "¿Seguro que quieres eliminar este evento? Esta acción no se puede deshacer.",
         "delete_success": "Evento eliminado correctamente.",
-        "delete_error": "No se pudo eliminar el evento."
+        "delete_error": "No se pudo eliminar el evento.",
+        "loading_users": "Cargando usuarios...",
+        "error_loading_users": "Error al cargar usuarios. Inténtalo de nuevo.",
+        "role_update_success": "Rol de usuario actualizado exitosamente.",
+        "role_update_error": "Error al actualizar el rol del usuario.",
+        "delete_user": "Eliminar",
+        "delete_user_confirm": "¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.",
+        "delete_user_success": "Usuario eliminado exitosamente.",
+        "delete_user_error": "Error al eliminar usuario.",
+        "search_users": "Buscar usuarios por correo...",
+        "filter_all_roles": "Todos los Roles",
+        "cannot_change_own_role": "No puedes cambiar tu propio rol.",
+        "role_user": "Usuario",
+        "role_provider": "Proveedor",
+        "role_admin": "Administrador",
+        "events_management": "Gestión de eventos",
+        "events_management_subtitle": "Gestionar aprobaciones y listados de eventos",
+        "analytics_title": "Analíticas",
+        "analytics_subtitle": "Resumen y métricas de la plataforma"
     },
     "Nav": {
         "app_name": "Esperanza",
