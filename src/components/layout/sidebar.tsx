@@ -74,9 +74,10 @@ function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
             {
                 section_label: "PLATFORM",
                 items: [
-                    { key: "home",   label: labels.nav_home,         href: "/",         icon: <Home size={SZ} /> },
-                    { key: "events", label: labels.nav_my_events,    href: "/provider", icon: <CalendarDays size={SZ} /> },
-                    { key: "submit", label: labels.nav_submit_event, href: "/provider", icon: <Plus size={SZ} /> },
+                    { key: "home",     label: labels.nav_home,         href: "/",             icon: <Home size={SZ} /> },
+                    { key: "myevents", label: labels.nav_my_events,    href: "/events",      icon: <CalendarDays size={SZ} /> },
+                    { key: "submit",   label: labels.nav_submit_event, href: "/events/create", icon: <Plus size={SZ} /> },
+                    { key: "analytics", label: labels.nav_analytics,   href: "/analytics",   icon: <BarChart3 size={SZ} /> },
                 ],
             },
         ];
@@ -115,6 +116,10 @@ function NavLink({
         is_active = currentPath.startsWith("/admin/analytics");
     } else if (item.href === "/admin") {
         is_active = currentPath === "/admin" || (currentPath.startsWith("/admin") && !currentPath.startsWith("/admin/events") && !currentPath.startsWith("/admin/analytics") && !currentPath.startsWith("/admin/users"));
+    } else if (item.href === "/analytics") {
+        is_active = currentPath.startsWith("/analytics");
+    } else if (item.href === "/events") {
+        is_active = currentPath.startsWith("/events");
     } else {
         is_active = item.href !== "#" && currentPath.startsWith(item.href);
     }

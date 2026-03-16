@@ -409,14 +409,20 @@ export default function EventForm({
       payload.image_url = form.image_url.trim();
     }
 
+    console.log("[EventForm] Submitting payload:", payload);
+
     try {
       const result = await on_submit(payload);
+      console.log("[EventForm] Submit result:", result);
+      
       if (result.error) {
+        console.error("[EventForm] Error returned:", result.error);
         set_error(result.error);
         if (result.field_errors) {
           set_field_errors(result.field_errors);
         }
       } else if (result.id) {
+        console.log("[EventForm] Event created successfully with ID:", result.id);
         if (on_submit_redirect) {
           router.push(on_submit_redirect);
         } else if (is_admin_edit_context) {
@@ -425,7 +431,8 @@ export default function EventForm({
           router.push(`/events/${result.id}`);
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("[EventForm] Caught error:", err);
       set_error(t("error_loading"));
     } finally {
       set_loading(false);

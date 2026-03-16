@@ -1,133 +1,133 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-}
-
-enum Role {
-    USER
-    PROVIDER
-    ADMIN
-}
-
-enum EventStatus {
-    PENDING
-    APPROVED
-    REJECTED
-    CANCELLED
-}
-
-enum TargetRole {
-    ALL
-    USER
-    PROVIDER
-}
-
-enum AnalyticsEventType {
-    SEARCH
-    PAGE_VIEW
-    DIRECTION_REQUEST
-    RSVP
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id            String         @id @default(uuid())
-    email         String         @unique
-    password_hash String
-    role          Role           @default(USER)
-    language_pref String         @default("en")
-    consented_at  DateTime?
-    created_at    DateTime       @default(now())
-    demographics  Demographics?
-    events        Event[]        @relation("ProviderEvents")
-    rsvps         Rsvp[]
-    announcements Announcement[] @relation("AuthorAnnouncements")
-    analytics     AnalyticsEvent[]
+  id            String           @id @default(uuid())
+  email         String           @unique
+  password_hash String
+  role          Role             @default(USER)
+  language_pref String           @default("en")
+  consented_at  DateTime?
+  created_at    DateTime         @default(now())
+  analytics     AnalyticsEvent[]
+  announcements Announcement[]   @relation("AuthorAnnouncements")
+  demographics  Demographics?
+  events        Event[]          @relation("ProviderEvents")
+  rsvps         Rsvp[]
 
-    @@map("users")
+  @@map("users")
 }
 
 model Demographics {
-    id                      String  @id @default(uuid())
-    user_id                 String  @unique
-    user                    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-    race                    String?
-    gender                  String?
-    age                     Int?
-    annual_personal_income  String?
-    annual_household_income String?
-    county                  String?
-    has_children_under_18   Boolean @default(false)
-    has_children_under_5    Boolean @default(false)
-    educational_attainment  String?
-    has_personal_vehicle    Boolean @default(false)
-    is_employed             Boolean @default(false)
-    industry_area           String?
+  id                      String  @id @default(uuid())
+  user_id                 String  @unique
+  race                    String?
+  gender                  String?
+  age                     Int?
+  annual_personal_income  String?
+  annual_household_income String?
+  county                  String?
+  has_children_under_18   Boolean @default(false)
+  has_children_under_5    Boolean @default(false)
+  educational_attainment  String?
+  has_personal_vehicle    Boolean @default(false)
+  is_employed             Boolean @default(false)
+  industry_area           String?
+  user                    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    @@map("demographics")
+  @@map("demographics")
 }
 
 model Event {
-    id             String      @id @default(uuid())
-    title_en       String
-    title_es       String
-    description_en String
-    description_es String
-    location_name  String
-    location_address String?
-    latitude       Float
-    longitude      Float
-    start_time     DateTime
-    end_time       DateTime
-    provider_id    String
-    provider       User        @relation("ProviderEvents", fields: [provider_id], references: [id])
-    status         EventStatus @default(PENDING)
-    category       String
-    image_url      String?
-    created_at     DateTime    @default(now())
-    updated_at     DateTime    @updatedAt
-    rsvps          Rsvp[]
+  id             String      @id @default(uuid())
+  title_en       String
+  title_es       String
+  description_en String
+  description_es String
+  location_name  String
+  location_address String?
+  latitude       Float
+  longitude      Float
+  start_time     DateTime
+  end_time       DateTime
+  provider_id    String
+  status         EventStatus @default(PENDING)
+  category       String
+  image_url      String?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+  provider       User        @relation("ProviderEvents", fields: [provider_id], references: [id])
+  rsvps          Rsvp[]
 
-    @@map("events")
+  @@map("events")
 }
 
 model Rsvp {
-    id         String   @id @default(uuid())
-    user_id    String
-    user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-    event_id   String
-    event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
-    created_at DateTime @default(now())
+  id         String   @id @default(uuid())
+  user_id    String
+  event_id   String
+  created_at DateTime @default(now())
+  event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    @@unique([user_id, event_id])
-    @@map("rsvps")
+  @@unique([user_id, event_id])
+  @@map("rsvps")
 }
 
 model Announcement {
-    id          String     @id @default(uuid())
-    title_en    String
-    title_es    String
-    body_en     String
-    body_es     String
-    author_id   String
-    author      User       @relation("AuthorAnnouncements", fields: [author_id], references: [id])
-    target_role TargetRole @default(ALL)
-    created_at  DateTime   @default(now())
+  id          String     @id @default(uuid())
+  title_en    String
+  title_es    String
+  body_en     String
+  body_es     String
+  author_id   String
+  target_role TargetRole @default(ALL)
+  created_at  DateTime   @default(now())
+  author      User       @relation("AuthorAnnouncements", fields: [author_id], references: [id])
 
-    @@map("announcements")
+  @@map("announcements")
 }
 
 model AnalyticsEvent {
-    id         String             @id @default(uuid())
-    user_id    String?
-    user       User?              @relation(fields: [user_id], references: [id], onDelete: SetNull)
-    event_type AnalyticsEventType
-    metadata   Json?
-    created_at DateTime           @default(now())
+  id         String             @id @default(uuid())
+  user_id    String?
+  event_type AnalyticsEventType
+  metadata   Json?
+  created_at DateTime           @default(now())
+  user       User?              @relation(fields: [user_id], references: [id])
 
-    @@index([event_type, created_at])
-    @@map("analytics_events")
+  @@index([event_type, created_at])
+  @@map("analytics_events")
+}
+
+enum Role {
+  USER
+  PROVIDER
+  ADMIN
+}
+
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum TargetRole {
+  ALL
+  USER
+  PROVIDER
+}
+
+enum AnalyticsEventType {
+  SEARCH
+  PAGE_VIEW
+  DIRECTION_REQUEST
+  RSVP
 }
