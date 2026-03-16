@@ -144,9 +144,20 @@
         "view_details": "View Details",
         "view_list": "List View",
         "view_calendar": "Calendar View",
-        "event_details": "Event Details",
-        "provider_label": "Organizer",
-        "add_to_calendar": "Add to Calendar"
+    "event_details": "Event Details",
+    "provider_label": "Organizer",
+    "add_to_calendar": "Add to Calendar",
+    "translate_to_spanish": "Translate to Spanish",
+    "translate_to_english": "Translate to English",
+    "translate_missing": "Translate missing fields",
+    "auto_translated": "Auto-translated",
+    "auto_translating": "Translating...",
+    "edited_manually": "Edited manually",
+    "translation_failed": "Translation failed. Please fill this field manually.",
+    "missing_bilingual_title": "Please provide a title in at least one language.",
+    "missing_bilingual_description": "Please provide a description in at least one language.",
+    "auto_translated_hint": "Auto-translated — review before submitting",
+    "fields_auto_translated": "Some fields were auto-translated. Please review and submit again."
     },
     "Unauthorized": {
         "title": "Access Denied",
