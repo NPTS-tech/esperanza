@@ -17,6 +17,17 @@ export async function POST(request: Request) {
 
         const { email, password, language_pref, consent, ...demographic_data } = parsed.data;
 
+        // invariant: consent must always be true after validation
+        if (!consent) {
+            console.error("Registration invariant violation: consent is false after register_schema validation", {
+                email,
+            });
+            return NextResponse.json(
+                { error: "Registration failed due to an internal validation error" },
+                { status: 500 },
+            );
+        }
+
         // check for existing user
         const existing_user = await db.user.findUnique({
             where: { email },
@@ -71,7 +82,13 @@ export async function POST(request: Request) {
             return new_user;
         });
 
-        // never return password_hash to the client
+        // structured log for monitoring successful registrations
+        console.info("User registered successfully", {
+            user_id: user.id,
+            has_demographics: !!user.demographics,
+        });
+
+        // never return password_hash or other sensitive fields to the client
         return NextResponse.json(
             {
                 id: user.id,

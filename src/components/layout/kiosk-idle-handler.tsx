@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { use_idle_timeout } from "@/lib/use_idle_timeout";
 import { sign_out_action } from "@/app/actions/sign_out_action";
@@ -11,11 +11,13 @@ type KioskIdleHandlerProps = {
 };
 
 const IDLE_MS = 3 * 60 * 1000; // 3 minutes
+const MODAL_IDLE_MS = 2 * 60 * 1000; // 2 minutes after modal appears
 
 export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
     const search_params = useSearchParams();
     const is_kiosk = search_params.get("kiosk") === "true";
     const [show_idle_modal, set_show_idle_modal] = useState(false);
+    const modal_timeout_id_ref = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handle_idle = useCallback(() => {
         if (is_kiosk && role === "USER") {
@@ -24,6 +26,33 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
     }, [is_kiosk, role]);
 
     use_idle_timeout(is_kiosk && role === "USER" ? IDLE_MS : Infinity, handle_idle);
+
+    useEffect(() => {
+        const should_start_modal_timer = is_kiosk && role === "USER" && show_idle_modal;
+
+        if (!should_start_modal_timer) {
+            if (modal_timeout_id_ref.current !== null) {
+                clearTimeout(modal_timeout_id_ref.current);
+                modal_timeout_id_ref.current = null;
+            }
+            return;
+        }
+
+        modal_timeout_id_ref.current = setTimeout(() => {
+            // If the modal is still visible and we're still in kiosk user mode, auto log out.
+            if (is_kiosk && role === "USER") {
+                // Fire and forget; navigation happens inside.
+                void handle_idle_confirm();
+            }
+        }, MODAL_IDLE_MS);
+
+        return () => {
+            if (modal_timeout_id_ref.current !== null) {
+                clearTimeout(modal_timeout_id_ref.current);
+                modal_timeout_id_ref.current = null;
+            }
+        };
+    }, [is_kiosk, role, show_idle_modal]);
 
     function handle_idle_dismiss() {
         set_show_idle_modal(false);
