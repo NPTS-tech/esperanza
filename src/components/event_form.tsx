@@ -342,34 +342,42 @@ export default function EventForm({
       set_auto_translating(true);
       const newlyTranslated = new Set<string>();
       try {
-        const translate = async (text: string, sourceLang: "en" | "es", targetLang: "en" | "es") => {
+        const translate = async (
+          text: string,
+          sourceLang: "en" | "es",
+          targetLang: "en" | "es",
+        ) => {
           const res = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text, sourceLang, targetLang }),
           });
-          const json = (await res.json()) as { translatedText?: string; error?: string };
-          if (!res.ok || !json.translatedText) throw new Error(json.error || "Translation failed");
+          const json = (await res.json()) as {
+            translatedText?: string;
+            error?: string;
+          };
+          if (!res.ok || !json.translatedText)
+            throw new Error(json.error || "Translation failed");
           return json.translatedText;
         };
 
         if (hasTitleEn && !hasTitleEs) {
           finalTitleEs = await translate(finalTitleEn, "en", "es");
-          set_form(prev => ({ ...prev, title_es: finalTitleEs }));
+          set_form((prev) => ({ ...prev, title_es: finalTitleEs }));
           newlyTranslated.add("title_es");
         } else if (!hasTitleEn && hasTitleEs) {
           finalTitleEn = await translate(finalTitleEs, "es", "en");
-          set_form(prev => ({ ...prev, title_en: finalTitleEn }));
+          set_form((prev) => ({ ...prev, title_en: finalTitleEn }));
           newlyTranslated.add("title_en");
         }
 
         if (hasDescriptionEn && !hasDescriptionEs) {
           finalDescriptionEs = await translate(finalDescriptionEn, "en", "es");
-          set_form(prev => ({ ...prev, description_es: finalDescriptionEs }));
+          set_form((prev) => ({ ...prev, description_es: finalDescriptionEs }));
           newlyTranslated.add("description_es");
         } else if (!hasDescriptionEn && hasDescriptionEs) {
           finalDescriptionEn = await translate(finalDescriptionEs, "es", "en");
-          set_form(prev => ({ ...prev, description_en: finalDescriptionEn }));
+          set_form((prev) => ({ ...prev, description_en: finalDescriptionEn }));
           newlyTranslated.add("description_en");
         }
       } catch {
@@ -378,8 +386,10 @@ export default function EventForm({
         set_auto_translating(false);
         return;
       }
-      
-      set_autoTranslatedFields(prev => new Set([...prev, ...newlyTranslated]));
+
+      set_autoTranslatedFields(
+        (prev) => new Set([...prev, ...newlyTranslated]),
+      );
       set_info_message(t("fields_auto_translated"));
       set_loading(false);
       set_auto_translating(false);
@@ -409,20 +419,15 @@ export default function EventForm({
       payload.image_url = form.image_url.trim();
     }
 
-    console.log("[EventForm] Submitting payload:", payload);
-
     try {
       const result = await on_submit(payload);
-      console.log("[EventForm] Submit result:", result);
-      
+
       if (result.error) {
-        console.error("[EventForm] Error returned:", result.error);
         set_error(result.error);
         if (result.field_errors) {
           set_field_errors(result.field_errors);
         }
       } else if (result.id) {
-        console.log("[EventForm] Event created successfully with ID:", result.id);
         if (on_submit_redirect) {
           router.push(on_submit_redirect);
         } else if (is_admin_edit_context) {
@@ -431,8 +436,7 @@ export default function EventForm({
           router.push(`/events/${result.id}`);
         }
       }
-    } catch (err) {
-      console.error("[EventForm] Caught error:", err);
+    } catch {
       set_error(t("error_loading"));
     } finally {
       set_loading(false);
