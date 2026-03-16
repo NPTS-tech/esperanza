@@ -27,7 +27,7 @@
         "back": "Volver",
         "already_have_account": "¿Ya tienes cuenta?",
         "sign_in_link": "Iniciar sesión",
-        "demographics_info": "Esta información nos ayuda a conectarte con servicios relevantes. Todos los campos son opcionales.",
+        "demographics_info": "Esta información nos ayuda a conectarte con servicios relevantes. Todos los campos son obligatorios.",
         "race": "Raza",
         "gender": "Género",
         "age": "Edad",
@@ -52,7 +52,10 @@
         "consent_required": "Debes aceptar la recopilación de datos para registrarte.",
         "registration_failed": "Error en el registro",
         "signin_after_register_failed": "Cuenta creada pero el inicio de sesión falló. Por favor, inicia sesión manualmente.",
-        "generic_error": "Algo salió mal. Por favor, inténtalo de nuevo."
+        "generic_error": "Algo salió mal. Por favor, inténtalo de nuevo.",
+        "demographics_required": "Por favor completa todos los campos demográficos antes de continuar.",
+        "age_required": "La edad es obligatoria.",
+        "age_invalid": "La edad debe estar entre 0 y 120."
     },
     "Dashboard": {
         "sign_out": "Cerrar sesión",

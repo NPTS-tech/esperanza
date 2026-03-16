@@ -54,30 +54,24 @@ export async function POST(request: Request) {
                 },
             });
 
-            // only create demographics if any demographic fields were provided
-            const has_demographic_data = Object.values(demographic_data).some(
-                (v) => v !== undefined && v !== null && v !== "" && v !== false,
-            );
-
-            if (has_demographic_data) {
-                await tx.demographics.create({
-                    data: {
-                        user_id: new_user.id,
-                        race: demographic_data.race || null,
-                        gender: demographic_data.gender || null,
-                        age: demographic_data.age ?? null,
-                        annual_personal_income: demographic_data.annual_personal_income || null,
-                        annual_household_income: demographic_data.annual_household_income || null,
-                        county: demographic_data.county || null,
-                        has_children_under_18: demographic_data.has_children_under_18,
-                        has_children_under_5: demographic_data.has_children_under_5,
-                        educational_attainment: demographic_data.educational_attainment || null,
-                        has_personal_vehicle: demographic_data.has_personal_vehicle,
-                        is_employed: demographic_data.is_employed,
-                        industry_area: demographic_data.industry_area || null,
-                    },
-                });
-            }
+            // always create demographics for new users (all fields are now required by validation)
+            await tx.demographics.create({
+                data: {
+                    user_id: new_user.id,
+                    race: demographic_data.race,
+                    gender: demographic_data.gender,
+                    age: demographic_data.age,
+                    annual_personal_income: demographic_data.annual_personal_income,
+                    annual_household_income: demographic_data.annual_household_income,
+                    county: demographic_data.county,
+                    has_children_under_18: demographic_data.has_children_under_18,
+                    has_children_under_5: demographic_data.has_children_under_5,
+                    educational_attainment: demographic_data.educational_attainment,
+                    has_personal_vehicle: demographic_data.has_personal_vehicle,
+                    is_employed: demographic_data.is_employed,
+                    industry_area: demographic_data.industry_area,
+                },
+            });
 
             return new_user;
         });
@@ -85,7 +79,7 @@ export async function POST(request: Request) {
         // structured log for monitoring successful registrations
         console.info("User registered successfully", {
             user_id: user.id,
-            has_demographics: !!user.demographics,
+            has_demographics: true,
         });
 
         // never return password_hash or other sensitive fields to the client

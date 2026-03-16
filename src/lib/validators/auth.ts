@@ -23,19 +23,33 @@ export const register_schema = z.object({
         .enum(["en", "es"])
         .default("en"),
 
-    // demographics (all optional)
-    race: z.string().optional(),
-    gender: z.string().optional(),
-    age: z.coerce.number().int().min(0).max(120).optional().nullable(),
-    annual_personal_income: z.string().optional(),
-    annual_household_income: z.string().optional(),
-    county: z.string().optional(),
+    // demographics (all required for new signups)
+    race: z
+        .string()
+        .min(1, "Race is required"),
+    gender: z
+        .string()
+        .min(1, "Gender is required"),
+    age: z.coerce.number().int().min(0, "Age must be at least 0").max(120, "Age must be 120 or less"),
+    annual_personal_income: z
+        .string()
+        .min(1, "Personal income is required"),
+    annual_household_income: z
+        .string()
+        .min(1, "Household income is required"),
+    county: z
+        .string()
+        .min(1, "County is required"),
     has_children_under_18: z.boolean().default(false),
     has_children_under_5: z.boolean().default(false),
-    educational_attainment: z.string().optional(),
+    educational_attainment: z
+        .string()
+        .min(1, "Education is required"),
     has_personal_vehicle: z.boolean().default(false),
     is_employed: z.boolean().default(false),
-    industry_area: z.string().optional(),
+    industry_area: z
+        .string()
+        .min(1, "Industry is required"),
 
     consent: z.boolean(),
 }).refine((data) => data.password === data.confirm_password, {

@@ -27,7 +27,7 @@
         "back": "Back",
         "already_have_account": "Already have an account?",
         "sign_in_link": "Sign In",
-        "demographics_info": "This information helps us connect you with relevant services. All fields are optional.",
+        "demographics_info": "This information helps us connect you with relevant services. All fields are required.",
         "race": "Race",
         "gender": "Gender",
         "age": "Age",
@@ -52,7 +52,10 @@
         "consent_required": "You must consent to data collection to register.",
         "registration_failed": "Registration failed",
         "signin_after_register_failed": "Account created but sign-in failed. Please log in manually.",
-        "generic_error": "Something went wrong. Please try again."
+        "generic_error": "Something went wrong. Please try again.",
+        "demographics_required": "Please complete all demographic fields before continuing.",
+        "age_required": "Age is required.",
+        "age_invalid": "Age must be between 0 and 120."
     },
     "Dashboard": {
         "sign_out": "Sign Out",

@@ -76,6 +76,22 @@ export default function RegisterPage() {
             }
             set_step(2);
         } else if (step === 2) {
+            // ensure all demographics are filled before moving to consent
+            if (!demographics.race || !demographics.gender || !demographics.annual_personal_income ||
+                !demographics.annual_household_income || !demographics.county || !demographics.educational_attainment ||
+                !demographics.industry_area) {
+                set_error(t("demographics_required"));
+                return;
+            }
+            if (!demographics.age) {
+                set_error(t("age_required"));
+                return;
+            }
+            const parsed_age = parseInt(demographics.age, 10);
+            if (Number.isNaN(parsed_age) || parsed_age < 0 || parsed_age > 120) {
+                set_error(t("age_invalid"));
+                return;
+            }
             set_step(3);
         } else {
             if (!consent) {
@@ -96,7 +112,7 @@ export default function RegisterPage() {
                         language_pref: account.language_pref,
                         consent,
                         ...demographics,
-                        age: demographics.age ? parseInt(demographics.age) : null,
+                        age: demographics.age ? parseInt(demographics.age, 10) : null,
                     }),
                 });
 
@@ -235,7 +251,7 @@ export default function RegisterPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")}</label>
-                                    <select className="select" value={demographics.race}
+                                    <select className="select" value={demographics.race} required
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -243,7 +259,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")}</label>
-                                    <select className="select" value={demographics.gender}
+                                    <select className="select" value={demographics.gender} required
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -251,12 +267,12 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age")}</label>
-                                    <input type="number" className="input" placeholder={t("age")} min="0" max="120"
+                                    <input type="number" className="input" placeholder={t("age")} min="0" max="120" required
                                         value={demographics.age} onChange={(e) => set_demographics({ ...demographics, age: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("personal_income")}</label>
-                                    <select className="select" value={demographics.annual_personal_income}
+                                    <select className="select" value={demographics.annual_personal_income} required
                                         onChange={(e) => set_demographics({ ...demographics, annual_personal_income: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
@@ -264,7 +280,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("household_income")}</label>
-                                    <select className="select" value={demographics.annual_household_income}
+                                    <select className="select" value={demographics.annual_household_income} required
                                         onChange={(e) => set_demographics({ ...demographics, annual_household_income: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
@@ -272,7 +288,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")}</label>
-                                    <select className="select" value={demographics.county}
+                                    <select className="select" value={demographics.county} required
                                         onChange={(e) => set_demographics({ ...demographics, county: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -280,7 +296,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("education")}</label>
-                                    <select className="select" value={demographics.educational_attainment}
+                                    <select className="select" value={demographics.educational_attainment} required
                                         onChange={(e) => set_demographics({ ...demographics, educational_attainment: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {EDUCATION_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -288,7 +304,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("industry")}</label>
-                                    <select className="select" value={demographics.industry_area}
+                                    <select className="select" value={demographics.industry_area} required
                                         onChange={(e) => set_demographics({ ...demographics, industry_area: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {INDUSTRY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
