@@ -129,116 +129,6 @@ function TimeFilterDropdown({
   );
 }
 
-// ── Status filter dropdown ────────────────────────────────────────────────
-function StatusFilterDropdown({
-  status,
-  setStatus,
-  t,
-}: {
-  status: string;
-  setStatus: (s: string) => void;
-  t: ReturnType<typeof useTranslations>;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, [open]);
-
-  const labels: Record<string, string> = {
-    all: "All Status",
-    PENDING: "Pending Approval",
-    APPROVED: "Approved",
-    REJECTED: "Denied",
-  };
-
-  return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "7px 12px",
-          fontSize: 13,
-          fontWeight: 500,
-          border: "1px solid var(--color-border)",
-          borderRadius: 8,
-          cursor: "pointer",
-          background: status !== "all" ? "var(--color-surface-hover)" : "var(--color-surface)",
-          color: "var(--color-text)",
-          fontFamily: "inherit",
-          whiteSpace: "nowrap",
-          transition: "background .12s",
-        }}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-      >
-        Status: <strong>{labels[status] || "All Status"}</strong>
-        {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-      </button>
-
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 6px)",
-            left: 0,
-            zIndex: 50,
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 10,
-            boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
-            minWidth: 180,
-            padding: "4px 0",
-          }}
-          role="listbox"
-        >
-          {["all", "PENDING", "APPROVED", "REJECTED"].map((option) => (
-            <button
-              key={option}
-              onClick={() => {
-                setStatus(option);
-                setOpen(false);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: option === status ? 600 : 400,
-                background: option === status ? "var(--color-surface-hover)" : "transparent",
-                color: "var(--color-text)",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                fontFamily: "inherit",
-                transition: "background .1s",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = option === status ? "var(--color-surface-hover)" : "transparent")}
-              role="option"
-              aria-selected={option === status}
-            >
-              {labels[option as keyof typeof labels] || option}
-              {option === status && <Check size={13} style={{ color: "var(--color-primary)" }} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Category dropdown ────────────────────────────────────────────────
 function CategoryDropdown({
   category,
@@ -453,8 +343,7 @@ export default function EventsPage() {
   const [page, set_page]               = useState(1);
   const [view, set_view]               = useState<"list" | "calendar">("list");
   const [timeFilter, setTimeFilter]    = useState<"all" | "past" | "future">("future");
-  const [status, setStatus]            = useState<string>("all");
-
+  
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { set_debounced_search(search); set_page(1); }, 400);
@@ -471,11 +360,7 @@ export default function EventsPage() {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     params.set("limit", view === "calendar" ? "100" : "20");
-    
-    // Add status filter (for providers, show their own events; for others, public events)
-    if (status !== "all") {
-      params.set("status", status);
-    }
+  
     
     if (category) params.set("category", category);
     if (debounced_search.trim()) params.set("search", debounced_search.trim());
@@ -558,11 +443,6 @@ export default function EventsPage() {
         <TimeFilterDropdown
           timeFilter={timeFilter}
           setTimeFilter={setTimeFilter}
-          t={t}
-        />
-        <StatusFilterDropdown
-          status={status}
-          setStatus={setStatus}
           t={t}
         />
       </div>
