@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  create_event_schema,
-  event_query_schema,
-} from "@/lib/validators/event";
+import { create_event_schema, event_query_schema } from "@/lib/validators/event";
+import { ensureBilingualEventFields } from "@/lib/services/event-translation";
 import { Prisma } from "@prisma/client";
 
 // GET /api/events — list events with filtering, search, and pagination
@@ -193,9 +191,23 @@ export async function POST(request: NextRequest) {
 
     const initial_status = role === "ADMIN" ? "APPROVED" : "PENDING";
 
+    let bilingualFields;
+    try {
+      bilingualFields = await ensureBilingualEventFields(parsed.data);
+    } catch (error) {
+      console.error("ensureBilingualEventFields error (create):", error);
+      return NextResponse.json(
+        {
+          error: "Translation service unavailable",
+        },
+        { status: 502 },
+      );
+    }
+
     const event = await db.event.create({
       data: {
         ...parsed.data,
+        ...bilingualFields,
         provider_id: session.user.id,
         status: initial_status,
       },

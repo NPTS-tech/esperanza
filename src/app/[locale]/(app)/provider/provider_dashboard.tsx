@@ -184,6 +184,9 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     const [events, set_events] = useState<MockEvent[]>([]);
     const [form, set_form] = useState<FormState>(INITIAL_FORM);
     const [uploading_image, set_uploading_image] = useState(false);
+    const [auto_translating, set_auto_translating] = useState(false);
+    const [auto_translated_fields, set_auto_translated_fields] = useState<Set<string>>(new Set());
+    const [info_message, set_info_message] = useState<string | null>(null);
     const image_input_id = "provider-event-image-upload";
     const { toasts, show_toast, dismiss } = useToast();
 
@@ -281,9 +284,23 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     const pending_count = events.filter((e) => e.status === "PENDING").length;
     const total_rsvp_sum = events.reduce((sum, e) => sum + e.rsvp_count, 0);
 
-    function handle_submit(e: React.FormEvent) {
+    async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
-        if (!form.title_en.trim() || !form.title_es.trim()) return;
+
+        const hasTitleEn = !!form.title_en.trim();
+        const hasTitleEs = !!form.title_es.trim();
+        const hasDescEn = !!form.description_en.trim();
+        const hasDescEs = !!form.description_es.trim();
+
+        if (!hasTitleEn && !hasTitleEs) {
+            show_toast("Please provide a title in at least one language.", "error");
+            return;
+        }
+        if (!hasDescEn && !hasDescEs) {
+            show_toast("Please provide a description in at least one language.", "error");
+            return;
+        }
+
         if (!form.location_address.trim()) {
             show_toast(props.location_address_required, "error");
             return;
@@ -298,12 +315,70 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             return;
         }
 
+        let finalTitleEn = form.title_en.trim();
+        let finalTitleEs = form.title_es.trim();
+        let finalDescriptionEn = form.description_en.trim();
+        let finalDescriptionEs = form.description_es.trim();
+
+        const needsTranslation =
+            (hasTitleEn && !hasTitleEs) ||
+            (!hasTitleEn && hasTitleEs) ||
+            (hasDescEn && !hasDescEs) ||
+            (!hasDescEn && hasDescEs);
+
+        if (needsTranslation) {
+            set_auto_translating(true);
+            const newly_translated = new Set<string>();
+            try {
+                const translate = async (text: string, sourceLang: "en" | "es", targetLang: "en" | "es") => {
+                    const res = await fetch("/api/translate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text, sourceLang, targetLang }),
+                    });
+                    const json = (await res.json()) as { translatedText?: string; error?: string };
+                    if (!res.ok || !json.translatedText) throw new Error(json.error || "Translation failed");
+                    return json.translatedText;
+                };
+
+                if (hasTitleEn && !hasTitleEs) {
+                    finalTitleEs = await translate(finalTitleEn, "en", "es");
+                    set_form(prev => ({ ...prev, title_es: finalTitleEs }));
+                    newly_translated.add("title_es");
+                } else if (!hasTitleEn && hasTitleEs) {
+                    finalTitleEn = await translate(finalTitleEs, "es", "en");
+                    set_form(prev => ({ ...prev, title_en: finalTitleEn }));
+                    newly_translated.add("title_en");
+                }
+
+                if (hasDescEn && !hasDescEs) {
+                    finalDescriptionEs = await translate(finalDescriptionEn, "en", "es");
+                    set_form(prev => ({ ...prev, description_es: finalDescriptionEs }));
+                    newly_translated.add("description_es");
+                } else if (!hasDescEn && hasDescEs) {
+                    finalDescriptionEn = await translate(finalDescriptionEs, "es", "en");
+                    set_form(prev => ({ ...prev, description_en: finalDescriptionEn }));
+                    newly_translated.add("description_en");
+                }
+            } catch {
+                show_toast("Translation failed. Please fill this field manually.", "error");
+                set_auto_translating(false);
+                return;
+            }
+
+            set_auto_translated_fields(prev => new Set([...prev, ...newly_translated]));
+            set_info_message("Some fields were auto-translated. Please review and submit again.");
+            set_auto_translating(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
         const new_event: MockEvent = {
             id: `evt-${Date.now()}`,
-            title_en: form.title_en.trim(),
-            title_es: form.title_es.trim(),
-            description_en: form.description_en.trim(),
-            description_es: form.description_es.trim(),
+            title_en: finalTitleEn,
+            title_es: finalTitleEs,
+            description_en: finalDescriptionEn,
+            description_es: finalDescriptionEs,
             location_name:
                 form.location_name.trim() || form.location_address.trim() || "TBD",
             latitude: form.latitude ?? 0,
@@ -325,6 +400,15 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     }
 
     function update_form(field: keyof FormState, value: string) {
+        // clear auto-translated badge when user edits
+        if (auto_translated_fields.has(field)) {
+            set_auto_translated_fields((prev) => {
+                const next = new Set(prev);
+                next.delete(field);
+                return next;
+            });
+        }
+
         set_form((prev) => {
             if (field === "start_time") {
                 return {
@@ -369,20 +453,48 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                 </div>
 
                 <form onSubmit={handle_submit} className="space-y-4">
+                    {info_message && (
+                        <div
+                            className="p-3 rounded-lg text-sm"
+                            style={{ background: "#dbeafe", color: "#1e40af", border: "1px solid #93c5fd" }}
+                        >
+                            ✨ {info_message}
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField label={props.title_en} required>
-                            <Input value={form.title_en} onChange={(e) => update_form("title_en", e.target.value)} required />
+                        <FormField label={props.title_en}>
+                            <Input value={form.title_en} onChange={(e) => update_form("title_en", e.target.value)} />
+                            {auto_translated_fields.has("title_en") && (
+                                <p className="text-xs mt-1" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
+                                    ✨ Auto-translated — review before submitting
+                                </p>
+                            )}
                         </FormField>
-                        <FormField label={props.title_es} required>
-                            <Input value={form.title_es} onChange={(e) => update_form("title_es", e.target.value)} required />
+                        <FormField label={props.title_es}>
+                            <Input value={form.title_es} onChange={(e) => update_form("title_es", e.target.value)} />
+                            {auto_translated_fields.has("title_es") && (
+                                <p className="text-xs mt-1" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
+                                    ✨ Auto-translated — review before submitting
+                                </p>
+                            )}
                         </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label={props.description_en}>
                             <Textarea value={form.description_en} onChange={(e) => update_form("description_en", e.target.value)} />
+                            {auto_translated_fields.has("description_en") && (
+                                <p className="text-xs mt-1" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
+                                    ✨ Auto-translated — review before submitting
+                                </p>
+                            )}
                         </FormField>
                         <FormField label={props.description_es}>
                             <Textarea value={form.description_es} onChange={(e) => update_form("description_es", e.target.value)} />
+                            {auto_translated_fields.has("description_es") && (
+                                <p className="text-xs mt-1" style={{ color: "var(--color-primary)", fontWeight: 500 }}>
+                                    ✨ Auto-translated — review before submitting
+                                </p>
+                            )}
                         </FormField>
                     </div>
                     <FormField label={props.location_name} required>
@@ -506,8 +618,8 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                             )}
                         </div>
                     </FormField>
-                    <button type="submit" className="btn btn-primary">
-                        {props.submit}
+                    <button type="submit" className="btn btn-primary" disabled={auto_translating}>
+                        {auto_translating ? "Translating..." : props.submit}
                     </button>
                 </form>
             </div>

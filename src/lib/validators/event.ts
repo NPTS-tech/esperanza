@@ -28,19 +28,13 @@ const age_range_refinement = (data: {
 
 
 // create_event_schema, used by POST /api/events.
-// All bilingual fields are required at creation time.
+// Bilingual fields: require at least one language for title and description.
 export const create_event_schema = z
     .object({
-        title_en: z.string().min(1, "English title is required").max(200),
-        title_es: z.string().min(1, "Spanish title is required").max(200),
-        description_en: z
-            .string()
-            .min(1, "English description is required")
-            .max(5000),
-        description_es: z
-            .string()
-            .min(1, "Spanish description is required")
-            .max(5000),
+        title_en: z.string().max(200),
+        title_es: z.string().max(200),
+        description_en: z.string().max(5000),
+        description_es: z.string().max(5000),
         location_name: z.string().min(1, "Location name is required").max(300),
         location_address: z.string().min(1, "Location address is required").max(500),
         latitude: z.coerce.number().min(-90).max(90),
@@ -70,13 +64,53 @@ export const create_event_schema = z
 
         image_url: z.string().url("Must be a valid URL").optional().nullable(),
     })
-    .refine((data) => data.end_time > data.start_time, {
-        message: "End time must be after start time",
-        path: ["end_time"],
-    })
-    .refine(age_range_refinement, {
-        message: "target_age_max must be greater than target_age_min",
-        path: ["target_age_max"],
+    .superRefine((data, ctx) => {
+        const has_title_en = !!data.title_en?.trim();
+        const has_title_es = !!data.title_es?.trim();
+        const has_description_en = !!data.description_en?.trim();
+        const has_description_es = !!data.description_es?.trim();
+
+        if (!has_title_en && !has_title_es) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A title is required in at least one language.",
+                path: ["title_en"],
+            });
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A title is required in at least one language.",
+                path: ["title_es"],
+            });
+        }
+
+        if (!has_description_en && !has_description_es) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A description is required in at least one language.",
+                path: ["description_en"],
+            });
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A description is required in at least one language.",
+                path: ["description_es"],
+            });
+        }
+
+        if (data.end_time <= data.start_time) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "End time must be after start time",
+                path: ["end_time"],
+            });
+        }
+
+        if (!age_range_refinement(data)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "target_age_max must be greater than target_age_min",
+                path: ["target_age_max"],
+            });
+        }
     });
 
 // update_event_schema, used by PATCH /api/events/[id].

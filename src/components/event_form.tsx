@@ -24,12 +24,18 @@ const LocationPicker = dynamic(
   },
 );
 
+interface EventFormSubmitResult {
+  id?: string;
+  error?: string;
+  field_errors?: Record<string, string[]>;
+}
+
 interface EventFormProps {
   mode: "create" | "edit";
   initial_data?: EventData;
   on_submit: (
     data: Record<string, unknown>,
-  ) => Promise<{ id?: string; error?: string }>;
+  ) => Promise<EventFormSubmitResult>;
   on_delete?: () => Promise<void>;
   on_submit_redirect?: string;
   on_delete_redirect?: string;
@@ -150,10 +156,16 @@ export default function EventForm({
   const [loading, set_loading] = useState(false);
   const [deleting, set_deleting] = useState(false);
   const [uploading_image, set_uploading_image] = useState(false);
+  const [auto_translating, set_auto_translating] = useState(false);
   const [error, set_error] = useState<string | null>(null);
+  const [info_message, set_info_message] = useState<string | null>(null);
   const [field_errors, set_field_errors] = useState<Record<string, string[]>>(
     {},
   );
+  const [translatingField, set_translatingField] = useState<
+    "title_en" | "title_es" | "description_en" | "description_es" | null
+  >(null);
+  const [autoTranslatedFields, set_autoTranslatedFields] = useState<Set<string>>(new Set());
   const end_time_options = TIME_OPTIONS.filter(
     (time) => to_minutes(time) > to_minutes(form.start_time),
   );
@@ -251,13 +263,48 @@ export default function EventForm({
         return next;
       });
     }
+    // clear auto translated badge
+    if (autoTranslatedFields.has(name)) {
+      set_autoTranslatedFields((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }
   }
 
   async function handle_submit(e: React.FormEvent) {
     e.preventDefault();
     set_loading(true);
+    set_auto_translating(false);
     set_error(null);
+    set_info_message(null);
     set_field_errors({});
+
+    const hasTitleEn = !!form.title_en.trim();
+    const hasTitleEs = !!form.title_es.trim();
+    const hasDescriptionEn = !!form.description_en.trim();
+    const hasDescriptionEs = !!form.description_es.trim();
+
+    if (!hasTitleEn && !hasTitleEs) {
+      set_field_errors((prev) => ({
+        ...prev,
+        title_en: [t("missing_bilingual_title")],
+        title_es: [t("missing_bilingual_title")],
+      }));
+      set_loading(false);
+      return;
+    }
+
+    if (!hasDescriptionEn && !hasDescriptionEs) {
+      set_field_errors((prev) => ({
+        ...prev,
+        description_en: [t("missing_bilingual_description")],
+        description_es: [t("missing_bilingual_description")],
+      }));
+      set_loading(false);
+      return;
+    }
 
     if (!form.location_address.trim()) {
       set_field_errors({
@@ -280,15 +327,75 @@ export default function EventForm({
       return;
     }
 
+    let finalTitleEn = form.title_en;
+    let finalTitleEs = form.title_es;
+    let finalDescriptionEn = form.description_en;
+    let finalDescriptionEs = form.description_es;
+
+    const needsTranslation =
+      (hasTitleEn && !hasTitleEs) ||
+      (!hasTitleEn && hasTitleEs) ||
+      (hasDescriptionEn && !hasDescriptionEs) ||
+      (!hasDescriptionEn && hasDescriptionEs);
+
+    if (needsTranslation) {
+      set_auto_translating(true);
+      const newlyTranslated = new Set<string>();
+      try {
+        const translate = async (text: string, sourceLang: "en" | "es", targetLang: "en" | "es") => {
+          const res = await fetch("/api/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, sourceLang, targetLang }),
+          });
+          const json = (await res.json()) as { translatedText?: string; error?: string };
+          if (!res.ok || !json.translatedText) throw new Error(json.error || "Translation failed");
+          return json.translatedText;
+        };
+
+        if (hasTitleEn && !hasTitleEs) {
+          finalTitleEs = await translate(finalTitleEn, "en", "es");
+          set_form(prev => ({ ...prev, title_es: finalTitleEs }));
+          newlyTranslated.add("title_es");
+        } else if (!hasTitleEn && hasTitleEs) {
+          finalTitleEn = await translate(finalTitleEs, "es", "en");
+          set_form(prev => ({ ...prev, title_en: finalTitleEn }));
+          newlyTranslated.add("title_en");
+        }
+
+        if (hasDescriptionEn && !hasDescriptionEs) {
+          finalDescriptionEs = await translate(finalDescriptionEn, "en", "es");
+          set_form(prev => ({ ...prev, description_es: finalDescriptionEs }));
+          newlyTranslated.add("description_es");
+        } else if (!hasDescriptionEn && hasDescriptionEs) {
+          finalDescriptionEn = await translate(finalDescriptionEs, "es", "en");
+          set_form(prev => ({ ...prev, description_en: finalDescriptionEn }));
+          newlyTranslated.add("description_en");
+        }
+      } catch {
+        set_error(t("translation_failed"));
+        set_loading(false);
+        set_auto_translating(false);
+        return;
+      }
+      
+      set_autoTranslatedFields(prev => new Set([...prev, ...newlyTranslated]));
+      set_info_message(t("fields_auto_translated"));
+      set_loading(false);
+      set_auto_translating(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     const start_iso = combine_date_and_time_to_iso(form.event_date, form.start_time);
     const end_iso = combine_date_and_time_to_iso(form.event_date, form.end_time);
 
     // build payload
     const payload: Record<string, unknown> = {
-      title_en: form.title_en,
-      title_es: form.title_es,
-      description_en: form.description_en,
-      description_es: form.description_es,
+      title_en: finalTitleEn,
+      title_es: finalTitleEs,
+      description_en: finalDescriptionEn,
+      description_es: finalDescriptionEs,
       location_name: form.location_name,
       location_address: form.location_address,
       latitude: form.latitude,
@@ -306,6 +413,9 @@ export default function EventForm({
       const result = await on_submit(payload);
       if (result.error) {
         set_error(result.error);
+        if (result.field_errors) {
+          set_field_errors(result.field_errors);
+        }
       } else if (result.id) {
         if (on_submit_redirect) {
           router.push(on_submit_redirect);
@@ -343,13 +453,15 @@ export default function EventForm({
   }
 
   const submit_label =
-    mode === "create"
-      ? loading
-        ? t("creating")
-        : t("create_event")
-      : loading
-        ? t("saving")
-        : t("save_changes");
+    auto_translating
+      ? t("auto_translating")
+      : mode === "create"
+        ? loading
+          ? t("creating")
+          : t("create_event")
+        : loading
+          ? t("saving")
+          : t("save_changes");
 
   return (
     <form onSubmit={handle_submit} className="space-y-5">
@@ -362,6 +474,15 @@ export default function EventForm({
         </div>
       )}
 
+      {info_message && (
+        <div
+          className="p-3 rounded-lg text-sm"
+          style={{ background: "#dbeafe", color: "#1e40af", border: "1px solid #93c5fd" }}
+        >
+          ✨ {info_message}
+        </div>
+      )}
+
       {/* Titles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -369,14 +490,13 @@ export default function EventForm({
             className="block text-sm font-medium mb-1"
             style={{ color: "var(--color-text)" }}
           >
-            {t("form_title_en")} *
+            {t("form_title_en")}
           </label>
           <input
             type="text"
             name="title_en"
             value={form.title_en}
             onChange={handle_change}
-            required
             maxLength={200}
             className="input"
           />
@@ -388,20 +508,75 @@ export default function EventForm({
               {field_errors.title_en[0]}
             </p>
           )}
+          {autoTranslatedFields.has("title_en") && !field_errors.title_en && (
+            <p
+              className="text-xs mt-1"
+              style={{ color: "var(--color-primary)", fontWeight: 500 }}
+            >
+              ✨ {t("auto_translated_hint")}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary mt-2 text-xs"
+            disabled={translatingField === "title_es" || !form.title_en.trim()}
+            onClick={async () => {
+              if (!form.title_en.trim()) return;
+              set_translatingField("title_es");
+              set_error(null);
+              try {
+                const res = await fetch("/api/translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    text: form.title_en,
+                    sourceLang: "en",
+                    targetLang: "es",
+                  }),
+                });
+                const json = (await res.json()) as {
+                  translatedText?: string;
+                  error?: string;
+                };
+                if (!res.ok || !json.translatedText) {
+                  throw new Error(json.error || "Translation failed");
+                }
+                set_form((prev) => ({
+                  ...prev,
+                  title_es: json.translatedText ?? "",
+                }));
+                set_field_errors((prev) => {
+                  const next = { ...prev };
+                  delete next.title_es;
+                  return next;
+                });
+              } catch {
+                set_field_errors((prev) => ({
+                  ...prev,
+                  title_es: [t("translation_failed")],
+                }));
+              } finally {
+                set_translatingField(null);
+              }
+            }}
+          >
+            {translatingField === "title_es"
+              ? t("auto_translating")
+              : t("translate_to_spanish")}
+          </button>
         </div>
         <div>
           <label
             className="block text-sm font-medium mb-1"
             style={{ color: "var(--color-text)" }}
           >
-            {t("form_title_es")} *
+            {t("form_title_es")}
           </label>
           <input
             type="text"
             name="title_es"
             value={form.title_es}
             onChange={handle_change}
-            required
             maxLength={200}
             className="input"
           />
@@ -413,6 +588,62 @@ export default function EventForm({
               {field_errors.title_es[0]}
             </p>
           )}
+          {autoTranslatedFields.has("title_es") && !field_errors.title_es && (
+            <p
+              className="text-xs mt-1"
+              style={{ color: "var(--color-primary)", fontWeight: 500 }}
+            >
+              ✨ {t("auto_translated_hint")}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary mt-2 text-xs"
+            disabled={translatingField === "title_en" || !form.title_es.trim()}
+            onClick={async () => {
+              if (!form.title_es.trim()) return;
+              set_translatingField("title_en");
+              set_error(null);
+              try {
+                const res = await fetch("/api/translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    text: form.title_es,
+                    sourceLang: "es",
+                    targetLang: "en",
+                  }),
+                });
+                const json = (await res.json()) as {
+                  translatedText?: string;
+                  error?: string;
+                };
+                if (!res.ok || !json.translatedText) {
+                  throw new Error(json.error || "Translation failed");
+                }
+                set_form((prev) => ({
+                  ...prev,
+                  title_en: json.translatedText ?? "",
+                }));
+                set_field_errors((prev) => {
+                  const next = { ...prev };
+                  delete next.title_en;
+                  return next;
+                });
+              } catch {
+                set_field_errors((prev) => ({
+                  ...prev,
+                  title_en: [t("translation_failed")],
+                }));
+              } finally {
+                set_translatingField(null);
+              }
+            }}
+          >
+            {translatingField === "title_en"
+              ? t("auto_translating")
+              : t("translate_to_english")}
+          </button>
         </div>
       </div>
 
@@ -423,13 +654,12 @@ export default function EventForm({
             className="block text-sm font-medium mb-1"
             style={{ color: "var(--color-text)" }}
           >
-            {t("form_description_en")} *
+            {t("form_description_en")}
           </label>
           <textarea
             name="description_en"
             value={form.description_en}
             onChange={handle_change}
-            required
             maxLength={5000}
             rows={4}
             className="input"
@@ -443,19 +673,76 @@ export default function EventForm({
               {field_errors.description_en[0]}
             </p>
           )}
+          {autoTranslatedFields.has("description_en") && !field_errors.description_en && (
+            <p
+              className="text-xs mt-1"
+              style={{ color: "var(--color-primary)", fontWeight: 500 }}
+            >
+              ✨ {t("auto_translated_hint")}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary mt-2 text-xs"
+            disabled={
+              translatingField === "description_es" || !form.description_en.trim()
+            }
+            onClick={async () => {
+              if (!form.description_en.trim()) return;
+              set_translatingField("description_es");
+              set_error(null);
+              try {
+                const res = await fetch("/api/translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    text: form.description_en,
+                    sourceLang: "en",
+                    targetLang: "es",
+                  }),
+                });
+                const json = (await res.json()) as {
+                  translatedText?: string;
+                  error?: string;
+                };
+                if (!res.ok || !json.translatedText) {
+                  throw new Error(json.error || "Translation failed");
+                }
+                set_form((prev) => ({
+                  ...prev,
+                  description_es: json.translatedText ?? "",
+                }));
+                set_field_errors((prev) => {
+                  const next = { ...prev };
+                  delete next.description_es;
+                  return next;
+                });
+              } catch {
+                set_field_errors((prev) => ({
+                  ...prev,
+                  description_es: [t("translation_failed")],
+                }));
+              } finally {
+                set_translatingField(null);
+              }
+            }}
+          >
+            {translatingField === "description_es"
+              ? t("auto_translating")
+              : t("translate_to_spanish")}
+          </button>
         </div>
         <div>
           <label
             className="block text-sm font-medium mb-1"
             style={{ color: "var(--color-text)" }}
           >
-            {t("form_description_es")} *
+            {t("form_description_es")}
           </label>
           <textarea
             name="description_es"
             value={form.description_es}
             onChange={handle_change}
-            required
             maxLength={5000}
             rows={4}
             className="input"
@@ -469,6 +756,64 @@ export default function EventForm({
               {field_errors.description_es[0]}
             </p>
           )}
+          {autoTranslatedFields.has("description_es") && !field_errors.description_es && (
+            <p
+              className="text-xs mt-1"
+              style={{ color: "var(--color-primary)", fontWeight: 500 }}
+            >
+              ✨ {t("auto_translated_hint")}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary mt-2 text-xs"
+            disabled={
+              translatingField === "description_en" || !form.description_es.trim()
+            }
+            onClick={async () => {
+              if (!form.description_es.trim()) return;
+              set_translatingField("description_en");
+              set_error(null);
+              try {
+                const res = await fetch("/api/translate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    text: form.description_es,
+                    sourceLang: "es",
+                    targetLang: "en",
+                  }),
+                });
+                const json = (await res.json()) as {
+                  translatedText?: string;
+                  error?: string;
+                };
+                if (!res.ok || !json.translatedText) {
+                  throw new Error(json.error || "Translation failed");
+                }
+                set_form((prev) => ({
+                  ...prev,
+                  description_en: json.translatedText ?? "",
+                }));
+                set_field_errors((prev) => {
+                  const next = { ...prev };
+                  delete next.description_en;
+                  return next;
+                });
+              } catch {
+                set_field_errors((prev) => ({
+                  ...prev,
+                  description_en: [t("translation_failed")],
+                }));
+              } finally {
+                set_translatingField(null);
+              }
+            }}
+          >
+            {translatingField === "description_en"
+              ? t("auto_translating")
+              : t("translate_to_english")}
+          </button>
         </div>
       </div>
 

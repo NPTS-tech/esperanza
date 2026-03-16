@@ -144,9 +144,20 @@
         "view_details": "Ver Detalles",
         "view_list": "Vista de Lista",
         "view_calendar": "Vista de Calendario",
-        "event_details": "Detalles del evento",
-        "provider_label": "Organizador",
-        "add_to_calendar": "Agregar al Calendario"
+    "event_details": "Detalles del evento",
+    "provider_label": "Organizador",
+    "add_to_calendar": "Agregar al Calendario",
+    "translate_to_spanish": "Traducir al español",
+    "translate_to_english": "Traducir al inglés",
+    "translate_missing": "Traducir campos faltantes",
+    "auto_translated": "Traducido automáticamente",
+    "auto_translating": "Traduciendo...",
+    "edited_manually": "Editado manualmente",
+    "translation_failed": "La traducción falló. Completa este campo manualmente.",
+    "missing_bilingual_title": "Proporciona un título en al menos un idioma.",
+    "missing_bilingual_description": "Proporciona una descripción en al menos un idioma.",
+    "auto_translated_hint": "Traducido automáticamente — revisa antes de enviar",
+    "fields_auto_translated": "Algunos campos fueron traducidos automáticamente. Revisa y envía de nuevo."
     },
     "Unauthorized": {
         "title": "Acceso Denegado",

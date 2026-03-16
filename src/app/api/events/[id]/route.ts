@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { update_event_schema } from "@/lib/validators/event";
+import { ensureBilingualEventFields } from "@/lib/services/event-translation";
 import { EventStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -142,6 +143,51 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             );
             if (has_content_change) {
                 update_data.status = EventStatus.PENDING;
+            }
+        }
+
+        // Ensure bilingual title/description after applying patch.
+        // Merge existing values with incoming patch, then fill any missing counterpart language.
+        let bilingualFields = {
+            title_en: existing.title_en,
+            title_es: existing.title_es,
+            description_en: existing.description_en,
+            description_es: existing.description_es,
+        };
+
+        if (
+            update_data.title_en !== undefined ||
+            update_data.title_es !== undefined ||
+            update_data.description_en !== undefined ||
+            update_data.description_es !== undefined
+        ) {
+            const mergedForTranslation = {
+                title_en: (update_data.title_en ?? existing.title_en) ?? "",
+                title_es: (update_data.title_es ?? existing.title_es) ?? "",
+                description_en: (update_data.description_en ?? existing.description_en) ?? "",
+                description_es: (update_data.description_es ?? existing.description_es) ?? "",
+            };
+
+            try {
+                bilingualFields = await ensureBilingualEventFields(mergedForTranslation);
+            } catch (error) {
+                console.error("ensureBilingualEventFields error (update):", error);
+                return NextResponse.json(
+                    {
+                        error: "Translation service unavailable",
+                    },
+                    { status: 502 },
+                );
+            }
+
+            if (update_data.title_en !== undefined || update_data.title_es !== undefined) {
+                update_data.title_en = bilingualFields.title_en;
+                update_data.title_es = bilingualFields.title_es;
+            }
+
+            if (update_data.description_en !== undefined || update_data.description_es !== undefined) {
+                update_data.description_en = bilingualFields.description_en;
+                update_data.description_es = bilingualFields.description_es;
             }
         }
 

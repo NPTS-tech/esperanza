@@ -46,7 +46,7 @@ export default function CreateEventPage() {
 
   async function handle_create(
     data: Record<string, unknown>,
-  ): Promise<{ id?: string; error?: string }> {
+  ): Promise<{ id?: string; error?: string; field_errors?: Record<string, string[]> }> {
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -56,10 +56,13 @@ export default function CreateEventPage() {
     const json = await res.json();
 
     if (!res.ok) {
-      return { error: json.error || t("error_loading") };
+      return {
+        error: json.error || t("error_loading"),
+        field_errors: json.details as Record<string, string[]> | undefined,
+      };
     }
 
-    return { id: json.id };
+    return { id: json.id as string | undefined };
   }
 
   return (
