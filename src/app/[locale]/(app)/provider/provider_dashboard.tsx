@@ -284,13 +284,25 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     const pending_count = events.filter((e) => e.status === "PENDING").length;
     const total_rsvp_sum = events.reduce((sum, e) => sum + e.rsvp_count, 0);
 
+    const hasTitleEn = !!form.title_en.trim();
+    const hasTitleEs = !!form.title_es.trim();
+    const hasDescEn = !!form.description_en.trim();
+    const hasDescEs = !!form.description_es.trim();
+
+    const has_any_source_text =
+        hasTitleEn ||
+        hasTitleEs ||
+        hasDescEn ||
+        hasDescEs;
+
+    const has_any_missing_bilingual_field =
+        (hasTitleEn && !hasTitleEs) ||
+        (!hasTitleEn && hasTitleEs) ||
+        (hasDescEn && !hasDescEs) ||
+        (!hasDescEn && hasDescEs);
+
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
-
-        const hasTitleEn = !!form.title_en.trim();
-        const hasTitleEs = !!form.title_es.trim();
-        const hasDescEn = !!form.description_en.trim();
-        const hasDescEs = !!form.description_es.trim();
 
         if (!hasTitleEn && !hasTitleEs) {
             show_toast("Please provide a title in at least one language.", "error");
@@ -439,9 +451,78 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
 
             {/* Submit event form */}
             <div className="card card-no-hover p-4 md:p-6">
-                <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
-                    {props.submit_event}
-                </h2>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                    <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                        {props.submit_event}
+                    </h2>
+                    {has_any_source_text && has_any_missing_bilingual_field && (
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-sm text-xs"
+                            disabled={auto_translating}
+                            onClick={async () => {
+                                if (!has_any_source_text || !has_any_missing_bilingual_field) {
+                                    return;
+                                }
+
+                                set_auto_translating(true);
+                                const newly_translated = new Set<string>();
+
+                                try {
+                                    const translate = async (text: string, sourceLang: "en" | "es", targetLang: "en" | "es") => {
+                                        const res = await fetch("/api/translate", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ text, sourceLang, targetLang }),
+                                        });
+                                        const json = (await res.json()) as { translatedText?: string; error?: string };
+                                        if (!res.ok || !json.translatedText) {
+                                            throw new Error(json.error || "Translation failed");
+                                        }
+                                        return json.translatedText;
+                                    };
+
+                                    // Title pair
+                                    if (hasTitleEn && !hasTitleEs) {
+                                        const translated = await translate(form.title_en.trim(), "en", "es");
+                                        set_form(prev => ({ ...prev, title_es: translated }));
+                                        newly_translated.add("title_es");
+                                    } else if (!hasTitleEn && hasTitleEs) {
+                                        const translated = await translate(form.title_es.trim(), "es", "en");
+                                        set_form(prev => ({ ...prev, title_en: translated }));
+                                        newly_translated.add("title_en");
+                                    }
+
+                                    // Description pair
+                                    if (hasDescEn && !hasDescEs) {
+                                        const translated = await translate(form.description_en.trim(), "en", "es");
+                                        set_form(prev => ({ ...prev, description_es: translated }));
+                                        newly_translated.add("description_es");
+                                    } else if (!hasDescEn && hasDescEs) {
+                                        const translated = await translate(form.description_es.trim(), "es", "en");
+                                        set_form(prev => ({ ...prev, description_en: translated }));
+                                        newly_translated.add("description_en");
+                                    }
+
+                                    if (newly_translated.size > 0) {
+                                        set_auto_translated_fields(prev => new Set([...prev, ...newly_translated]));
+                                        set_info_message("Some fields were auto-translated. Please review and submit again.");
+                                        window.scrollTo({ top: 0, behavior: "smooth" });
+                                    }
+                                } catch (err) {
+                                    show_toast(
+                                        err instanceof Error ? err.message : "Translation failed. Please fill this field manually.",
+                                        "error",
+                                    );
+                                } finally {
+                                    set_auto_translating(false);
+                                }
+                            }}
+                        >
+                            {auto_translating ? "Translating..." : "Translate missing fields"}
+                        </button>
+                    )}
+                </div>
                 <div
                     className="flex items-center gap-3 p-3 mb-4 rounded-lg"
                     style={{ backgroundColor: "rgba(212,168,83,0.15)", borderLeft: "4px solid var(--color-warning)" }}
@@ -472,41 +553,6 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     ✨ Auto-translated — review before submitting
                                 </p>
                             )}
-                            <button
-                                type="button"
-                                className="btn btn-secondary mt-2 text-xs"
-                                disabled={!form.title_en.trim() || auto_translating}
-                                onClick={async () => {
-                                    if (!form.title_en.trim()) return;
-                                    try {
-                                        set_auto_translating(true);
-                                        const res = await fetch("/api/translate", {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                text: form.title_en,
-                                                sourceLang: "en",
-                                                targetLang: "es",
-                                            }),
-                                        });
-                                        const json = (await res.json()) as { translatedText?: string; error?: string };
-                                        if (!res.ok || !json.translatedText) {
-                                            throw new Error(json.error || "Translation failed");
-                                        }
-                                        set_form((prev) => ({ ...prev, title_es: json.translatedText ?? "" }));
-                                        set_auto_translated_fields((prev) => new Set(prev).add("title_es"));
-                                    } catch (err) {
-                                        show_toast(
-                                            err instanceof Error ? err.message : "Translation failed. Please fill this field manually.",
-                                            "error",
-                                        );
-                                    } finally {
-                                        set_auto_translating(false);
-                                    }
-                                }}
-                            >
-                                {auto_translating ? "Translating..." : "Translate to Spanish"}
-                            </button>
                         </FormField>
                         <FormField label={props.title_es}>
                             <Input
@@ -518,41 +564,6 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     ✨ Auto-translated — review before submitting
                                 </p>
                             )}
-                            <button
-                                type="button"
-                                className="btn btn-secondary mt-2 text-xs"
-                                disabled={!form.title_es.trim() || auto_translating}
-                                onClick={async () => {
-                                    if (!form.title_es.trim()) return;
-                                    try {
-                                        set_auto_translating(true);
-                                        const res = await fetch("/api/translate", {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                text: form.title_es,
-                                                sourceLang: "es",
-                                                targetLang: "en",
-                                            }),
-                                        });
-                                        const json = (await res.json()) as { translatedText?: string; error?: string };
-                                        if (!res.ok || !json.translatedText) {
-                                            throw new Error(json.error || "Translation failed");
-                                        }
-                                        set_form((prev) => ({ ...prev, title_en: json.translatedText ?? "" }));
-                                        set_auto_translated_fields((prev) => new Set(prev).add("title_en"));
-                                    } catch (err) {
-                                        show_toast(
-                                            err instanceof Error ? err.message : "Translation failed. Please fill this field manually.",
-                                            "error",
-                                        );
-                                    } finally {
-                                        set_auto_translating(false);
-                                    }
-                                }}
-                            >
-                                {auto_translating ? "Translating..." : "Translate to English"}
-                            </button>
                         </FormField>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -566,41 +577,6 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     ✨ Auto-translated — review before submitting
                                 </p>
                             )}
-                            <button
-                                type="button"
-                                className="btn btn-secondary mt-2 text-xs"
-                                disabled={!form.description_en.trim() || auto_translating}
-                                onClick={async () => {
-                                    if (!form.description_en.trim()) return;
-                                    try {
-                                        set_auto_translating(true);
-                                        const res = await fetch("/api/translate", {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                text: form.description_en,
-                                                sourceLang: "en",
-                                                targetLang: "es",
-                                            }),
-                                        });
-                                        const json = (await res.json()) as { translatedText?: string; error?: string };
-                                        if (!res.ok || !json.translatedText) {
-                                            throw new Error(json.error || "Translation failed");
-                                        }
-                                        set_form((prev) => ({ ...prev, description_es: json.translatedText ?? "" }));
-                                        set_auto_translated_fields((prev) => new Set(prev).add("description_es"));
-                                    } catch (err) {
-                                        show_toast(
-                                            err instanceof Error ? err.message : "Translation failed. Please fill this field manually.",
-                                            "error",
-                                        );
-                                    } finally {
-                                        set_auto_translating(false);
-                                    }
-                                }}
-                            >
-                                {auto_translating ? "Translating..." : "Translate to Spanish"}
-                            </button>
                         </FormField>
                         <FormField label={props.description_es}>
                             <Textarea
@@ -612,41 +588,6 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     ✨ Auto-translated — review before submitting
                                 </p>
                             )}
-                            <button
-                                type="button"
-                                className="btn btn-secondary mt-2 text-xs"
-                                disabled={!form.description_es.trim() || auto_translating}
-                                onClick={async () => {
-                                    if (!form.description_es.trim()) return;
-                                    try {
-                                        set_auto_translating(true);
-                                        const res = await fetch("/api/translate", {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                text: form.description_es,
-                                                sourceLang: "es",
-                                                targetLang: "en",
-                                            }),
-                                        });
-                                        const json = (await res.json()) as { translatedText?: string; error?: string };
-                                        if (!res.ok || !json.translatedText) {
-                                            throw new Error(json.error || "Translation failed");
-                                        }
-                                        set_form((prev) => ({ ...prev, description_en: json.translatedText ?? "" }));
-                                        set_auto_translated_fields((prev) => new Set(prev).add("description_en"));
-                                    } catch (err) {
-                                        show_toast(
-                                            err instanceof Error ? err.message : "Translation failed. Please fill this field manually.",
-                                            "error",
-                                        );
-                                    } finally {
-                                        set_auto_translating(false);
-                                    }
-                                }}
-                            >
-                                {auto_translating ? "Translating..." : "Translate to English"}
-                            </button>
                         </FormField>
                     </div>
                     <FormField label={props.location_name} required>
