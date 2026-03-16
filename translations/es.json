@@ -310,5 +310,14 @@
         "table_title": "Título",
         "date": "Fecha",
         "status": "Estado"
+    },
+    "Kiosk": {
+        "idle_title": "Sesión finalizada por inactividad",
+        "idle_body": "Tu sesión ha terminado por inactividad.",
+        "idle_stay_signed_in": "Continuar",
+        "idle_log_out": "Cerrar sesión",
+        "error_title": "Algo salió mal",
+        "error_body": "Volveremos a la pantalla de inicio.",
+        "back_to_start": "Volver al inicio"
     }
 }

@@ -312,5 +312,14 @@
         "table_title": "Title",
         "date": "Date",
         "status": "Status"
+    },
+    "Kiosk": {
+        "idle_title": "Session timed out",
+        "idle_body": "Your session has ended due to inactivity.",
+        "idle_stay_signed_in": "Continue",
+        "idle_log_out": "Log out",
+        "error_title": "Something went wrong",
+        "error_body": "We will return to the start screen.",
+        "back_to_start": "Back to start"
     }
 }
