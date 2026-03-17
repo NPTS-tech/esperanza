@@ -272,7 +272,9 @@
         "view_map": "Ver Mapa",
         "view_map_desc": "Explora eventos en un mapa interactivo",
         "my_profile": "Mi Perfil",
-        "my_profile_desc": "Administra tu cuenta y preferencias"
+        "my_profile_desc": "Administra tu cuenta y preferencias",
+        "org_profile": "Perfil de org.",
+        "org_profile_desc": "Edita el perfil público de tu organización"
     },
     "ProviderSettings": {
         "heading": "Perfil de la organización",
@@ -345,6 +347,7 @@
         "no_events": "Aún no has enviado ningún evento",
         "table_title": "Título",
         "date": "Fecha",
-        "status": "Estado"
+        "status": "Estado",
+        "org_profile": "Perfil de org."
     }
 }

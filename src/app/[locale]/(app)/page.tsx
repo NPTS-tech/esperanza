@@ -1,12 +1,11 @@
 import { auth } from "@/lib/auth";
-import { getTranslations, getLocale } from "next-intl/server";
-import { CalendarDays, Map, User } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { CalendarDays, Map, User, Building2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
 export default async function HomePage() {
     const session = (await auth())!;
 
-    const locale = await getLocale();
     const t = await getTranslations("Home");
 
     const quick_links = [
@@ -28,6 +27,12 @@ export default async function HomePage() {
             label: t("my_profile"),
             desc: t("my_profile_desc"),
         },
+        ...(session.user.role === "PROVIDER" ? [{
+            href: "/provider/settings",
+            icon: <Building2 size={28} style={{ color: "var(--color-primary)" }} />,
+            label: t("org_profile"),
+            desc: t("org_profile_desc"),
+        }] : []),
     ];
 
     return (

@@ -274,7 +274,9 @@
         "view_map": "View Map",
         "view_map_desc": "Explore events on an interactive map",
         "my_profile": "My Profile",
-        "my_profile_desc": "Manage your account and preferences"
+        "my_profile_desc": "Manage your account and preferences",
+        "org_profile": "Org Profile",
+        "org_profile_desc": "Edit your organization's public profile"
     },
     "ProviderSettings": {
         "heading": "Organization Profile",
@@ -347,6 +349,7 @@
         "no_events": "You haven't submitted any events yet",
         "table_title": "Title",
         "date": "Date",
-        "status": "Status"
+        "status": "Status",
+        "org_profile": "Org Profile"
     }
 }
