@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { MapPin, Clock, CalendarDays, Building2 } from "lucide-react";
+import { MapPin, Clock, CalendarDays } from "lucide-react";
 
 export interface EventData {
   id: string;
@@ -147,10 +147,31 @@ export default function EventCard({ event }: EventCardProps) {
             </span>
           </div>
           <div
-            className="flex items-center gap-2 pt-1.5 mt-0.5"
+            className="flex items-center gap-2 pt-2 mt-1"
             style={{ borderTop: "1px solid var(--color-border)" }}
           >
-            <Building2 size={11} strokeWidth={2} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+            {/* Provider avatar */}
+            <div
+              style={{
+                width: 22, height: 22, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+                background: "var(--color-primary-light)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              {event.provider.provider_profile?.logo_url ? (
+                <img
+                  src={event.provider.provider_profile.logo_url}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+                  {(event.provider.provider_profile?.org_name ?? event.provider.email)
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
+              )}
+            </div>
             <span className="text-xs font-medium truncate" style={{ color: "var(--color-primary)" }}>
               {event.provider.provider_profile?.org_name ?? event.provider.email}
             </span>

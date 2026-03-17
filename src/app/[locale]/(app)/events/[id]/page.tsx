@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
-import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3 } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight } from "lucide-react";
 import type { EventData } from "@/components/event_card";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
@@ -367,6 +367,44 @@ export default function EventDetailPage() {
               </p>
             )}
           </div>
+
+          {/* Hosted by */}
+          <Link
+            href={`/providers/${event.provider.id}`}
+            className="flex items-center gap-3 mb-6 p-3 rounded-xl no-underline group"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-border)" }}
+          >
+            <div
+              style={{
+                width: 44, height: 44, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+                background: "var(--color-primary-light)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              {event.provider.provider_profile?.logo_url ? (
+                <img
+                  src={event.provider.provider_profile.logo_url}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: 18, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+                  {(event.provider.provider_profile?.org_name ?? event.provider.email)
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                {locale === "es" ? "Organizado por" : "Hosted by"}
+              </p>
+              <p className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>
+                {event.provider.provider_profile?.org_name ?? event.provider.email}
+              </p>
+            </div>
+            <ChevronRight size={16} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
+          </Link>
 
           {/* Map */}
           <div className="mb-6 rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
