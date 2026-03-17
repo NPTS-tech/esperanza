@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String           @id @default(uuid())
-  email         String           @unique
-  password_hash String
-  role          Role             @default(USER)
-  language_pref String           @default("en")
-  consented_at  DateTime?
-  created_at    DateTime         @default(now())
-  analytics     AnalyticsEvent[]
-  announcements Announcement[]   @relation("AuthorAnnouncements")
-  demographics  Demographics?
-  events        Event[]          @relation("ProviderEvents")
-  rsvps         Rsvp[]
+  id               String           @id @default(uuid())
+  email            String           @unique
+  password_hash    String
+  role             Role             @default(USER)
+  language_pref    String           @default("en")
+  consented_at     DateTime?
+  created_at       DateTime         @default(now())
+  analytics        AnalyticsEvent[]
+  announcements    Announcement[]   @relation("AuthorAnnouncements")
+  demographics     Demographics?
+  events           Event[]          @relation("ProviderEvents")
+  rsvps            Rsvp[]
+  provider_profile ProviderProfile?
 
   @@map("users")
 }
@@ -42,6 +43,20 @@ model Demographics {
   user                    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("demographics")
+}
+
+model ProviderProfile {
+  id            String  @id @default(uuid())
+  user_id       String  @unique
+  org_name      String?
+  bio           String?
+  logo_url      String?
+  website_url   String?
+  contact_email String?
+  contact_phone String?
+  user          User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("provider_profiles")
 }
 
 model Event {

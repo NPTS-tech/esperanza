@@ -125,7 +125,13 @@ export async function GET(request: NextRequest) {
         orderBy: { start_time: "asc" },
         include: {
           provider: {
-            select: { id: true, email: true },
+            select: {
+              id: true,
+              email: true,
+              provider_profile: {
+                select: { org_name: true, logo_url: true },
+              },
+            },
           },
           _count: {
             select: { rsvps: true },
@@ -213,7 +219,13 @@ export async function POST(request: NextRequest) {
       },
       include: {
         provider: {
-          select: { id: true, email: true },
+          select: {
+            id: true,
+            email: true,
+            provider_profile: {
+              select: { org_name: true, logo_url: true },
+            },
+          },
         },
       },
     });

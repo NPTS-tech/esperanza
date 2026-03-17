@@ -29,7 +29,13 @@ export async function GET(_request: NextRequest, context: RouteContext) {
             where: { id },
             include: {
                 provider: {
-                    select: { id: true, email: true },
+                    select: {
+                        id: true,
+                        email: true,
+                        provider_profile: {
+                            select: { org_name: true, logo_url: true },
+                        },
+                    },
                 },
                 _count: {
                     select: { rsvps: true },
@@ -194,7 +200,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             data: update_data,
             include: {
                 provider: {
-                    select: { id: true, email: true },
+                    select: {
+                        id: true,
+                        email: true,
+                        provider_profile: {
+                            select: { org_name: true, logo_url: true },
+                        },
+                    },
                 },
                 _count: {
                     select: { rsvps: true },
