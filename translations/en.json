@@ -276,6 +276,19 @@
         "my_profile": "My Profile",
         "my_profile_desc": "Manage your account and preferences"
     },
+    "ProviderProfile": {
+        "back": "Back to events",
+        "hosted_by": "Hosted by",
+        "about": "About",
+        "website": "Website",
+        "contact_email": "Email",
+        "contact_phone": "Phone",
+        "upcoming_events": "Upcoming Events",
+        "no_events": "No upcoming events.",
+        "loading": "Loading...",
+        "not_found": "Provider not found.",
+        "error_loading": "Failed to load provider."
+    },
     "Provider": {
         "title": "Provider Dashboard",
         "subtitle": "Manage your events and services",

@@ -274,6 +274,19 @@
         "my_profile": "Mi Perfil",
         "my_profile_desc": "Administra tu cuenta y preferencias"
     },
+    "ProviderProfile": {
+        "back": "Volver a eventos",
+        "hosted_by": "Organizado por",
+        "about": "Acerca de",
+        "website": "Sitio web",
+        "contact_email": "Correo electrónico",
+        "contact_phone": "Teléfono",
+        "upcoming_events": "Próximos eventos",
+        "no_events": "Sin eventos próximos.",
+        "loading": "Cargando...",
+        "not_found": "Proveedor no encontrado.",
+        "error_loading": "Error al cargar el proveedor."
+    },
     "Provider": {
         "title": "Panel de Proveedor",
         "subtitle": "Gestionar tus eventos y servicios",

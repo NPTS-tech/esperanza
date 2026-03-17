@@ -52,7 +52,7 @@ export default auth((req) => {
     if (req.auth) {
         const role = req.auth.user?.role;
         const is_admin_route = normalizedPathname.startsWith("/admin");
-        const is_provider_route = normalizedPathname.startsWith("/provider");
+        const is_provider_route = normalizedPathname.startsWith("/provider/") || normalizedPathname === "/provider";
 
         if (is_admin_route && role !== "ADMIN") {
             return NextResponse.redirect(new URL(`/${locale}/unauthorized`, req.nextUrl.origin));
