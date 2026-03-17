@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Globe, Mail, Phone, ExternalLink } from "lucide-react";
@@ -22,7 +22,11 @@ export default function ProviderProfilePage() {
     const t = useTranslations("ProviderProfile");
     const locale = useLocale();
     const params = useParams();
+    const search_params = useSearchParams();
     const provider_id = params.id as string;
+    const from_settings = search_params.get("from") === "settings";
+    const back_href = from_settings ? "/provider/settings" : "/events";
+    const back_label = from_settings ? t("back_profile") : t("back");
 
     const [profile, set_profile] = useState<ProviderProfile | null>(null);
     const [events, set_events] = useState<EventData[]>([]);
@@ -80,8 +84,8 @@ export default function ProviderProfilePage() {
                 <h2 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
                     {error || t("not_found")}
                 </h2>
-                <Link href="/events" className="text-sm mt-2 inline-block" style={{ color: "var(--color-primary)" }}>
-                    ← {t("back")}
+                <Link href={back_href as any} className="text-sm mt-2 inline-block" style={{ color: "var(--color-primary)" }}>
+                    ← {back_label}
                 </Link>
             </div>
         );
@@ -94,12 +98,12 @@ export default function ProviderProfilePage() {
         <div className="max-w-3xl mx-auto px-4 py-6">
             {/* Back link */}
             <Link
-                href="/events"
+                href={back_href as any}
                 className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-5"
                 style={{ color: "var(--color-text-secondary)" }}
             >
                 <span style={{ fontSize: 16, lineHeight: 1 }}>‹</span>
-                {t("back")}
+                {back_label}
             </Link>
 
             {/* Profile header card */}

@@ -210,7 +210,7 @@ export function ProviderSettings({
 
                 <div className="flex items-center justify-between pt-2">
                     <Link
-                        href={`/providers/${provider_id}` as any}
+                        href={`/providers/${provider_id}?from=settings` as any}
                         className="text-sm"
                         style={{ color: "var(--color-primary)" }}
                     >
@@ -227,15 +227,6 @@ export function ProviderSettings({
                 </div>
             </form>
 
-            <div>
-                <Link
-                    href="/provider"
-                    className="text-sm"
-                    style={{ color: "var(--color-text-secondary)" }}
-                >
-                    {label_back}
-                </Link>
-            </div>
         </div>
     );
 }

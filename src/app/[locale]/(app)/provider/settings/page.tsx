@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
 import { ProviderSettings } from "./provider_settings";
 
 export default async function ProviderSettingsPage() {
@@ -8,6 +9,14 @@ export default async function ProviderSettingsPage() {
 
     return (
         <div className="max-w-2xl mx-auto">
+            <Link
+                href="/"
+                className="inline-block text-sm mb-4"
+                style={{ color: "var(--color-text-secondary)" }}
+            >
+                {t("back")}
+            </Link>
+
             <div className="mb-6">
                 <h1 className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
                     {t("heading")}

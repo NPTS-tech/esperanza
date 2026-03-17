@@ -297,10 +297,11 @@
         "error_saving": "Error al guardar el perfil. Inténtalo de nuevo.",
         "error_loading": "Error al cargar el perfil. Actualiza la página.",
         "view_public_profile": "Ver perfil público →",
-        "back": "← Volver al panel"
+        "back": "← Volver al inicio"
     },
     "ProviderProfile": {
         "back": "Volver a eventos",
+        "back_profile": "Volver al perfil",
         "hosted_by": "Organizado por",
         "about": "Acerca de",
         "website": "Sitio web",

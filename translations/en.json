@@ -299,10 +299,11 @@
         "error_saving": "Failed to save profile. Please try again.",
         "error_loading": "Failed to load profile. Please refresh.",
         "view_public_profile": "View public profile →",
-        "back": "← Back to Dashboard"
+        "back": "← Back to Home"
     },
     "ProviderProfile": {
         "back": "Back to events",
+        "back_profile": "Back to profile",
         "hosted_by": "Hosted by",
         "about": "About",
         "website": "Website",
