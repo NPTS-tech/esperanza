@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Building2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Badge, get_category_badge_variant } from "@/components/ui/badge";
 import { format_date } from "@/lib/utils";
@@ -85,6 +85,17 @@ export function EventCard({
                         </span>
                     </div>
                 )}
+
+                {/* Provider */}
+                <div className="flex items-center gap-1.5 mt-auto">
+                    <Building2 size={11} strokeWidth={2} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+                    <span
+                        className="text-xs font-medium truncate"
+                        style={{ color: "var(--color-primary)" }}
+                    >
+                        {event.provider.provider_profile?.org_name ?? event.provider.email}
+                    </span>
+                </div>
 
                 {/* Footer */}
                 {!onClick && (

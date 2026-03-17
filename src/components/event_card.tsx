@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { MapPin, Clock, CalendarDays } from "lucide-react";
+import { MapPin, Clock, CalendarDays, Building2 } from "lucide-react";
 
 export interface EventData {
   id: string;
@@ -22,7 +22,11 @@ export interface EventData {
   image_url?: string | null;
   created_at: string;
   updated_at: string;
-  provider: { id: string; email: string };
+  provider: {
+    id: string;
+    email: string;
+    provider_profile: { org_name: string | null; logo_url: string | null } | null;
+  };
   _count: { rsvps: number };
 }
 
@@ -140,6 +144,15 @@ export default function EventCard({ event }: EventCardProps) {
             <Clock size={11} strokeWidth={2} style={{ color: "var(--color-text-secondary)", flexShrink: 0 }} />
             <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
               {format_time(event.start_time, locale)} – {format_time(event.end_time, locale)}
+            </span>
+          </div>
+          <div
+            className="flex items-center gap-2 pt-1.5 mt-0.5"
+            style={{ borderTop: "1px solid var(--color-border)" }}
+          >
+            <Building2 size={11} strokeWidth={2} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+            <span className="text-xs font-medium truncate" style={{ color: "var(--color-primary)" }}>
+              {event.provider.provider_profile?.org_name ?? event.provider.email}
             </span>
           </div>
         </div>
