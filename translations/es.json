@@ -258,7 +258,10 @@
         "save": "Guardar cambios",
         "cancel": "Cancelar",
         "password_updated": "Contraseña actualizada con éxito",
-        "password_error": "Error al actualizar la contraseña. Verifica tu contraseña actual.",        "rsvp_history": "Historial de RSVPs",
+        "password_error": "Error al actualizar la contraseña. Verifica tu contraseña actual.",
+        "language_updated": "Idioma actualizado con éxito",
+        "language_error": "Error al actualizar el idioma preferido.",
+        "rsvp_history": "Historial de RSVPs",
         "no_rsvps": "Aún no hay RSVPs.",        "quick_links": "Accesos rápidos",
         "browse_events": "Ver eventos",
         "view_map": "Ver mapa"

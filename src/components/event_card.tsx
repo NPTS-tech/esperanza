@@ -3,6 +3,7 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { MapPin, Clock, CalendarDays } from "lucide-react";
+import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
 
 export interface EventData {
   id: string;
@@ -87,13 +88,23 @@ export default function EventCard({ event }: EventCardProps) {
               style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
             />
           ) : (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                background: "linear-gradient(90deg, var(--color-surface-hover), var(--color-border))",
-              }}
-            />
+            (() => {
+              const cfg = getCategoryPlaceholderStyle(event.category);
+              return (
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background: `linear-gradient(135deg, ${cfg.color} 0%, rgba(0,0,0,0.2) 100%)`,
+                  }}
+                >
+                  <span aria-hidden="true" style={{ fontSize: "2rem", lineHeight: 1 }}>
+                    {cfg.emoji}
+                  </span>
+                </div>
+              );
+            })()
           )}
         </div>
 

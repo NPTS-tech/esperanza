@@ -2,6 +2,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Badge, get_category_badge_variant } from "@/components/ui/badge";
 import { format_date } from "@/lib/utils";
+import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
 import type { EventData } from "@/components/event_card";
 
 type EventCardProps = {
@@ -30,13 +31,17 @@ export function EventCard({
             onClick={onClick}
             style={{ cursor: onClick ? "pointer" : undefined }}
         >
-            {/* Hero image / gradient placeholder */}
+            {/* Hero image / category placeholder */}
             <div
                 className="rounded-t-[var(--radius)] flex items-center justify-center overflow-hidden"
                 style={{
                     height: compact ? "80px" : "140px",
-                    background:
-                        "linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary) 100%)",
+                    background: event.image_url
+                        ? undefined
+                        : (() => {
+                            const cfg = getCategoryPlaceholderStyle(event.category);
+                            return `linear-gradient(135deg, ${cfg.color} 0%, rgba(0,0,0,0.2) 100%)`;
+                          })(),
                 }}
             >
                 {event.image_url ? (
@@ -46,7 +51,9 @@ export function EventCard({
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <CalendarDays size={compact ? 24 : 36} color="white" opacity={0.8} />
+                    <span aria-hidden="true" style={{ fontSize: compact ? "1.5rem" : "2.25rem", lineHeight: 1 }}>
+                        {getCategoryPlaceholderStyle(event.category).emoji}
+                    </span>
                 )}
             </div>
 

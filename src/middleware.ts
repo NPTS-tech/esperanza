@@ -66,9 +66,10 @@ export default auth((req) => {
     // Pass to i18n middleware for prefixing and negotiation
     const response = handleI18nRouting(req);
 
-    // If user is authenticated, force their preferred language cookie
-    // Next-intl middleware will read this NEXT_LOCALE cookie to set the active language
-    if (req.auth?.user?.language_pref) {
+    // If user is authenticated, set preferred language cookie from session.
+    // Skip if request already has NEXT_LOCALE (e.g. user just changed language in profile).
+    const existingLocale = req.cookies.get("NEXT_LOCALE")?.value;
+    if (req.auth?.user?.language_pref && !existingLocale) {
         response.cookies.set("NEXT_LOCALE", req.auth.user.language_pref, {
             path: '/',
             sameSite: 'lax',

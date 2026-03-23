@@ -259,6 +259,8 @@
         "cancel": "Cancel",
         "password_updated": "Password updated successfully",
         "password_error": "Failed to update password. Please check your current password.",
+        "language_updated": "Language updated successfully",
+        "language_error": "Failed to update language preference.",
         "rsvp_history": "RSVP History",
         "no_rsvps": "No RSVPs yet.",
         "quick_links": "Quick Links",
