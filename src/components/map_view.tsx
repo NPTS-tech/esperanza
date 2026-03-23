@@ -5,26 +5,17 @@ import { useLocale } from "next-intl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { EventData } from "@/components/event_card";
+import { CATEGORY_CONFIG } from "@/lib/event_category_assets";
 
-// ── Exported so map_page can reuse the same colors/emojis ──
+// Re-export so map_page and others can keep importing from here
+export { CATEGORY_CONFIG };
+
 export interface MapBounds {
   north: number;
   south: number;
   east: number;
   west: number;
 }
-
-export const CATEGORY_CONFIG: Record<string, { color: string; emoji: string }> = {
-  Health:            { color: "#ef4444", emoji: "🏥" },
-  Employment:        { color: "#3b82f6", emoji: "💼" },
-  Financial:         { color: "#22c55e", emoji: "💰" },
-  Recreation:        { color: "#f97316", emoji: "⚽" },
-  Transit:           { color: "#8b5cf6", emoji: "🚌" },
-  "Senior Services": { color: "#06b6d4", emoji: "🤝" },
-  Education:         { color: "#eab308", emoji: "📚" },
-  Community:         { color: "#6366f1", emoji: "🏘️" },
-  Other:             { color: "#6b7280", emoji: "📌" },
-};
 
 interface MapViewProps {
   events: EventData[];

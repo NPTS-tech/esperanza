@@ -24,6 +24,8 @@ type ProfileClientProps = {
     label_cancel: string;
     msg_password_updated: string;
     msg_password_error: string;
+    msg_language_updated: string;
+    msg_language_error: string;
     label_rsvp_history: string;
     label_no_rsvps: string;
 };
@@ -45,6 +47,8 @@ export function ProfileClient({
     label_cancel,
     msg_password_updated,
     msg_password_error,
+    msg_language_updated,
+    msg_language_error,
     label_rsvp_history,
     label_no_rsvps,
 }: ProfileClientProps) {
@@ -88,22 +92,22 @@ export function ProfileClient({
     async function handle_change_language() {
         set_loading(true);
         try {
-            // TODO: Attach endpoint here for updating language preference
-            // const res = await fetch("/api/auth/language", {
-            //   method: "PUT",
-            //   headers: { "Content-Type": "application/json" },
-            //   body: JSON.stringify({ language_pref: new_language }),
-            // });
-            // if (res.ok) {
-            //   // Update local state or reload
-            //   window.location.reload(); // Or update session
-            // } else {
-            //   show_toast("Failed to update language", "error");
-            // }
-            show_toast("Language updated (placeholder)", "success"); // Placeholder
-            set_language_modal_open(false);
+            const res = await fetch("/api/users/me", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language_pref: new_language }),
+            });
+            if (res.ok) {
+                const maxAge = 365 * 24 * 60 * 60;
+                document.cookie = `NEXT_LOCALE=${new_language}; path=/; max-age=${maxAge}; SameSite=Lax`;
+                set_language_modal_open(false);
+                show_toast(msg_language_updated, "success");
+                window.location.reload();
+            } else {
+                show_toast(msg_language_error, "error");
+            }
         } catch {
-            show_toast("Failed to update language", "error");
+            show_toast(msg_language_error, "error");
         } finally {
             set_loading(false);
         }
@@ -281,7 +285,7 @@ export function ProfileClient({
             <Modal
                 open={language_modal_open}
                 onClose={() => set_language_modal_open(false)}
-                title="Change Language"
+                title={label_language}
                 size="sm"
                 footer={
                     <>

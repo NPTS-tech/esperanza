@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { use_idle_timeout } from "@/lib/use_idle_timeout";
 import { sign_out_action } from "@/app/actions/sign_out_action";
 
@@ -10,10 +11,13 @@ type KioskIdleHandlerProps = {
     locale: string;
 };
 
-const IDLE_MS = 3 * 60 * 1000; // 3 minutes
-const MODAL_IDLE_MS = 2 * 60 * 1000; // 2 minutes after modal appears
+const KIOSK_IDLE_CONFIG = {
+    IDLE_MS: 3 * 60 * 1000, // 3 minutes before showing modal
+    MODAL_IDLE_MS: 2 * 60 * 1000, // additional 2 minutes before forced logout
+} as const;
 
 export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
+    const t = useTranslations("Kiosk");
     const search_params = useSearchParams();
     const is_kiosk = search_params.get("kiosk") === "true";
     const [show_idle_modal, set_show_idle_modal] = useState(false);
@@ -25,7 +29,7 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
         }
     }, [is_kiosk, role]);
 
-    use_idle_timeout(is_kiosk && role === "USER" ? IDLE_MS : Infinity, handle_idle);
+    use_idle_timeout(is_kiosk && role === "USER" ? KIOSK_IDLE_CONFIG.IDLE_MS : Infinity, handle_idle);
 
     useEffect(() => {
         const should_start_modal_timer = is_kiosk && role === "USER" && show_idle_modal;
@@ -44,7 +48,7 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
                 // Fire and forget; navigation happens inside.
                 void handle_idle_confirm();
             }
-        }, MODAL_IDLE_MS);
+        }, KIOSK_IDLE_CONFIG.MODAL_IDLE_MS);
 
         return () => {
             if (modal_timeout_id_ref.current !== null) {
@@ -60,8 +64,11 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
 
     async function handle_idle_confirm() {
         set_show_idle_modal(false);
-        await sign_out_action();
-        window.location.replace(`/${locale}/auth/login?kiosk=true`);
+        try {
+            await sign_out_action();
+        } finally {
+            window.location.replace(`/${locale}/auth/login?kiosk=true`);
+        }
     }
 
     if (!show_idle_modal) return null;
@@ -72,14 +79,14 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
             style={{ background: "rgba(0,0,0,0.5)" }}
             role="dialog"
             aria-modal="true"
-            aria-label="Session timeout"
+            aria-label={t("idle_title")}
         >
             <div className="card p-6 max-w-md w-full space-y-4">
                 <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
-                    Session Expired
+                    {t("idle_title")}
                 </h2>
                 <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                    Your session has timed out due to inactivity. Continue to stay signed in or log out.
+                    {t("idle_body")}
                 </p>
                 <div className="flex gap-3 justify-end">
                     <button
@@ -87,14 +94,14 @@ export function KioskIdleHandler({ role, locale }: KioskIdleHandlerProps) {
                         className="btn btn-secondary"
                         onClick={handle_idle_dismiss}
                     >
-                        Continue
+                        {t("idle_stay_signed_in")}
                     </button>
                     <button
                         type="button"
                         className="btn btn-primary"
                         onClick={handle_idle_confirm}
                     >
-                        Log Out
+                        {t("idle_log_out")}
                     </button>
                 </div>
             </div>

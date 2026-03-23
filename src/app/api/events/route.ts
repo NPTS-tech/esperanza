@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       if (status === "APPROVED") {
         // Explicit approved filter — show only approved events (same as USER)
         where.status = "APPROVED";
-      } else if (status && status !== "APPROVED") {
+      } else if (status) {
         // Provider is filtering by a non-public status (e.g. PENDING)
         // Return only their own events with that status
         where.provider_id = user_id;

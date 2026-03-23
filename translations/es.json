@@ -258,8 +258,12 @@
         "save": "Guardar cambios",
         "cancel": "Cancelar",
         "password_updated": "Contraseña actualizada con éxito",
-        "password_error": "Error al actualizar la contraseña. Verifica tu contraseña actual.",        "rsvp_history": "Historial de RSVPs",
-        "no_rsvps": "Aún no hay RSVPs.",        "quick_links": "Accesos rápidos",
+        "password_error": "Error al actualizar la contraseña. Verifica tu contraseña actual.",
+        "language_updated": "Idioma actualizado con éxito",
+        "language_error": "Error al actualizar el idioma preferido.",
+        "rsvp_history": "Historial de RSVPs",
+        "no_rsvps": "Aún no hay RSVPs.",
+        "quick_links": "Accesos rápidos",
         "browse_events": "Ver eventos",
         "view_map": "Ver mapa"
     },
@@ -350,5 +354,14 @@
         "date": "Fecha",
         "status": "Estado",
         "org_profile": "Perfil de org."
+    },
+    "Kiosk": {
+        "idle_title": "Sesión finalizada por inactividad",
+        "idle_body": "Tu sesión ha terminado por inactividad.",
+        "idle_stay_signed_in": "Continuar",
+        "idle_log_out": "Cerrar sesión",
+        "error_title": "Algo salió mal",
+        "error_body": "Volveremos a la pantalla de inicio.",
+        "back_to_start": "Volver al inicio"
     }
 }

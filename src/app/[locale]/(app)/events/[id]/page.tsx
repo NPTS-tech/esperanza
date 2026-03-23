@@ -8,6 +8,7 @@ import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
 import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight } from "lucide-react";
 import type { EventData } from "@/components/event_card";
+import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
   ssr: false,
@@ -222,7 +223,7 @@ export default function EventDetailPage() {
 
       <div className="card card-no-hover overflow-hidden">
 
-        {/* Hero image or color band */}
+        {/* Hero image or category placeholder */}
         {event.image_url ? (
           <div style={{ height: 240, overflow: "hidden" }}>
             <img
@@ -232,12 +233,22 @@ export default function EventDetailPage() {
             />
           </div>
         ) : (
-          <div
-            style={{
-              height: 8,
-              background: "linear-gradient(90deg, var(--color-primary), var(--color-accent))",
-            }}
-          />
+          (() => {
+            const cfg = getCategoryPlaceholderStyle(event.category);
+            return (
+              <div
+                className="flex items-center justify-center"
+                style={{
+                  height: 240,
+                  background: `linear-gradient(135deg, ${cfg.color} 0%, rgba(0,0,0,0.2) 100%)`,
+                }}
+              >
+                <span aria-hidden="true" style={{ fontSize: "4rem", lineHeight: 1 }}>
+                  {cfg.emoji}
+                </span>
+              </div>
+            );
+          })()
         )}
 
         <div className="p-6 sm:p-8">
@@ -486,7 +497,7 @@ export default function EventDetailPage() {
                 </Link>
               )}
               
-              {/* For regular users: show RSVP + Get Directions */}
+              {/* For regular users: show RSVP + Get Directions + Add to Calendar */}
               {!is_own && session?.user && (
                 <>
                   <button
@@ -506,9 +517,40 @@ export default function EventDetailPage() {
                     <Navigation size={15} />
                     {t("get_directions")}
                   </a>
+                  <a
+                    href={`/api/events/${event.id}/ics?locale=${locale}`}
+                    className="btn btn-secondary no-underline"
+                    download
+                  >
+                    <CalendarDays size={15} />
+                    {t("add_to_calendar")}
+                  </a>
                 </>
               )}
-              
+
+              {/* For providers viewing own event: Add to Calendar + Get Directions (no RSVP) */}
+              {is_own && (
+                <>
+                  <a
+                    href={`/api/events/${event.id}/ics?locale=${locale}`}
+                    className="btn btn-secondary no-underline"
+                    download
+                  >
+                    <CalendarDays size={15} />
+                    {t("add_to_calendar")}
+                  </a>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary no-underline"
+                  >
+                    <Navigation size={15} />
+                    {t("get_directions")}
+                  </a>
+                </>
+              )}
+
               {/* For unauthenticated users: just Get Directions */}
               {!session?.user && (
                 <a
