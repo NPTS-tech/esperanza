@@ -79,7 +79,10 @@ esperanza/
 ├── docker-compose.prod.yml     # production: postgres + next.js + nginx
 ├── Dockerfile                  # multi-stage production build
 ├── nginx/
-│   └── nginx.conf              # reverse proxy config
+│   ├── Dockerfile              # prod reverse proxy (TLS templates + entrypoint)
+│   ├── nginx.http.conf         # HTTP until Let's Encrypt certs exist
+│   ├── nginx.https.conf        # HTTPS + redirect once certs exist
+│   └── nginx.conf              # reference copy (not used by prod compose)
 ├── prisma/
 │   ├── schema.prisma           # database schema
 │   ├── migrations/             # SQL migration history

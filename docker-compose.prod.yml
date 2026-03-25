@@ -1,5 +1,5 @@
 # Esperanza — Production Stack
-# Runs PostgreSQL + Next.js + Nginx on the Oracle Cloud VM.
+# Runs PostgreSQL + Next.js + Nginx reverse proxy (TLS via Let's Encrypt when certs exist).
 #
 # Usage:
 #   cp .env.example .env   # fill in production values
@@ -65,28 +65,34 @@ services:
       - esperanza-net
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: esperanza-nginx
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      LETSENCRYPT_DOMAIN: ${LETSENCRYPT_DOMAIN:?set in .env e.g. yourname.duckdns.org}
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - certbot_certs:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
     depends_on:
       - app
     networks:
       - esperanza-net
-  # optional: uncomment when ready to set up HTTPS with Let's Encrypt
-  # certbot:
-  #   image: certbot/certbot
-  #   container_name: esperanza-certbot
-  #   volumes:
-  #     - certbot_certs:/etc/letsencrypt
-  #     - certbot_www:/var/www/certbot
-  #   entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  # Renews certs on a loop. After a successful renew, reload nginx:
+  #   docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+  certbot:
+    image: certbot/certbot
+    container_name: esperanza-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
 
 networks:
   esperanza-net:

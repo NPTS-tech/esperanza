@@ -111,7 +111,9 @@ esperanza/
 │   └── workflows/
 │       └── deploy.yml          # CI/CD pipeline
 ├── nginx/
-│   └── nginx.conf              # reverse proxy config
+│   ├── Dockerfile              # prod reverse proxy image
+│   ├── nginx.http.conf / nginx.https.conf  # TLS staging vs HTTPS+redirect
+│   └── nginx.conf              # reference (prod uses Docker entrypoint)
 ├── prisma/
 │   ├── schema.prisma           # database schema
 │   └── seed.ts                 # seed data for dev
