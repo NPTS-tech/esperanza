@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { Globe } from "lucide-react";
@@ -286,11 +286,11 @@ export default function RegisterPage() {
             </div>
 
             {/* Step indicator with numbered circles */}
-            <div className="flex items-center mb-6">
+            <div className="flex items-center justify-center mb-6 mx-auto w-full max-w-xs">
                 {[1, 2, 3].map((s, i) => (
-                    <div key={s} className="flex items-center flex-1">
+                    <Fragment key={s}>
                         <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors shrink-0"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold leading-none transition-colors shrink-0"
                             style={{
                                 background: s <= step ? "var(--color-primary)" : "var(--color-border)",
                                 color: s <= step ? "white" : "var(--color-text-secondary)",
@@ -300,11 +300,11 @@ export default function RegisterPage() {
                         </div>
                         {i < 2 && (
                             <div
-                                className="flex-1 h-0.5 mx-1 transition-colors"
+                                className="h-0.5 flex-1 mx-1 transition-colors"
                                 style={{ background: s < step ? "var(--color-primary)" : "var(--color-border)" }}
                             />
                         )}
-                    </div>
+                    </Fragment>
                 ))}
             </div>
             <p className="text-xs text-center mb-4" style={{ color: "var(--color-text-secondary)" }}>
