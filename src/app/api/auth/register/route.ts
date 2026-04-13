@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { build_dallas_county_demographics_write_data } from "@/lib/dallas_county_profile";
 import { register_schema } from "@/lib/validators/auth";
 
 export async function POST(request: Request) {
@@ -15,7 +16,15 @@ export async function POST(request: Request) {
             );
         }
 
-        const { email, password, language_pref, consent, ...demographic_data } = parsed.data;
+        const {
+            username,
+            email,
+            password,
+            language_pref,
+            share_with_providers,
+            consent,
+            ...demographic_data
+        } = parsed.data;
 
         // invariant: consent must always be true after validation
         if (!consent) {
@@ -29,13 +38,25 @@ export async function POST(request: Request) {
         }
 
         // check for existing user
-        const existing_user = await db.user.findUnique({
-            where: { email },
-        });
+        const [existing_email_user, existing_username_user] = await Promise.all([
+            db.user.findUnique({
+                where: { email },
+            }),
+            db.user.findUnique({
+                where: { username },
+            }),
+        ]);
 
-        if (existing_user) {
+        if (existing_email_user) {
             return NextResponse.json(
                 { error: "An account with this email already exists" },
+                { status: 409 },
+            );
+        }
+
+        if (existing_username_user) {
+            return NextResponse.json(
+                { error: "That username is already taken" },
                 { status: 409 },
             );
         }
@@ -47,29 +68,19 @@ export async function POST(request: Request) {
         const user = await db.$transaction(async (tx) => {
             const new_user = await tx.user.create({
                 data: {
+                    username,
                     email,
                     password_hash,
                     language_pref,
+                    share_with_providers,
                     consented_at: consent ? new Date() : null,
                 },
             });
 
-            // always create demographics for new users (all fields are now required by validation)
             await tx.demographics.create({
                 data: {
                     user_id: new_user.id,
-                    race: demographic_data.race,
-                    gender: demographic_data.gender,
-                    age: demographic_data.age,
-                    annual_personal_income: demographic_data.annual_personal_income,
-                    annual_household_income: demographic_data.annual_household_income,
-                    county: demographic_data.county,
-                    has_children_under_18: demographic_data.has_children_under_18,
-                    has_children_under_5: demographic_data.has_children_under_5,
-                    educational_attainment: demographic_data.educational_attainment,
-                    has_personal_vehicle: demographic_data.has_personal_vehicle,
-                    is_employed: demographic_data.is_employed,
-                    industry_area: demographic_data.industry_area,
+                    ...build_dallas_county_demographics_write_data(demographic_data),
                 },
             });
 
@@ -86,9 +97,11 @@ export async function POST(request: Request) {
         return NextResponse.json(
             {
                 id: user.id,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 language_pref: user.language_pref,
+                share_with_providers: user.share_with_providers,
             },
             { status: 201 },
         );

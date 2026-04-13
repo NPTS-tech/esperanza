@@ -1,71 +1,181 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { Globe } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-    RACE_OPTIONS,
-    GENDER_OPTIONS,
-    INCOME_BRACKETS,
-    COUNTY_OPTIONS,
-    EDUCATION_OPTIONS,
-    INDUSTRY_OPTIONS,
-} from "@/lib/constants";
+    DALLAS_COUNTY_AGE_BAND_OPTIONS,
+    DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS,
+    DALLAS_COUNTY_COUNTY_OPTIONS,
+    DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS,
+    DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS,
+    DALLAS_COUNTY_ETHNICITY_OPTIONS,
+    DALLAS_COUNTY_GENDER_OPTIONS,
+    DALLAS_COUNTY_MARITAL_STATUS_OPTIONS,
+    DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
+    DALLAS_COUNTY_RACE_OPTIONS,
+} from "@/lib/dallas_county_profile_options";
+import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
 
 export type Locale = "en" | "es";
+
+type RegisterAccount = {
+    username: string;
+    email: string;
+    password: string;
+    confirm_password: string;
+    language_pref: Locale;
+};
+
+type RegisterDemographics = {
+    race: string;
+    gender: string;
+    ethnicity: string;
+    age_band: string;
+    marital_status: string;
+    children_under_5_count: number;
+    children_5_to_18_count: number;
+    children_over_18_count: number;
+    county_of_residence: string;
+    employment_status: string;
+    annual_income_bracket: string;
+    education_level: string;
+    primary_language: string;
+};
+
+type RegisterDraft = {
+    step: number;
+    account: RegisterAccount;
+    demographics: RegisterDemographics;
+    share_with_providers: boolean;
+    consent: boolean;
+};
+
+let register_draft: RegisterDraft | null = null;
+
+function normalize_locale(locale: string): Locale {
+    return locale === "es" ? "es" : "en";
+}
+
+function create_register_draft(locale: Locale): RegisterDraft {
+    return {
+        step: 1,
+        account: {
+            username: "",
+            email: "",
+            password: "",
+            confirm_password: "",
+            language_pref: locale,
+        },
+        demographics: {
+            race: "",
+            gender: "",
+            ethnicity: "",
+            age_band: "",
+            marital_status: "",
+            children_under_5_count: 0,
+            children_5_to_18_count: 0,
+            children_over_18_count: 0,
+            county_of_residence: "",
+            employment_status: "",
+            annual_income_bracket: "",
+            education_level: "",
+            primary_language: get_default_primary_language_for_locale(locale),
+        },
+        share_with_providers: true,
+        consent: false,
+    };
+}
+
+function get_register_draft(locale: Locale): RegisterDraft {
+    return register_draft ?? create_register_draft(locale);
+}
+
+function should_update_primary_language_for_locale_switch(demographics: RegisterDemographics, locale: Locale) {
+    return (
+        demographics.primary_language === "" ||
+        demographics.primary_language === get_default_primary_language_for_locale(locale)
+    );
+}
+
+function clear_register_draft() {
+    register_draft = null;
+}
 
 export default function RegisterPage() {
     const router = useRouter();
     const pathname = usePathname();
     const t = useTranslations("Auth");
-    const activeLocale = useLocale();
+    const activeLocale = normalize_locale(useLocale());
+    const initial_draft = get_register_draft(activeLocale);
 
-    const [step, set_step] = useState(1);
+    const [step, set_step] = useState(initial_draft.step);
     const [error, set_error] = useState("");
     const [loading, set_loading] = useState(false);
 
-    function toggle_lang() {
-        const next_lang = activeLocale === "en" ? "es" : "en";
-        // routing.ts handles the path change transparently
-        router.replace(pathname, { locale: next_lang });
+    const [account, set_account] = useState<RegisterAccount>(initial_draft.account);
+    const [demographics, set_demographics] = useState<RegisterDemographics>(initial_draft.demographics);
+    const [share_with_providers, set_share_with_providers] = useState(initial_draft.share_with_providers);
+    const [consent, set_consent] = useState(initial_draft.consent);
+
+    function stash_register_draft(next_draft?: Partial<RegisterDraft>) {
+        register_draft = {
+            step,
+            account,
+            demographics,
+            share_with_providers,
+            consent,
+            ...next_draft,
+        };
     }
 
-    const [account, set_account] = useState({
-        email: "",
-        password: "",
-        confirm_password: "",
-        language_pref: "en",
-    });
+    function switch_locale(next_locale: Locale, next_language_pref: Locale = next_locale) {
+        const next_account = {
+            ...account,
+            language_pref: next_language_pref,
+        };
+        const next_demographics = should_update_primary_language_for_locale_switch(demographics, activeLocale)
+            ? {
+                ...demographics,
+                primary_language: get_default_primary_language_for_locale(next_locale),
+            }
+            : demographics;
 
-    const [demographics, set_demographics] = useState({
-        race: "",
-        gender: "",
-        age: "",
-        annual_personal_income: "",
-        annual_household_income: "",
-        county: "",
-        has_children_under_18: false,
-        has_children_under_5: false,
-        educational_attainment: "",
-        has_personal_vehicle: false,
-        is_employed: false,
-        industry_area: "",
-    });
+        set_account(next_account);
+        set_demographics(next_demographics);
+        set_error("");
+        stash_register_draft({
+            account: next_account,
+            demographics: next_demographics,
+        });
+        router.replace(pathname, { locale: next_locale });
+    }
 
-    const [consent, set_consent] = useState(false);
+    function toggle_lang() {
+        switch_locale(activeLocale === "en" ? "es" : "en");
+    }
 
-    // sync the account language pref with the UI language
     useEffect(() => {
-        set_account((prev) => ({ ...prev, language_pref: activeLocale }));
-    }, [activeLocale]);
+        register_draft = {
+            step,
+            account,
+            demographics,
+            share_with_providers,
+            consent,
+        };
+    }, [step, account, demographics, share_with_providers, consent]);
 
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
         set_error("");
 
         if (step === 1) {
+            if (!account.username.trim()) {
+                set_error(t("username_required"));
+                return;
+            }
             if (account.password !== account.confirm_password) {
                 set_error(t("passwords_mismatch"));
                 return;
@@ -76,20 +186,19 @@ export default function RegisterPage() {
             }
             set_step(2);
         } else if (step === 2) {
-            // ensure all demographics are filled before moving to consent
-            if (!demographics.race || !demographics.gender || !demographics.annual_personal_income ||
-                !demographics.annual_household_income || !demographics.county || !demographics.educational_attainment ||
-                !demographics.industry_area) {
+            if (
+                !demographics.race ||
+                !demographics.gender ||
+                !demographics.ethnicity ||
+                !demographics.age_band ||
+                !demographics.marital_status ||
+                !demographics.county_of_residence ||
+                !demographics.employment_status ||
+                !demographics.annual_income_bracket ||
+                !demographics.education_level ||
+                !demographics.primary_language
+            ) {
                 set_error(t("demographics_required"));
-                return;
-            }
-            if (!demographics.age) {
-                set_error(t("age_required"));
-                return;
-            }
-            const parsed_age = parseInt(demographics.age, 10);
-            if (Number.isNaN(parsed_age) || parsed_age < 0 || parsed_age > 120) {
-                set_error(t("age_invalid"));
                 return;
             }
             set_step(3);
@@ -106,13 +215,14 @@ export default function RegisterPage() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        username: account.username.trim(),
                         email: account.email,
                         password: account.password,
                         confirm_password: account.confirm_password,
                         language_pref: account.language_pref,
+                        share_with_providers,
                         consent,
                         ...demographics,
-                        age: demographics.age ? parseInt(demographics.age, 10) : null,
                     }),
                 });
 
@@ -137,6 +247,7 @@ export default function RegisterPage() {
                     return;
                 }
 
+                clear_register_draft();
                 window.location.href = `/${activeLocale}`;
             } catch {
                 set_error(t("generic_error"));
@@ -211,6 +322,11 @@ export default function RegisterPage() {
                     {step === 1 && (
                         <>
                             <div>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("username")}</label>
+                                <input type="text" className="input" required placeholder="neighbor_01"
+                                    value={account.username} onChange={(e) => set_account({ ...account, username: e.target.value })} />
+                            </div>
+                            <div>
                                 <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("email")}</label>
                                 <input type="email" className="input" required placeholder="you@example.com"
                                     value={account.email} onChange={(e) => set_account({ ...account, email: e.target.value })} />
@@ -230,10 +346,9 @@ export default function RegisterPage() {
                                 <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("preferred_language")}</label>
                                 <select className="select"
                                     value={account.language_pref} onChange={(e) => {
-                                        set_account({ ...account, language_pref: e.target.value });
                                         const new_lang = e.target.value as Locale;
                                         if (new_lang === "en" || new_lang === "es") {
-                                            router.replace(pathname, { locale: new_lang });
+                                            switch_locale(new_lang, new_lang);
                                         }
                                     }}>
                                     <option value="en">English</option>
@@ -254,7 +369,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.race} required
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -262,77 +377,108 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.gender} required
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age")}</label>
-                                    <input type="number" className="input" placeholder={t("age")} min="0" max="120" required
-                                        value={demographics.age} onChange={(e) => set_demographics({ ...demographics, age: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("personal_income")}</label>
-                                    <select className="select" value={demographics.annual_personal_income} required
-                                        onChange={(e) => set_demographics({ ...demographics, annual_personal_income: e.target.value })}>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("ethnicity")}</label>
+                                    <select className="select" value={demographics.ethnicity} required
+                                        onChange={(e) => set_demographics({ ...demographics, ethnicity: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("household_income")}</label>
-                                    <select className="select" value={demographics.annual_household_income} required
-                                        onChange={(e) => set_demographics({ ...demographics, annual_household_income: e.target.value })}>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age_band")}</label>
+                                    <select className="select" value={demographics.age_band} required
+                                        onChange={(e) => set_demographics({ ...demographics, age_band: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {INCOME_BRACKETS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_AGE_BAND_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("marital_status")}</label>
+                                    <select className="select" value={demographics.marital_status} required
+                                        onChange={(e) => set_demographics({ ...demographics, marital_status: e.target.value })}>
+                                        <option value="">{t("select_placeholder")}</option>
+                                        {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")}</label>
-                                    <select className="select" value={demographics.county} required
-                                        onChange={(e) => set_demographics({ ...demographics, county: e.target.value })}>
+                                    <select className="select" value={demographics.county_of_residence} required
+                                        onChange={(e) => set_demographics({ ...demographics, county_of_residence: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("employment_status")}</label>
+                                    <select className="select" value={demographics.employment_status} required
+                                        onChange={(e) => set_demographics({ ...demographics, employment_status: e.target.value })}>
+                                        <option value="">{t("select_placeholder")}</option>
+                                        {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("annual_income_bracket")}</label>
+                                    <select className="select" value={demographics.annual_income_bracket} required
+                                        onChange={(e) => set_demographics({ ...demographics, annual_income_bracket: e.target.value })}>
+                                        <option value="">{t("select_placeholder")}</option>
+                                        {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("education")}</label>
-                                    <select className="select" value={demographics.educational_attainment} required
-                                        onChange={(e) => set_demographics({ ...demographics, educational_attainment: e.target.value })}>
+                                    <select className="select" value={demographics.education_level} required
+                                        onChange={(e) => set_demographics({ ...demographics, education_level: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {EDUCATION_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("industry")}</label>
-                                    <select className="select" value={demographics.industry_area} required
-                                        onChange={(e) => set_demographics({ ...demographics, industry_area: e.target.value })}>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("primary_language")}</label>
+                                    <select className="select" value={demographics.primary_language} required
+                                        onChange={(e) => set_demographics({ ...demographics, primary_language: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {INDUSTRY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                             </div>
 
-                            <div className="space-y-2 pt-2">
-                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
-                                    <input type="checkbox" checked={demographics.has_children_under_18}
-                                        onChange={(e) => set_demographics({ ...demographics, has_children_under_18: e.target.checked })} />
-                                    {t("children_under_18")}
-                                </label>
-                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
-                                    <input type="checkbox" checked={demographics.has_children_under_5}
-                                        onChange={(e) => set_demographics({ ...demographics, has_children_under_5: e.target.checked })} />
-                                    {t("children_under_5")}
-                                </label>
-                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
-                                    <input type="checkbox" checked={demographics.has_personal_vehicle}
-                                        onChange={(e) => set_demographics({ ...demographics, has_personal_vehicle: e.target.checked })} />
-                                    {t("personal_vehicle")}
-                                </label>
-                                <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text)" }}>
-                                    <input type="checkbox" checked={demographics.is_employed}
-                                        onChange={(e) => set_demographics({ ...demographics, is_employed: e.target.checked })} />
-                                    {t("currently_employed")}
-                                </label>
+                            <div className="pt-2">
+                                <p className="text-sm font-medium mb-3" style={{ color: "var(--color-text)" }}>
+                                    {t("children_heading")}
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("children_under_5_count")}</label>
+                                        <input type="number" className="input" min="0"
+                                            value={demographics.children_under_5_count}
+                                            onChange={(e) => set_demographics({
+                                                ...demographics,
+                                                children_under_5_count: Number.parseInt(e.target.value || "0", 10) || 0,
+                                            })} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("children_5_to_18_count")}</label>
+                                        <input type="number" className="input" min="0"
+                                            value={demographics.children_5_to_18_count}
+                                            onChange={(e) => set_demographics({
+                                                ...demographics,
+                                                children_5_to_18_count: Number.parseInt(e.target.value || "0", 10) || 0,
+                                            })} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("children_over_18_count")}</label>
+                                        <input type="number" className="input" min="0"
+                                            value={demographics.children_over_18_count}
+                                            onChange={(e) => set_demographics({
+                                                ...demographics,
+                                                children_over_18_count: Number.parseInt(e.target.value || "0", 10) || 0,
+                                            })} />
+                                    </div>
+                                </div>
                             </div>
                         </>
                     )}
@@ -352,6 +498,20 @@ export default function RegisterPage() {
                                     <li>{t("consent_5")}</li>
                                 </ul>
                             </div>
+                            <label className="flex items-start gap-3 text-sm pt-2" style={{ color: "var(--color-text)" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={share_with_providers}
+                                    onChange={(e) => set_share_with_providers(e.target.checked)}
+                                    className="mt-1"
+                                />
+                                <span>
+                                    <span className="font-medium">{t("share_with_providers")}</span>
+                                    <span className="block text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                        {t("share_with_providers_help")}
+                                    </span>
+                                </span>
+                            </label>
                             <label className="flex items-start gap-3 text-sm pt-2" style={{ color: "var(--color-text)" }}>
                                 <input
                                     type="checkbox"

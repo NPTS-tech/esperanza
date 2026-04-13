@@ -2,11 +2,20 @@ import { auth } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
 import { CalendarDays, Map, User, Building2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { redirect } from "@/i18n/routing";
+import { getLocale } from "next-intl/server";
 
 export default async function HomePage() {
-    const session = (await auth())!;
+    const [session, t, locale] = await Promise.all([
+        auth(),
+        getTranslations("Home"),
+        getLocale(),
+    ]);
 
-    const t = await getTranslations("Home");
+    if (!session?.user) {
+        redirect({ href: "/auth/login", locale });
+        return null;
+    }
 
     const quick_links = [
         {

@@ -1,24 +1,73 @@
 import { db } from "../src/lib/db";
 import bcrypt from "bcryptjs";
+import { build_dallas_county_demographics_write_data } from "../src/lib/dallas_county_profile";
 
 const seed_accounts = [
     {
+        username: "admin",
         email: "admin@esperanza.app",
         password: "admin123",
         role: "ADMIN" as const,
         language_pref: "en",
+        demographics: {
+            race: "White",
+            gender: "Female",
+            ethnicity: "Not Hispanic/Latino",
+            age_band: "36-45",
+            marital_status: "Married",
+            children_under_5_count: 0,
+            children_5_to_18_count: 1,
+            children_over_18_count: 0,
+            county_of_residence: "Dallas",
+            employment_status: "Employed full-time",
+            annual_income_bracket: "$70,000-$80,000",
+            education_level: "Graduate degree",
+            primary_language: "English",
+        },
     },
     {
+        username: "provider",
         email: "provider@esperanza.app",
         password: "provider123",
         role: "PROVIDER" as const,
         language_pref: "en",
+        demographics: {
+            race: "Black or African American",
+            gender: "Male",
+            ethnicity: "Not Hispanic/Latino",
+            age_band: "46-55",
+            marital_status: "Married",
+            children_under_5_count: 0,
+            children_5_to_18_count: 2,
+            children_over_18_count: 0,
+            county_of_residence: "Dallas",
+            employment_status: "Employed full-time",
+            annual_income_bracket: "$50,000-$60,000",
+            education_level: "Bachelor degree",
+            primary_language: "English",
+        },
     },
     {
+        username: "user",
         email: "user@esperanza.app",
         password: "user123",
         role: "USER" as const,
         language_pref: "en",
+        demographics: {
+            race: "Asian",
+            gender: "Female",
+            ethnicity: "Hispanic/Latino",
+            age_band: "61-75",
+            marital_status: "Widowed",
+            children_under_5_count: 0,
+            children_5_to_18_count: 0,
+            children_over_18_count: 2,
+            county_of_residence: "Dallas",
+            employment_status: "Retired",
+            annual_income_bracket: "$20,000-$30,000",
+            education_level: "High school diploma",
+            primary_language: "English",
+        },
     },
 ];
 
@@ -88,24 +137,35 @@ async function main() {
     console.log("\n Esperanza — Seeding database...\n");
 
     for (const account of seed_accounts) {
-        const existing = await db.user.findUnique({
-            where: { email: account.email },
-        });
-
-        if (existing) {
-            console.log(`   ⏭️  ${account.role.padEnd(8)} ${account.email} (already exists)`);
-            continue;
-        }
-
         const password_hash = await bcrypt.hash(account.password, 12);
 
-        await db.user.create({
-            data: {
+        const user = await db.user.upsert({
+            where: { email: account.email },
+            update: {
+                username: account.username,
+                password_hash,
+                role: account.role,
+                language_pref: account.language_pref,
+                share_with_providers: true,
+                consented_at: new Date(),
+            },
+            create: {
+                username: account.username,
                 email: account.email,
                 password_hash,
                 role: account.role,
                 language_pref: account.language_pref,
+                share_with_providers: true,
                 consented_at: new Date(),
+            },
+        });
+
+        await db.demographics.upsert({
+            where: { user_id: user.id },
+            update: build_dallas_county_demographics_write_data(account.demographics),
+            create: {
+                user_id: user.id,
+                ...build_dallas_county_demographics_write_data(account.demographics),
             },
         });
 

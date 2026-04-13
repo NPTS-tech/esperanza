@@ -252,6 +252,16 @@ body {
     box-shadow: 0 0 0 3px rgba(183, 113, 74, 0.15);
 }
 
+.input:disabled {
+    color: var(--color-text);
+    background: var(--color-surface-hover);
+    border-color: var(--color-border);
+    cursor: default;
+    opacity: 1;
+    box-shadow: none;
+    -webkit-text-fill-color: var(--color-text);
+}
+
 .select,
 select.select {
     width: 100%;
@@ -281,6 +291,30 @@ select.select:focus {
 .select:hover,
 select.select:hover {
     border-color: var(--color-primary-light);
+}
+
+.select:disabled,
+select.select:disabled {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border);
+    background-image: none;
+    cursor: default;
+    opacity: 1;
+    box-shadow: none;
+    padding-right: 14px;
+    -webkit-text-fill-color: var(--color-text);
+}
+
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* checkboxes */

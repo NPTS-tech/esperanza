@@ -9,10 +9,12 @@ datasource db {
 
 model User {
   id               String           @id @default(uuid())
+  username         String?          @unique
   email            String           @unique
   password_hash    String
   role             Role             @default(USER)
   language_pref    String           @default("en")
+  share_with_providers Boolean      @default(true)
   consented_at     DateTime?
   created_at       DateTime         @default(now())
   analytics        AnalyticsEvent[]
@@ -28,6 +30,17 @@ model User {
 model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
+  ethnicity               String?
+  age_band                String?
+  marital_status          String?
+  children_under_5_count  Int     @default(0)
+  children_5_to_18_count  Int     @default(0)
+  children_over_18_count  Int     @default(0)
+  county_of_residence     String?
+  employment_status       String?
+  annual_income_bracket   String?
+  education_level         String?
+  primary_language        String?
   race                    String?
   gender                  String?
   age                     Int?
