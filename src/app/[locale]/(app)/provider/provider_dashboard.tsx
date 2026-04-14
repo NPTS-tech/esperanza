@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { CalendarDays, CheckCircle, AlertCircle, Ticket, UploadCloud } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { format_date } from "@/lib/utils";
-import { mock_events, EVENT_CATEGORIES, type MockEvent } from "@/lib/mock_data";
+import { EVENT_CATEGORIES } from "@/lib/validators/event";
 import type { LocationValue } from "@/components/location_picker";
 
 const LocationPicker = dynamic(
@@ -82,32 +82,36 @@ type FormState = {
     image_url: string;
 };
 
+type ProviderEvent = {
+    id: string;
+    title_en: string;
+    title_es: string;
+    description_en: string;
+    description_es: string;
+    location_name: string;
+    latitude: number;
+    longitude: number;
+    start_time: string;
+    end_time: string;
+    provider_id: string;
+    provider_email: string;
+    status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+    category: string;
+    image_url: string | null;
+    created_at: string;
+    rsvp_count: number;
+};
+
 const INITIAL_FORM: FormState = {
     title_en: "", title_es: "", description_en: "", description_es: "",
     location_name: "", location_address: "", latitude: null, longitude: null,
     start_time: "", end_time: "", category: "", image_url: "",
 };
 
-function is_provider_event(
-    event: { provider_id: string; provider_email?: string | null },
-    provider_id: string,
-    provider_email: string,
-): boolean {
-    if (provider_id && event.provider_id === provider_id) {
-        return true;
-    }
-
-    if (provider_email && event.provider_email === provider_email) {
-        return true;
-    }
-
-    return false;
-}
-
 function to_provider_event(
     api_event: Record<string, unknown>,
     fallback_provider_email: string,
-): MockEvent | null {
+): ProviderEvent | null {
     if (
         typeof api_event.id !== "string" ||
         typeof api_event.title_en !== "string" ||
@@ -181,59 +185,51 @@ function add_hour(value: string): string {
 }
 
 export function ProviderDashboard(props: ProviderDashboardProps) {
-    const [events, set_events] = useState<MockEvent[]>([]);
+    const [events, set_events] = useState<ProviderEvent[]>([]);
     const [form, set_form] = useState<FormState>(INITIAL_FORM);
     const [uploading_image, set_uploading_image] = useState(false);
     const [auto_translating, set_auto_translating] = useState(false);
     const [auto_translated_fields, set_auto_translated_fields] = useState<Set<string>>(new Set());
     const [info_message, set_info_message] = useState<string | null>(null);
+    const [submitting, set_submitting] = useState(false);
     const image_input_id = "provider-event-image-upload";
     const { toasts, show_toast, dismiss } = useToast();
 
-    useEffect(() => {
-        let cancelled = false;
+    const load_provider_events = useCallback(async () => {
+        try {
+            const params = new URLSearchParams({
+                page: "1",
+                limit: "200",
+                provider_id: props.provider_id,
+            });
 
-        async function load_provider_events() {
-            try {
-                const response = await fetch("/api/events?page=1&limit=200", {
-                    method: "GET",
-                    cache: "no-store",
-                });
+            const response = await fetch(`/api/events?${params.toString()}`, {
+                method: "GET",
+                cache: "no-store",
+            });
 
-                if (!response.ok) {
-                    throw new Error("Failed to load provider events");
-                }
-
-                const data = (await response.json()) as {
-                    events?: Array<Record<string, unknown>>;
-                };
-
-                const mapped = (data.events ?? [])
-                    .filter((event) =>
-                        is_provider_event(event as { provider_id: string; provider_email?: string | null }, props.provider_id, props.provider_email),
-                    )
-                    .map((event) => to_provider_event(event, props.provider_email))
-                    .filter((event): event is MockEvent => event !== null);
-
-                if (!cancelled) {
-                    set_events(mapped);
-                }
-            } catch {
-                const fallback = mock_events.filter((e) =>
-                    is_provider_event(e, props.provider_id, props.provider_email),
-                );
-                if (!cancelled) {
-                    set_events(fallback);
-                }
+            if (!response.ok) {
+                throw new Error("Failed to load provider events");
             }
+
+            const data = (await response.json()) as {
+                events?: Array<Record<string, unknown>>;
+            };
+
+            const mapped = (data.events ?? [])
+                .map((event) => to_provider_event(event, props.provider_email))
+                .filter((event): event is ProviderEvent => event !== null);
+
+            set_events(mapped);
+        } catch (error) {
+            console.error("Failed to load provider events:", error);
+            set_events([]);
         }
-
-        void load_provider_events();
-
-        return () => {
-            cancelled = true;
-        };
     }, [props.provider_email, props.provider_id]);
+
+    useEffect(() => {
+        void load_provider_events();
+    }, [load_provider_events]);
 
     async function handle_image_file_change(
         e: React.ChangeEvent<HTMLInputElement>,
@@ -303,27 +299,36 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
 
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
+        set_submitting(true);
 
         if (!hasTitleEn && !hasTitleEs) {
             show_toast("Please provide a title in at least one language.", "error");
+            set_submitting(false);
             return;
         }
         if (!hasDescEn && !hasDescEs) {
             show_toast("Please provide a description in at least one language.", "error");
+            set_submitting(false);
             return;
         }
 
         if (!form.location_address.trim()) {
             show_toast(props.location_address_required, "error");
+            set_submitting(false);
             return;
         }
         if (form.latitude == null || form.longitude == null) {
             show_toast(props.location_pick_required, "error");
+            set_submitting(false);
             return;
         }
-        if (!form.start_time || !form.end_time) return;
+        if (!form.start_time || !form.end_time) {
+            set_submitting(false);
+            return;
+        }
         if (new Date(form.end_time) <= new Date(form.start_time)) {
             show_toast(props.end_time_after_start_error, "error");
+            set_submitting(false);
             return;
         }
 
@@ -375,40 +380,76 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             } catch {
                 show_toast("Translation failed. Please fill this field manually.", "error");
                 set_auto_translating(false);
+                set_submitting(false);
                 return;
             }
 
             set_auto_translated_fields(prev => new Set([...prev, ...newly_translated]));
             set_info_message("Some fields were auto-translated. Please review and submit again.");
             set_auto_translating(false);
+            set_submitting(false);
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
 
-        const new_event: MockEvent = {
-            id: `evt-${Date.now()}`,
+        const payload: Record<string, unknown> = {
             title_en: finalTitleEn,
             title_es: finalTitleEs,
             description_en: finalDescriptionEn,
             description_es: finalDescriptionEs,
             location_name:
                 form.location_name.trim() || form.location_address.trim() || "TBD",
+            location_address: form.location_address.trim(),
             latitude: form.latitude ?? 0,
             longitude: form.longitude ?? 0,
             start_time: new Date(form.start_time).toISOString(),
             end_time: new Date(form.end_time).toISOString(),
-            provider_id: props.provider_id,
-            provider_email: props.provider_email,
-            status: "PENDING",
             category: form.category || "Community",
-            image_url: form.image_url.trim() || null,
-            created_at: new Date().toISOString(),
-            rsvp_count: 0,
         };
 
-        set_events((prev) => [new_event, ...prev]);
-        set_form(INITIAL_FORM);
-        show_toast(props.event_submitted, "success");
+        if (form.image_url.trim()) {
+            payload.image_url = form.image_url.trim();
+        }
+
+        try {
+            const response = await fetch("/api/events", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const json = (await response.json()) as {
+                error?: string;
+                details?: Record<string, string[]>;
+            };
+
+            if (!response.ok) {
+                const first_field_error = json.details
+                    ? Object.values(json.details).find(
+                        (messages) => Array.isArray(messages) && messages.length > 0,
+                    )?.[0]
+                    : null;
+
+                throw new Error(
+                    first_field_error ||
+                    json.error ||
+                    "Failed to submit event",
+                );
+            }
+
+            set_form(INITIAL_FORM);
+            set_auto_translated_fields(new Set());
+            set_info_message(null);
+            await load_provider_events();
+            show_toast(props.event_submitted, "success");
+        } catch (error) {
+            show_toast(
+                error instanceof Error ? error.message : "Failed to submit event",
+                "error",
+            );
+        } finally {
+            set_submitting(false);
+        }
     }
 
     function update_form(field: keyof FormState, value: string) {
@@ -711,8 +752,8 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                             )}
                         </div>
                     </FormField>
-                    <button type="submit" className="btn btn-primary" disabled={auto_translating}>
-                        {auto_translating ? "Translating..." : props.submit}
+                    <button type="submit" className="btn btn-primary" disabled={auto_translating || submitting}>
+                        {auto_translating ? "Translating..." : submitting ? "Submitting..." : props.submit}
                     </button>
                 </form>
             </div>
