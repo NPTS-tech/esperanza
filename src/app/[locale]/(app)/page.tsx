@@ -17,6 +17,11 @@ export default async function HomePage() {
         return null;
     }
 
+    const display_name =
+        session.user.username?.trim() ||
+        session.user.email?.split("@")[0] ||
+        session.user.email;
+
     const quick_links = [
         {
             href: "/events",
@@ -52,7 +57,7 @@ export default async function HomePage() {
                     {t("welcome")},
                 </p>
                 <h1 className="text-2xl font-bold mt-1" style={{ color: "var(--color-text)" }}>
-                    {session.user.email}
+                    {display_name}
                 </h1>
                 <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
                     {t("subtitle")}

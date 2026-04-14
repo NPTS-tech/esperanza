@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { Globe, Mail, Phone, ExternalLink } from "lucide-react";
 import EventCard, { type EventData } from "@/components/event_card";
 
@@ -21,12 +21,9 @@ type ProviderProfile = {
 export default function ProviderProfilePage() {
     const t = useTranslations("ProviderProfile");
     const locale = useLocale();
+    const router = useRouter();
     const params = useParams();
-    const search_params = useSearchParams();
     const provider_id = params.id as string;
-    const from_settings = search_params.get("from") === "settings";
-    const back_href = from_settings ? "/provider/settings" : "/events";
-    const back_label = from_settings ? t("back_profile") : t("back");
 
     const [profile, set_profile] = useState<ProviderProfile | null>(null);
     const [events, set_events] = useState<EventData[]>([]);
@@ -84,9 +81,14 @@ export default function ProviderProfilePage() {
                 <h2 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
                     {error || t("not_found")}
                 </h2>
-                <Link href={back_href as any} className="text-sm mt-2 inline-block" style={{ color: "var(--color-primary)" }}>
-                    ← {back_label}
-                </Link>
+                <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="text-sm mt-2 inline-block"
+                    style={{ color: "var(--color-primary)", background: "none", border: "none", cursor: "pointer" }}
+                >
+                    ← {t("back")}
+                </button>
             </div>
         );
     }
@@ -97,14 +99,15 @@ export default function ProviderProfilePage() {
     return (
         <div className="max-w-3xl mx-auto px-4 py-6">
             {/* Back link */}
-            <Link
-                href={back_href as any}
+            <button
+                type="button"
+                onClick={() => router.back()}
                 className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-5"
-                style={{ color: "var(--color-text-secondary)" }}
+                style={{ color: "var(--color-text-secondary)", background: "none", border: "none", cursor: "pointer" }}
             >
                 <span style={{ fontSize: 16, lineHeight: 1 }}>‹</span>
-                {back_label}
-            </Link>
+                {t("back")}
+            </button>
 
             {/* Profile header card */}
             <div className="card card-no-hover overflow-hidden mb-6">

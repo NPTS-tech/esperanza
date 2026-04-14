@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, CalendarDays, Map, User, Plus } from "lucide-react";
+import { Home, CalendarDays, Map, User, Plus, Bookmark } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +40,9 @@ function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
         ];
     }
     return [
-        { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
         { key: "events", label: labels.nav_events, href: "/events", icon: <CalendarDays size={SZ} /> },
         { key: "map", label: labels.nav_map, href: "/map", icon: <Map size={SZ} /> },
+        { key: "reservations", label: "Reservations", href: "/reservations", icon: <Bookmark size={SZ} /> },
         { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
     ];
 }

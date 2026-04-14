@@ -38,6 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 return {
                     id: user.id,
+                    username: user.username,
                     email: user.email,
                     role: user.role,
                     language_pref: user.language_pref,
@@ -50,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // on initial sign-in, add role and language to the token
             if (user) {
                 token.id = user.id as string;
+                token.username = (user.username as string | null) ?? null;
                 token.role = user.role;
                 token.language_pref = user.language_pref;
             }
@@ -59,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // expose role and id on the client-side session
             if (session.user) {
                 session.user.id = token.id;
+                session.user.username = (token.username as string | null) ?? null;
                 session.user.role = token.role;
                 session.user.language_pref = token.language_pref;
             }

@@ -6,10 +6,10 @@ import {
     CalendarDays,
     Map,
     Bookmark,
+    User,
     Users,
     BarChart3,
     Plus,
-    Settings,
     LogOut,
     ChevronRight,
     Sprout,
@@ -90,7 +90,7 @@ function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
                 { key: "home",         label: "Dashboard",    href: "/",       icon: <Home size={SZ} /> },
                 { key: "events",       label: labels.nav_events, href: "/events", icon: <CalendarDays size={SZ} /> },
                 { key: "map",          label: labels.nav_map, href: "/map",    icon: <Map size={SZ} /> },
-                { key: "reservations", label: "Reservations", href: "#",       icon: <Bookmark size={SZ} /> },
+                { key: "reservations", label: "Reservations", href: "/reservations", icon: <Bookmark size={SZ} /> },
             ],
         },
     ];
@@ -160,10 +160,12 @@ function MyAccount({
     email,
     locale,
     sign_out_label,
+    profile_label,
 }: {
     email: string;
     locale: string;
     sign_out_label: string;
+    profile_label: string;
 }) {
     const [open, set_open]       = useState(false);
     const [signing_out, set_so]  = useState(false);
@@ -218,8 +220,8 @@ function MyAccount({
                         style={{ color: "var(--color-text)", textDecoration: "none" }}
                         role="menuitem"
                     >
-                        <Settings size={15} aria-hidden="true" />
-                        Settings
+                        <User size={15} aria-hidden="true" />
+                        {profile_label}
                     </Link>
 
                     <div
@@ -371,6 +373,7 @@ export function Sidebar(props: SidebarProps) {
                     email={props.email}
                     locale={props.locale}
                     sign_out_label={props.sign_out_label}
+                    profile_label={props.nav_profile}
                 />
             </div>
         </aside>

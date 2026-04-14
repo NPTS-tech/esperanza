@@ -56,7 +56,9 @@ const my_profile_select = {
                     title_en: true,
                     title_es: true,
                     start_time: true,
+                    category: true,
                     status: true,
+                    image_url: true,
                     location_name: true,
                     location_address: true,
                 },
@@ -107,7 +109,9 @@ function serialize_profile(
                 title_en: string;
                 title_es: string;
                 start_time: Date;
+                category: string;
                 status: string;
+                image_url: string | null;
                 location_name: string;
                 location_address: string | null;
             };
@@ -134,7 +138,9 @@ function serialize_profile(
                 title_en: rsvp.event.title_en,
                 title_es: rsvp.event.title_es,
                 start_time: rsvp.event.start_time,
+                category: rsvp.event.category,
                 status: rsvp.event.status,
+                image_url: rsvp.event.image_url,
                 location_name: rsvp.event.location_name,
                 location_address: rsvp.event.location_address,
             },

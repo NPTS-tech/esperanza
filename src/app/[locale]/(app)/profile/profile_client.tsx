@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { Badge, get_status_badge_variant } from "@/components/ui/badge";
+import { sign_out_action } from "@/app/actions/sign_out_action";
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,6 @@ import {
     DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
     DALLAS_COUNTY_RACE_OPTIONS,
 } from "@/lib/dallas_county_profile_options";
-import { format_date } from "@/lib/utils";
 
 type Locale = "en" | "es";
 
@@ -197,6 +196,7 @@ export function ProfileClient() {
     const pathname = usePathname();
     const router = useRouter();
     const auth_t = useTranslations("Auth");
+    const nav_t = useTranslations("Nav");
     const t = useTranslations("Profile");
     const { toasts, show_toast, dismiss } = useToast();
 
@@ -205,6 +205,7 @@ export function ProfileClient() {
     const [loading_profile, set_loading_profile] = useState(true);
     const [load_error, set_load_error] = useState("");
     const [saving_profile, set_saving_profile] = useState(false);
+    const [saving_sharing, set_saving_sharing] = useState(false);
     const [is_editing, set_is_editing] = useState(false);
     const [password_modal_open, set_password_modal_open] = useState(false);
     const [saving_password, set_saving_password] = useState(false);
@@ -330,6 +331,84 @@ export function ProfileClient() {
         }
     }
 
+    async function handle_sign_out() {
+        const login_url = `/${locale}/auth/login`;
+        const redirect = () => window.location.replace(login_url);
+        const timeout = window.setTimeout(redirect, 3000);
+        try {
+            await sign_out_action();
+        } catch {
+            // still redirect so UI never stays stuck
+        } finally {
+            window.clearTimeout(timeout);
+            redirect();
+        }
+    }
+
+    async function handle_toggle_share_with_providers(next_value: boolean) {
+        const previous_value = form.share_with_providers;
+
+        set_form((current) => ({
+            ...current,
+            share_with_providers: next_value,
+        }));
+        set_profile((current) =>
+            current
+                ? {
+                    ...current,
+                    share_with_providers: next_value,
+                }
+                : current,
+        );
+        set_saving_sharing(true);
+
+        try {
+            const res = await fetch("/api/users/me", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    share_with_providers: next_value,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || t("profile_update_error"));
+            }
+
+            const persisted_value = Boolean(data.share_with_providers);
+            set_form((current) => ({
+                ...current,
+                share_with_providers: persisted_value,
+            }));
+            set_profile((current) =>
+                current
+                    ? {
+                        ...current,
+                        share_with_providers: persisted_value,
+                    }
+                    : current,
+            );
+            show_toast(t("profile_updated"), "success");
+        } catch {
+            set_form((current) => ({
+                ...current,
+                share_with_providers: previous_value,
+            }));
+            set_profile((current) =>
+                current
+                    ? {
+                        ...current,
+                        share_with_providers: previous_value,
+                    }
+                    : current,
+            );
+            show_toast(t("profile_update_error"), "error");
+        } finally {
+            set_saving_sharing(false);
+        }
+    }
+
     const initials = (
         profile?.username?.[0] ??
         profile?.email?.[0] ??
@@ -341,10 +420,6 @@ export function ProfileClient() {
         { value: "en", label: t("lang_english") },
         { value: "es", label: t("lang_spanish") },
     ];
-    const share_with_providers_status = form.share_with_providers
-        ? t("sharing_enabled")
-        : t("sharing_disabled");
-
     if (loading_profile) {
         return (
             <div className="card p-6">
@@ -377,7 +452,7 @@ export function ProfileClient() {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-6">
             <ToastContainer toasts={toasts} dismiss={dismiss} />
 
             <div className="card p-6">
@@ -650,35 +725,26 @@ export function ProfileClient() {
                         </p>
                     </div>
 
-                    {is_editing ? (
-                        <label className="flex items-start gap-3 text-sm" style={{ color: "var(--color-text)" }}>
-                            <input
-                                type="checkbox"
-                                className="mt-1"
-                                checked={form.share_with_providers}
-                                onChange={(e) =>
-                                    set_form((current) => ({
-                                        ...current,
-                                        share_with_providers: e.target.checked,
-                                    }))
-                                }
-                                disabled={form_disabled}
-                            />
-                            <span>
-                                <span className="font-medium">{auth_t("share_with_providers")}</span>
-                                <span className="block text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                                    {t("sharing_help")}
-                                </span>
+                    <label className="flex items-start gap-3 text-sm" style={{ color: "var(--color-text)" }}>
+                        <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={form.share_with_providers}
+                            onChange={(e) => {
+                                void handle_toggle_share_with_providers(e.target.checked);
+                            }}
+                            disabled={saving_profile || saving_sharing}
+                        />
+                        <span>
+                            <span className="font-medium">{auth_t("share_with_providers")}</span>
+                            <span className="block text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("sharing_help")}
                             </span>
-                        </label>
-                    ) : (
-                        <FormField
-                            label={auth_t("share_with_providers")}
-                            hint={t("sharing_help")}
-                        >
-                            <ReadOnlyFieldValue value={share_with_providers_status} />
-                        </FormField>
-                    )}
+                            <span className="block text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                {form.share_with_providers ? t("sharing_enabled") : t("sharing_disabled")}
+                            </span>
+                        </span>
+                    </label>
                 </div>
 
                 {is_editing && (
@@ -700,43 +766,22 @@ export function ProfileClient() {
                         </button>
                     </div>
                 )}
-            </form>
 
-            <div className="card p-6">
-                <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
-                    {t("rsvp_history")}
-                </h2>
-                {profile.rsvps.length === 0 ? (
-                    <p style={{ color: "var(--color-text-secondary)" }}>
-                        {t("no_rsvps")}
-                    </p>
-                ) : (
-                    <div className="space-y-3">
-                        {profile.rsvps.map((rsvp) => (
-                            <div
-                                key={rsvp.id}
-                                className="rounded-xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                                style={{ background: "var(--color-surface-hover)" }}
-                            >
-                                <div>
-                                    <p className="font-medium" style={{ color: "var(--color-text)" }}>
-                                        {locale === "es" ? rsvp.event.title_es : rsvp.event.title_en}
-                                    </p>
-                                    <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                                        {format_date(rsvp.event.start_time)}
-                                    </p>
-                                    <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                                        {rsvp.event.location_name}
-                                    </p>
-                                </div>
-                                <Badge variant={get_status_badge_variant(rsvp.event.status)}>
-                                    {rsvp.event.status}
-                                </Badge>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                <div className="card p-4 md:hidden">
+                    <button
+                        type="button"
+                        onClick={() => void handle_sign_out()}
+                        className="w-full px-4 py-2 rounded-lg text-sm font-medium"
+                        style={{
+                            color: "#ef4444",
+                            border: "1px solid var(--color-border)",
+                            background: "var(--color-surface)",
+                        }}
+                    >
+                        {nav_t("sign_out")}
+                    </button>
+                </div>
+            </form>
 
             <Modal
                 open={password_modal_open}

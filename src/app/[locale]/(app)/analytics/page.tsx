@@ -66,6 +66,7 @@ interface ProviderDemographicsAnalytics {
 }
 
 type AnalyticsPeriod = "week" | "month" | "year" | "all";
+type AnalyticsTab = "overview" | "demographics" | "events";
 
 const BREAKDOWN_CARD_FIELDS = [
   { key: "race", label_key: "race" },
@@ -118,6 +119,7 @@ export default function AnalyticsPage() {
   const [demographics, setDemographics] =
     useState<ProviderDemographicsAnalytics | null>(null);
   const [period, setPeriod] = useState<AnalyticsPeriod>("month");
+  const [active_tab, set_active_tab] = useState<AnalyticsTab>("overview");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [demographicsLoading, setDemographicsLoading] = useState(false);
@@ -215,7 +217,7 @@ export default function AnalyticsPage() {
 
   if (session?.user?.role !== "PROVIDER" && session?.user?.role !== "ADMIN") {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
         <h2
           className="text-xl font-bold mb-3"
           style={{ color: "var(--color-text)" }}
@@ -238,25 +240,26 @@ export default function AnalyticsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+      {/* Page Header */}
+      <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--color-text)" }}>
             {session?.user?.role === "ADMIN"
               ? "Platform Analytics"
               : "Your Event Analytics"}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-            Overview of all your events and engagement
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+            Overview of all your events and engagement metrics
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <label
             htmlFor="analytics-period"
             className="text-xs font-semibold uppercase tracking-wider"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            Time Range
+            Time Range:
           </label>
           <Select
             id="analytics-period"
@@ -265,7 +268,7 @@ export default function AnalyticsPage() {
             onChange={(event) =>
               setPeriod(event.target.value as AnalyticsPeriod)
             }
-            className="min-w-[180px]"
+            className="min-w-35"
           >
             {ANALYTICS_PERIOD_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -276,6 +279,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* Error Message */}
       {error && (
         <div
           className="p-4 rounded-lg mb-6 text-sm"
@@ -285,246 +289,26 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {loading && (
+      {loading ? (
         <div
           className="text-center py-12"
           style={{ color: "var(--color-text-secondary)" }}
         >
           <p>{t("loading")}</p>
         </div>
-      )}
-
-      {!loading && stats && (
+      ) : !stats ? (
+        <div
+          className="text-center py-12"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          <p>No data available</p>
+        </div>
+      ) : (
         <>
-          {is_provider && (
-            <div
-              className="card p-6 mb-8"
-              style={{ border: "1px solid var(--color-border)" }}
-            >
-              <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
-                <div>
-                  <h2
-                    className="text-lg font-semibold"
-                    style={{ color: "var(--color-text)" }}
-                  >
-                    {t("analytics_demographics_title")}
-                  </h2>
-                  <p
-                    className="text-sm mt-1 max-w-3xl"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
-                    {t("analytics_demographics_subtitle")}
-                  </p>
-                </div>
-
-                <a
-                  href={demographics_export_href}
-                  className="inline-flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2 no-underline"
-                  style={{
-                    color: "#fff",
-                    background: "var(--color-primary)",
-                  }}
-                >
-                  <Download size={14} />
-                  {t("analytics_demographics_export")}
-                </a>
-              </div>
-
-              <p className="text-xs mb-4" style={{ color: "var(--color-text-secondary)" }}>
-                {t("analytics_demographics_note")}
-              </p>
-
-              {demographicsError && (
-                <div
-                  className="p-4 rounded-lg mb-4 text-sm"
-                  style={{ background: "#fee2e2", color: "#991b1b" }}
-                >
-                  {demographicsError}
-                </div>
-              )}
-
-              {demographicsLoading ? (
-                <p style={{ color: "var(--color-text-secondary)" }}>{t("loading")}</p>
-              ) : demographics?.summary.shared_user_count ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div
-                      className="rounded-lg p-4"
-                      style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                      }}
-                    >
-                      <p
-                        className="text-xs font-semibold uppercase tracking-wider mb-2"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        {t("analytics_shared_residents")}
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                        {demographics.summary.shared_user_count}
-                      </p>
-                    </div>
-
-                    <div
-                      className="rounded-lg p-4"
-                      style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                      }}
-                    >
-                      <p
-                        className="text-xs font-semibold uppercase tracking-wider mb-2"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        {t("analytics_shared_rsvps")}
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                        {demographics.summary.shared_rsvp_count}
-                      </p>
-                    </div>
-
-                    <div
-                      className="rounded-lg p-4"
-                      style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                      }}
-                    >
-                      <p
-                        className="text-xs font-semibold uppercase tracking-wider mb-2"
-                        style={{ color: "var(--color-text-secondary)" }}
-                      >
-                        {t("analytics_shared_events")}
-                      </p>
-                      <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                        {demographics.summary.shared_event_count}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-                    {BREAKDOWN_CARD_FIELDS.map((field) => {
-                      const items = demographics.breakdowns[field.key].slice(0, 3);
-
-                      return (
-                        <div
-                          key={field.key}
-                          className="rounded-lg p-4"
-                          style={{
-                            background: "var(--color-surface)",
-                            border: "1px solid var(--color-border)",
-                          }}
-                        >
-                          <h3
-                            className="text-sm font-semibold mb-3"
-                            style={{ color: "var(--color-text)" }}
-                          >
-                            {auth_t(field.label_key)}
-                          </h3>
-
-                          <div className="space-y-2">
-                            {items.map((item) => (
-                              <div
-                                key={`${field.key}-${item.value || "empty"}`}
-                                className="flex items-start justify-between gap-3"
-                              >
-                                <span
-                                  className="text-sm"
-                                  style={{ color: "var(--color-text)" }}
-                                >
-                                  {item.value || t("analytics_demographics_not_provided")}
-                                </span>
-                                <span
-                                  className="text-xs font-medium whitespace-nowrap"
-                                  style={{ color: "var(--color-text-secondary)" }}
-                                >
-                                  {item.count} ({item.percentage}%)
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div>
-                    <h3
-                      className="text-sm font-semibold mb-3"
-                      style={{ color: "var(--color-text)" }}
-                    >
-                      {t("analytics_children_title")}
-                    </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div
-                        className="rounded-lg p-4"
-                        style={{
-                          background: "var(--color-surface)",
-                          border: "1px solid var(--color-border)",
-                        }}
-                      >
-                        <p
-                          className="text-xs font-semibold uppercase tracking-wider mb-2"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          {auth_t("children_under_5_count")}
-                        </p>
-                        <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                          {demographics.children.under_5_total}
-                        </p>
-                      </div>
-
-                      <div
-                        className="rounded-lg p-4"
-                        style={{
-                          background: "var(--color-surface)",
-                          border: "1px solid var(--color-border)",
-                        }}
-                      >
-                        <p
-                          className="text-xs font-semibold uppercase tracking-wider mb-2"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          {auth_t("children_5_to_18_count")}
-                        </p>
-                        <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                          {demographics.children.age_5_to_18_total}
-                        </p>
-                      </div>
-
-                      <div
-                        className="rounded-lg p-4"
-                        style={{
-                          background: "var(--color-surface)",
-                          border: "1px solid var(--color-border)",
-                        }}
-                      >
-                        <p
-                          className="text-xs font-semibold uppercase tracking-wider mb-2"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          {auth_t("children_over_18_count")}
-                        </p>
-                        <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
-                          {demographics.children.over_18_total}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p style={{ color: "var(--color-text-secondary)" }}>
-                  {t("analytics_demographics_empty")}
-                </p>
-              )}
-            </div>
-          )}
-
+          {/* Summary Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="card p-4" style={{ border: "1px solid var(--color-border)" }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <p
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--color-text-secondary)" }}
@@ -533,43 +317,43 @@ export default function AnalyticsPage() {
                 </p>
                 <CalendarDays size={16} style={{ color: "var(--color-primary)" }} />
               </div>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
                 {stats.total_events}
               </p>
             </div>
 
-            <div className="card p-4" style={{ border: "1px solid var(--color-border)" }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <p
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   Approved
                 </p>
-                <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} />
+                <CheckCircle2 size={16} style={{ color: "#22c55e" }} />
               </div>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
                 {stats.approved_events}
               </p>
             </div>
 
-            <div className="card p-4" style={{ border: "1px solid var(--color-border)" }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <p
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   Pending
                 </p>
-                <Clock size={16} style={{ color: "var(--color-warning)" }} />
+                <Clock size={16} style={{ color: "#f59e0b" }} />
               </div>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
                 {stats.pending_events}
               </p>
             </div>
 
-            <div className="card p-4" style={{ border: "1px solid var(--color-border)" }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <p
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--color-text-secondary)" }}
@@ -578,13 +362,13 @@ export default function AnalyticsPage() {
                 </p>
                 <Users size={16} style={{ color: "var(--color-accent)" }} />
               </div>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
                 {stats.total_rsvps}
               </p>
             </div>
 
-            <div className="card p-4" style={{ border: "1px solid var(--color-border)" }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <div className="flex items-center justify-between mb-3">
                 <p
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--color-text-secondary)" }}
@@ -593,84 +377,471 @@ export default function AnalyticsPage() {
                 </p>
                 <TrendingUp size={16} style={{ color: "var(--color-primary)" }} />
               </div>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
                 {stats.average_rsvps_per_event}
               </p>
             </div>
           </div>
 
-          <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
-              Event Breakdown
-            </h2>
-
-            {stats.events.length === 0 ? (
-              <p
-                className="text-sm text-center py-8"
-                style={{ color: "var(--color-text-secondary)" }}
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 border-b" style={{ borderColor: "var(--color-border)" }}>
+            {(["overview", "demographics", "events"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => set_active_tab(tab)}
+                className="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                style={{
+                  borderColor: active_tab === tab ? "var(--color-primary)" : "transparent",
+                  color: active_tab === tab ? "var(--color-primary)" : "var(--color-text-secondary)",
+                }}
               >
-                No events found for this period
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {stats.events.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/analytics/${event.id}`}
-                    className="block no-underline"
-                  >
+                {tab === "overview" && "Overview"}
+                {tab === "demographics" && "Demographic Groups"}
+                {tab === "events" && "Events"}
+              </button>
+            ))}
+          </div>
+
+          {/* Overview Tab */}
+          {active_tab === "overview" && (
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
+                Event Performance Summary
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-text)" }}>
+                    Status Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                        Active (Approved)
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-text)" }}>
+                        {stats.approved_events}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                        Pending Approval
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-text)" }}>
+                        {stats.pending_events}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                        Total
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-primary)" }}>
+                        {stats.total_events}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-text)" }}>
+                    Engagement Metrics
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                        Total RSVPs
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-text)" }}>
+                        {stats.total_rsvps}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                        Average per Event
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-text)" }}>
+                        {stats.average_rsvps_per_event}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                        Engagement Rate
+                      </span>
+                      <span className="font-bold" style={{ color: "var(--color-primary)" }}>
+                        {stats.total_events > 0
+                          ? Math.round(
+                              (stats.total_rsvps /
+                                (stats.total_events * 10)) *
+                                100
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Demographics Tab */}
+          {active_tab === "demographics" && (
+            <div className="space-y-6">
+              {is_provider ? (
+                <>
+                  {demographicsError && (
                     <div
-                      className="p-4 rounded-lg flex items-center justify-between cursor-pointer transition-colors"
-                      style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor =
-                          "var(--color-primary)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor =
-                          "var(--color-border)";
-                      }}
+                      className="p-4 rounded-lg text-sm"
+                      style={{ background: "#fee2e2", color: "#991b1b" }}
                     >
-                      <div className="flex-1 min-w-0">
+                      {demographicsError}
+                    </div>
+                  )}
+
+                  {demographicsLoading ? (
+                    <div
+                      className="text-center py-8"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      <p>{t("loading")}</p>
+                    </div>
+                  ) : demographics?.summary.shared_user_count ? (
+                    <>
+                      {/* Demographics Summary Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div
+                          className="card p-6"
+                          style={{ border: "1px solid var(--color-border)" }}
+                        >
+                          <p
+                            className="text-xs font-semibold uppercase mb-2"
+                            style={{ color: "var(--color-text-secondary)" }}
+                          >
+                            Shared Residents
+                          </p>
+                          <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
+                            {demographics.summary.shared_user_count}
+                          </p>
+                        </div>
+
+                        <div
+                          className="card p-6"
+                          style={{ border: "1px solid var(--color-border)" }}
+                        >
+                          <p
+                            className="text-xs font-semibold uppercase mb-2"
+                            style={{ color: "var(--color-text-secondary)" }}
+                          >
+                            Shared RSVPs
+                          </p>
+                          <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
+                            {demographics.summary.shared_rsvp_count}
+                          </p>
+                        </div>
+
+                        <div
+                          className="card p-6"
+                          style={{ border: "1px solid var(--color-border)" }}
+                        >
+                          <p
+                            className="text-xs font-semibold uppercase mb-2"
+                            style={{ color: "var(--color-text-secondary)" }}
+                          >
+                            Events with Data
+                          </p>
+                          <p className="text-3xl font-bold" style={{ color: "var(--color-text)" }}>
+                            {demographics.summary.shared_event_count}
+                          </p>
+                        </div>
+
+                        <a
+                          href={demographics_export_href}
+                          className="card p-6 flex items-center justify-center cursor-pointer no-underline transition-colors"
+                          style={{
+                            border: "1px solid var(--color-border)",
+                            background: "var(--color-primary)",
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.opacity = "0.9";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
+                          }}
+                        >
+                          <div className="text-center">
+                            <Download size={20} style={{ color: "white", margin: "0 auto 8px" }} />
+                            <p className="text-sm font-medium" style={{ color: "white" }}>
+                              Download CSV
+                            </p>
+                          </div>
+                        </a>
+                      </div>
+
+                      {/* Demographic Breakdowns */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {BREAKDOWN_CARD_FIELDS.slice(0, 3).map((field) => {
+                          const items = demographics.breakdowns[field.key].slice(0, 5);
+                          return (
+                            <div
+                              key={field.key}
+                              className="card p-6"
+                              style={{ border: "1px solid var(--color-border)" }}
+                            >
+                              <h3
+                                className="text-sm font-semibold mb-4"
+                                style={{ color: "var(--color-text)" }}
+                              >
+                                {auth_t(field.label_key)}
+                              </h3>
+                              <div className="space-y-3">
+                                {items.map((item) => (
+                                  <div
+                                    key={`${field.key}-${item.value || "empty"}`}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span
+                                      className="text-sm"
+                                      style={{ color: "var(--color-text-secondary)" }}
+                                    >
+                                      {item.value || t("analytics_demographics_not_provided")}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="h-1.5 rounded-full"
+                                        style={{
+                                          width: `${Math.max(30, item.percentage * 2)}px`,
+                                          background: "var(--color-primary)",
+                                        }}
+                                      />
+                                      <span
+                                        className="text-xs font-medium w-12 text-right"
+                                        style={{ color: "var(--color-text)" }}
+                                      >
+                                        {item.percentage}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {BREAKDOWN_CARD_FIELDS.slice(3).map((field) => {
+                          const items = demographics.breakdowns[field.key].slice(0, 5);
+                          return (
+                            <div
+                              key={field.key}
+                              className="card p-6"
+                              style={{ border: "1px solid var(--color-border)" }}
+                            >
+                              <h3
+                                className="text-sm font-semibold mb-4"
+                                style={{ color: "var(--color-text)" }}
+                              >
+                                {auth_t(field.label_key)}
+                              </h3>
+                              <div className="space-y-3">
+                                {items.map((item) => (
+                                  <div
+                                    key={`${field.key}-${item.value || "empty"}`}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span
+                                      className="text-sm"
+                                      style={{ color: "var(--color-text-secondary)" }}
+                                    >
+                                      {item.value || t("analytics_demographics_not_provided")}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="h-1.5 rounded-full"
+                                        style={{
+                                          width: `${Math.max(30, item.percentage * 2)}px`,
+                                          background: "var(--color-primary)",
+                                        }}
+                                      />
+                                      <span
+                                        className="text-xs font-medium w-12 text-right"
+                                        style={{ color: "var(--color-text)" }}
+                                      >
+                                        {item.percentage}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Children Statistics */}
+                      <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
                         <h3
-                          className="text-sm font-semibold"
+                          className="text-sm font-semibold mb-4"
                           style={{ color: "var(--color-text)" }}
                         >
-                          {event.title_en}
+                          {t("analytics_children_title")}
                         </h3>
-                        <p
-                          className="text-xs mt-1"
-                          style={{ color: "var(--color-text-secondary)" }}
-                        >
-                          Status: {event.status}
-                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div
+                            className="p-4 rounded-lg"
+                            style={{
+                              background: "var(--color-surface)",
+                              border: "1px solid var(--color-border)",
+                            }}
+                          >
+                            <p
+                              className="text-xs font-semibold uppercase mb-2"
+                              style={{ color: "var(--color-text-secondary)" }}
+                            >
+                              {auth_t("children_under_5_count")}
+                            </p>
+                            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+                              {demographics.children.under_5_total}
+                            </p>
+                          </div>
+
+                          <div
+                            className="p-4 rounded-lg"
+                            style={{
+                              background: "var(--color-surface)",
+                              border: "1px solid var(--color-border)",
+                            }}
+                          >
+                            <p
+                              className="text-xs font-semibold uppercase mb-2"
+                              style={{ color: "var(--color-text-secondary)" }}
+                            >
+                              {auth_t("children_5_to_18_count")}
+                            </p>
+                            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+                              {demographics.children.age_5_to_18_total}
+                            </p>
+                          </div>
+
+                          <div
+                            className="p-4 rounded-lg"
+                            style={{
+                              background: "var(--color-surface)",
+                              border: "1px solid var(--color-border)",
+                            }}
+                          >
+                            <p
+                              className="text-xs font-semibold uppercase mb-2"
+                              style={{ color: "var(--color-text-secondary)" }}
+                            >
+                              {auth_t("children_over_18_count")}
+                            </p>
+                            <p className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+                              {demographics.children.over_18_total}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        <div className="text-right">
-                          <p
+                    </>
+                  ) : (
+                    <div
+                      className="card p-6 text-center"
+                      style={{ border: "1px solid var(--color-border)" }}
+                    >
+                      <p style={{ color: "var(--color-text-secondary)" }}>
+                        {t("analytics_demographics_empty")}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div
+                  className="card p-6 text-center"
+                  style={{ border: "1px solid var(--color-border)" }}
+                >
+                  <p style={{ color: "var(--color-text-secondary)" }}>
+                    Demographic data is only available for providers.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Events Tab */}
+          {active_tab === "events" && (
+            <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
+                Events
+              </h2>
+
+              {stats.events.length === 0 ? (
+                <p
+                  className="text-sm text-center py-8"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  No events found for this period
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {stats.events.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/analytics/${event.id}`}
+                      className="block no-underline"
+                    >
+                      <div
+                        className="p-4 rounded-lg flex items-center justify-between cursor-pointer transition-colors"
+                        style={{
+                          background: "var(--color-surface)",
+                          border: "1px solid var(--color-border)",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.borderColor =
+                            "var(--color-primary)";
+                          (e.currentTarget as HTMLDivElement).style.background =
+                            "var(--color-surface)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.borderColor =
+                            "var(--color-border)";
+                        }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h3
                             className="text-sm font-semibold"
                             style={{ color: "var(--color-text)" }}
                           >
-                            {event._count.rsvps}
-                          </p>
+                            {event.title_en}
+                          </h3>
                           <p
-                            className="text-xs"
+                            className="text-xs mt-1"
                             style={{ color: "var(--color-text-secondary)" }}
                           >
-                            RSVPs
+                            {event.status} · {new Date(event.start_time).toLocaleDateString()}
                           </p>
                         </div>
-                        <span style={{ color: "var(--color-text-secondary)" }}>›</span>
+                        <div className="flex items-center gap-4 ml-4 shrink-0">
+                          <div className="text-right">
+                            <p
+                              className="text-sm font-semibold"
+                              style={{ color: "var(--color-text)" }}
+                            >
+                              {event._count.rsvps}
+                            </p>
+                            <p
+                              className="text-xs"
+                              style={{ color: "var(--color-text-secondary)" }}
+                            >
+                              RSVPs
+                            </p>
+                          </div>
+                          <span style={{ color: "var(--color-text-secondary)" }}>›</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

@@ -71,12 +71,8 @@ export function AppShell({
             {/* Header — mobile only. Desktop navigation lives entirely in the sidebar. */}
             <div className="md:hidden">
                 <Header
-                    role={role}
-                    email={email}
                     locale={locale}
                     app_name={app_name}
-                    sign_out_label={sign_out_label}
-                    language_toggle_label={language_toggle_label}
                 />
             </div>
 

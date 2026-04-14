@@ -180,13 +180,14 @@ export default function EventDetailPage() {
         >
           {error || t("error_not_found")}
         </h2>
-        <Link
-          href="/events"
+        <button
+          type="button"
+          onClick={() => router.back()}
           className="text-sm mt-2 inline-block"
-          style={{ color: "var(--color-primary)" }}
+          style={{ color: "var(--color-primary)", background: "none", border: "none", cursor: "pointer" }}
         >
-          ← {t("back_to_events")}
-        </Link>
+          ← {t("back")}
+        </button>
       </div>
     );
   }
@@ -203,7 +204,6 @@ export default function EventDetailPage() {
   const is_own = session?.user?.id === event.provider_id;
   const is_admin = session?.user?.role === "ADMIN";
   const can_edit = is_own || is_admin;
-  const back_href = is_admin ? "/admin/events" : "/events";
   const approve_label = locale === "es" ? "Aprobar" : "Approve";
   const reject_label = locale === "es" ? "Rechazar" : "Reject";
   const delete_label = locale === "es" ? "Eliminar" : "Delete";
@@ -212,14 +212,15 @@ export default function EventDetailPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       {/* Back link */}
-      <Link
-        href={back_href}
+      <button
+        type="button"
+        onClick={() => router.back()}
         className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-5"
-        style={{ color: "var(--color-text-secondary)" }}
+        style={{ color: "var(--color-text-secondary)", background: "none", border: "none", cursor: "pointer" }}
       >
         <span style={{ fontSize: 16, lineHeight: 1 }}>‹</span>
-        {t("back_to_events")}
-      </Link>
+        {t("back")}
+      </button>
 
       <div className="card card-no-hover overflow-hidden">
 
