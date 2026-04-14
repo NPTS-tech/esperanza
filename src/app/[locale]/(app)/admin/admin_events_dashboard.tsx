@@ -45,6 +45,7 @@ type ApiEvent = {
   title_en: string;
   category: string;
   start_time: string;
+  created_at: string;
   status: EventStatus;
   provider: {
     email: string;
@@ -98,6 +99,13 @@ function format_date(iso_string: string, locale: string): string {
   }).format(d);
 }
 
+function sort_by_created_desc(events: ApiEvent[]): ApiEvent[] {
+  return [...events].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+}
+
 export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
   const locale = useLocale();
   const [events, set_events] = useState<ApiEvent[]>([]);
@@ -132,8 +140,8 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
 
     try {
       const [all_res, pending_res] = await Promise.all([
-        fetch("/api/events?page=1&limit=100"),
-        fetch("/api/events?page=1&limit=100&status=PENDING"),
+        fetch("/api/events?page=1&limit=1000"),
+        fetch("/api/events?page=1&limit=1000&status=PENDING"),
       ]);
 
       if (!all_res.ok || !pending_res.ok) {
@@ -144,9 +152,9 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
       const pending_data =
         (await pending_res.json()) as PaginatedEventsResponse;
 
-      set_events(all_data.events);
+      set_events(sort_by_created_desc(all_data.events));
       set_total_events_count(all_data.pagination.total);
-      set_pending_events(pending_data.events);
+      set_pending_events(sort_by_created_desc(pending_data.events));
       set_pending_count(pending_data.pagination.total);
     } catch {
       set_error(props.error_loading_events);

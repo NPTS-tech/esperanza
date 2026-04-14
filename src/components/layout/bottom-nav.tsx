@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { Home, CalendarDays, Map, User, Plus, Bookmark } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,7 @@ type BottomNavProps = {
 type NavItem = {
     key: string;
     label: string;
-    href: string;
+    href: ComponentProps<typeof Link>["href"];
     icon: React.ReactNode;
 };
 
@@ -35,7 +36,7 @@ function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
         return [
             { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
             { key: "my_events", label: labels.nav_my_events, href: "/provider", icon: <CalendarDays size={SZ} /> },
-            { key: "submit", label: labels.nav_submit_event, href: "/provider", icon: <Plus size={SZ} /> },
+            { key: "submit", label: labels.nav_submit_event, href: "/events/create", icon: <Plus size={SZ} /> },
             { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
         ];
     }
@@ -69,7 +70,7 @@ export function BottomNav(props: BottomNavProps) {
                 return (
                     <Link
                         key={item.key}
-                        href={item.href as any}
+                        href={item.href}
                         className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
                         style={{
                             color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)",

@@ -28,6 +28,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Seed accounts: `admin@esperanza.app` / `admin123`, `provider@esperanza.app` / `provider123`, `user@esperanza.app` / `user123`
 
+For deployment options and the current production runbook, see [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+
 ## Architecture
 
 - **Nginx** — reverse proxy, HTTPS termination, rate limiting, security headers
