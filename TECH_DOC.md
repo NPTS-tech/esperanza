@@ -4,7 +4,7 @@
 
 ## 1. Cloud Provider Recommendation (Free Tier)
 
-Your best option for **free, self-hosted** development and demo hosting:
+Your best option for **free, self-hosted** development and staging hosting:
 
 ### 🏆 Primary: Oracle Cloud Always Free Tier
 
@@ -339,7 +339,7 @@ You don't have one yet. Options:
 
 | Option | Cost | Notes |
 |---|---|---|
-| **Oracle VM public IP** | Free | Use the raw IP for dev/demo (e.g., `http://129.xxx.xx.xx`) |
+| **Oracle VM public IP** | Free | Use the raw IP for dev/staging (e.g., `http://129.xxx.xx.xx`) |
 | **Free subdomain** (e.g., `esperanza.duckdns.org`) | Free | DuckDNS gives free DDNS, works with Let's Encrypt |
 | **`.tech` domain** | Free 1 year | Via GitHub Student Pack |
 | **Buy a real domain** | ~$10-15/yr | Namecheap, Cloudflare Registrar |
@@ -403,4 +403,4 @@ Each of these is a 5-10 minute task. The full initial setup is ~1 hour.
 | Which calendar library (FullCalendar, react-big-calendar, etc.) | When building events page |
 | Spanish translations: in-house or professional? | Before i18n implementation |
 | iPad kiosk security model (guided access, auto-clear cookies) | Before iPad deployment |
-| County IT handoff process | After prototype demo |
+| County IT handoff process | Before county production launch |
