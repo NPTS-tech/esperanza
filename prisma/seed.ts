@@ -20,7 +20,16 @@ import {
   DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
   DALLAS_COUNTY_RACE_OPTIONS,
 } from "../src/lib/dallas_county_profile_options";
-import { db } from "../src/lib/db";
+import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
+
+// Standalone client (not src/lib/db) so this runs inside the migration Lambda,
+// which bundles prisma/ + src/lib + the generated client but resolves no "@/" alias.
+const db = new PrismaClient({
+  adapter: new PrismaLibSql({
+    url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+  }),
+});
 
 type SeedAccount = {
   username: string;

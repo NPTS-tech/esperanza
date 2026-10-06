@@ -63,6 +63,10 @@ jobs:
             FILES="package.json pnpm-lock.yaml tsconfig.json prisma/"
             [ -f pnpm-workspace.yaml ] && FILES="$FILES pnpm-workspace.yaml"
             [ -f prisma.config.ts ] && FILES="$FILES prisma.config.ts"
+            # prisma/seed.ts imports helpers from src/lib; bundle them so seeding
+            # works in the migration Lambda (the generated client is recreated by
+            # `prisma generate` during install).
+            [ -d src/lib ] && FILES="$FILES src/lib"
             zip -ry /tmp/migration.zip $FILES
           elif [ -f "drizzle.config.ts" ]; then
             echo "ORM=drizzle" >> $GITHUB_ENV
