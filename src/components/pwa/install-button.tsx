@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Share, Plus, X } from "lucide-react";
+import { Download, Share, Menu, SquarePlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type BeforeInstallPromptEvent = Event & {
@@ -149,12 +149,16 @@ function IOSInstructions({ onClose }: { onClose: () => void }) {
                 </p>
                 <ol className="mt-4 space-y-3 text-sm">
                     <li className="flex items-center gap-3">
-                        <Share size={20} aria-hidden="true" style={{ color: "var(--color-primary)" }} />
+                        <Menu size={20} aria-hidden="true" style={{ color: "var(--color-primary)" }} />
                         <span>{t("ios_step1")}</span>
                     </li>
                     <li className="flex items-center gap-3">
-                        <Plus size={20} aria-hidden="true" style={{ color: "var(--color-primary)" }} />
+                        <Share size={20} aria-hidden="true" style={{ color: "var(--color-primary)" }} />
                         <span>{t("ios_step2")}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                        <SquarePlus size={20} aria-hidden="true" style={{ color: "var(--color-primary)" }} />
+                        <span>{t("ios_step3")}</span>
                     </li>
                 </ol>
                 <button type="button" onClick={onClose} className="btn btn-primary mt-5 w-full">

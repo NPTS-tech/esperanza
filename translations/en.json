@@ -284,8 +284,9 @@
         "button": "Install app",
         "ios_title": "Add to Home Screen",
         "ios_intro": "Install Esperanza for quick access and a full-screen experience.",
-        "ios_step1": "Tap the Share button in Safari's toolbar.",
-        "ios_step2": "Then choose \"Add to Home Screen\".",
+        "ios_step1": "In Safari, tap the menu button in the toolbar.",
+        "ios_step2": "Tap Share.",
+        "ios_step3": "Scroll down and tap \"Add to Home Screen\".",
         "ios_done": "Got it"
     },
     "Map": {

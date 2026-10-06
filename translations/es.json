@@ -284,8 +284,9 @@
         "button": "Instalar app",
         "ios_title": "Añadir a pantalla de inicio",
         "ios_intro": "Instala Esperanza para un acceso rápido y una experiencia en pantalla completa.",
-        "ios_step1": "Toca el botón Compartir en la barra de Safari.",
-        "ios_step2": "Luego elige \"Añadir a pantalla de inicio\".",
+        "ios_step1": "En Safari, toca el botón de menú en la barra.",
+        "ios_step2": "Toca Compartir.",
+        "ios_step3": "Desplázate y toca \"Añadir a pantalla de inicio\".",
         "ios_done": "Entendido"
     },
     "Map": {

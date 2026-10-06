@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     title: "Esperanza",
     description: "Community services portal for the Esperanza neighborhood",
     manifest: "/manifest.json",
+    // Without an apple-touch-icon, iOS uses a screenshot of the page as the
+    // home-screen icon (and shows a generic icon in the Share sheet).
+    icons: {
+        icon: "/icons/icon-192.png",
+        apple: "/icons/icon-192.png",
+    },
     appleWebApp: {
         capable: true,
         // "black-translucent" lets the app render under the iOS status bar;
