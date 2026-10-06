@@ -28,7 +28,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The database is a local **SQLite file** (`prisma/dev.db`) — no database server to run. Translation is optional; start a local LibreTranslate with `docker compose up -d libretranslate` if you want it.
+The database is a local **SQLite file** (`prisma/dev.db`) — no database server to run. For EN↔ES auto-translation of events, set `GEMINI_API_KEY` (free key from [AI Studio](https://aistudio.google.com)); without it, providers just enter both languages manually.
 
 Seed accounts: `admin@esperanza.app` / `admin123`, `provider@esperanza.app` / `provider123`, `user@esperanza.app` / `user123` (plus `resident01…30@esperanza.app` / `user123`).
 
@@ -55,6 +55,7 @@ See [`MIGRATION_TO_NPTS_INFRA.md`](./MIGRATION_TO_NPTS_INFRA.md) for the full de
 | i18n | next-intl (English / Spanish) |
 | Maps | MapLibre GL + OpenFreeMap tiles (keyless) |
 | Geocoding | Geoapify autocomplete (region-scoped), keyless Photon fallback |
+| Translation | Gemini (server-side EN↔ES auto-translation of event fields) |
 | Image uploads | Local filesystem / EFS (`UPLOAD_STORAGE_PATH`) |
 | Dev env | Nix flake + direnv |
 | Deploy | AWS ECS on NPTS infra (Docker image → ECR), GitHub Actions |
@@ -80,7 +81,6 @@ See [`MIGRATION_TO_NPTS_INFRA.md`](./MIGRATION_TO_NPTS_INFRA.md) for the full de
 ```
 esperanza/
 ├── flake.nix / .envrc          # nix dev shell (node + pnpm + prisma engine)
-├── docker-compose.yml          # optional LibreTranslate for local translation
 ├── Dockerfile                  # multi-stage production build (standalone)
 ├── prisma/
 │   ├── schema.prisma           # database schema (SQLite)

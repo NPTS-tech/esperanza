@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { update_event_schema } from "@/lib/validators/event";
 import { ensureBilingualEventFields } from "@/lib/services/event-translation";
+import { TranslationUnavailableError } from "@/lib/services/translation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -175,11 +176,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
                 bilingualFields = await ensureBilingualEventFields(mergedForTranslation);
             } catch (error) {
                 console.error("ensureBilingualEventFields error (update):", error);
+                if (error instanceof TranslationUnavailableError) {
+                    return NextResponse.json(
+                        {
+                            error:
+                                "Auto-translation is temporarily unavailable. Please provide both the English and Spanish title and description.",
+                        },
+                        { status: 422 },
+                    );
+                }
                 return NextResponse.json(
-                    {
-                        error: "Translation service unavailable",
-                    },
-                    { status: 502 },
+                    { error: error instanceof Error ? error.message : "Invalid event content" },
+                    { status: 400 },
                 );
             }
 

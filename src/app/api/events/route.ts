@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { create_event_schema, event_query_schema } from "@/lib/validators/event";
 import { ensureBilingualEventFields } from "@/lib/services/event-translation";
+import { TranslationUnavailableError } from "@/lib/services/translation";
 import { Prisma } from "@/generated/prisma/client";
 
 // GET /api/events — list events with filtering, search, and pagination
@@ -202,11 +203,18 @@ export async function POST(request: NextRequest) {
       bilingualFields = await ensureBilingualEventFields(parsed.data);
     } catch (error) {
       console.error("ensureBilingualEventFields error (create):", error);
+      if (error instanceof TranslationUnavailableError) {
+        return NextResponse.json(
+          {
+            error:
+              "Auto-translation is temporarily unavailable. Please provide both the English and Spanish title and description.",
+          },
+          { status: 422 },
+        );
+      }
       return NextResponse.json(
-        {
-          error: "Translation service unavailable",
-        },
-        { status: 502 },
+        { error: error instanceof Error ? error.message : "Invalid event content" },
+        { status: 400 },
       );
     }
 

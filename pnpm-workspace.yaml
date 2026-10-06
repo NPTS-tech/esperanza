@@ -3,6 +3,7 @@ verifyDepsBeforeRun: false
 packages: []
 
 allowBuilds:
+  '@google/genai': set this to true or false
   '@parcel/watcher': set this to true or false
   '@prisma/engines': set this to true or false
   '@swc/core': set this to true or false
@@ -10,6 +11,7 @@ allowBuilds:
   esbuild: set this to true or false
   msw: set this to true or false
   prisma: set this to true or false
+  protobufjs: set this to true or false
   sharp: set this to true or false
   unrs-resolver: set this to true or false
 
@@ -19,6 +21,8 @@ allowBuilds:
 # which 404s — Prisma 7 uses the WASM query engine instead). Listing them here
 # tells pnpm the skip is intentional so install doesn't error.
 ignoredBuiltDependencies:
+  - protobufjs
+  - '@google/genai'
   - better-sqlite3
   - '@parcel/watcher'
   - '@prisma/engines'

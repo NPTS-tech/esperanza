@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { translateText, type Language } from "@/lib/services/translation";
+import {
+  translateText,
+  TranslationUnavailableError,
+  type Language,
+} from "@/lib/services/translation";
 
 interface TranslateBody {
   text?: string;
@@ -38,11 +42,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ translatedText }, { status: 200 });
   } catch (error) {
+    if (error instanceof TranslationUnavailableError) {
+      return NextResponse.json(
+        { error: "Translation is temporarily unavailable. Please enter the text manually." },
+        { status: 422 },
+      );
+    }
     console.error("POST /api/translate error:", error);
-    return NextResponse.json(
-      { error: "Translation service unavailable" },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Translation failed" }, { status: 500 });
   }
 }
 

@@ -68,8 +68,9 @@ BETTER_AUTH_URL=https://esperanza.npts.tech      # stage: https://esperanza-stag
 NEXT_PUBLIC_APP_URL=https://esperanza.npts.tech  # stage: ...-stage.npts.tech
 # Maps/geocoding use MapLibre + OpenFreeMap + Photon — all keyless, nothing to set.
 
-# Translation (optional; omit to disable — bilingual fields fall back to source text)
-# TRANSLATION_BASE_URL=...
+# Translation (EN<->ES auto-translation of events via Gemini; server-side only).
+# Omit to disable — providers then enter both languages manually.
+GEMINI_API_KEY=<gemini api key from aistudio.google.com>
 
 NODE_ENV=production
 ```
@@ -179,8 +180,7 @@ Local dev mirrors prod except paths: SQLite at `./prisma/dev.db`, uploads at
 
 ```bash
 nix develop            # or: direnv allow  (provides node + pnpm via corepack)
-docker compose up -d   # optional: LibreTranslate on :5001
-pnpm install
+pnpm install           # set GEMINI_API_KEY in .env for auto-translation
 pnpm exec prisma migrate dev
 pnpm run db:seed       # dev credentials printed at the end
 pnpm run dev
