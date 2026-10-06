@@ -36,3 +36,6 @@ certs/
 .DS_Store
 Thumbs.db
 .codex
+
+# typescript incremental build cache
+*.tsbuildinfo

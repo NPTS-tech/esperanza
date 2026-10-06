@@ -16,29 +16,27 @@ out
 .git
 .gitignore
 
-# docker
-docker-compose*.yml
+# docker / build
 Dockerfile
 .dockerignore
 
-# docs and reference
-TECH_DOC.md
-PROJECT.md
-README.md
-mock/
+# nix dev shell
+.nix
+.direnv
+flake.nix
+flake.lock
 
-# ide
+# docs
+README.md
+MIGRATION_TO_NPTS_INFRA.md
+
+# os / ide
 .vscode
 .idea
 *.swp
 *.swo
-
-# os
 .DS_Store
 Thumbs.db
-
-# nginx (mounted separately, not baked into app image)
-nginx/
 
 # misc
 *.log

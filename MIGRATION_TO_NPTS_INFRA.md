@@ -224,13 +224,12 @@ Done as part of this migration (no action needed, listed for review):
   `src/lib` so the seed's helpers resolve.
 - **Local dev:** `flake.nix` + `.envrc` (nix dev shell), health endpoint at `/api/health`.
 
-### Safe to delete (old VM architecture)
+### Removed (old VM architecture)
 
-These are no longer used by the NPTS deployment — remove once you're happy:
-
-- `docker-compose.prod.yml`, `nginx/` (ALB handles ingress + TLS)
-- `DEPLOYMENT.md` sections describing the VM/nginx/certbot flow
-- `.env.example` Postgres/Supabase remnants (already updated)
+The single-VM artifacts have been deleted from the repo: `docker-compose.prod.yml`,
+`nginx/` (ALB handles ingress + TLS), `docker-compose.yml`, the `DEPLOYMENT.md`
+runbook, and the `TECH_DOC.md` Oracle-VM planning doc. Current docs are this file +
+the `README`.
 
 ---
 
@@ -312,6 +311,5 @@ CI runs build → migrate (applies schema to `/efs/prod.db`) → push `:prod` �
 `ACTIONS_ROLE_ARN` / `CLUSTER_NAME` repo secrets from §4.4 apply to prod too (same repo).
 
 ### Also worth doing (not blocking)
-- Delete the old-VM files: `docker-compose.prod.yml`, `nginx/`, the VM sections of `DEPLOYMENT.md`.
 - Reconcile the org-wide target-group drift with a deliberate full `tofu apply` (off-hours).
 - If you make the repo public or upgrade the org plan, drop the repo secrets and use the org ones.
