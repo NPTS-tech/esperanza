@@ -44,6 +44,11 @@ jobs:
           context: .
           platforms: linux/arm64
           load: true
+          # NEXT_PUBLIC_* values are inlined at build time (client bundle). The app
+          # URL is derived from the environment; the Geoapify key is a repo var.
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://esperanza${{ inputs.environment == 'stage' && '-stage' || '' }}.npts.tech
+            NEXT_PUBLIC_GEOAPIFY_KEY=${{ vars.NEXT_PUBLIC_GEOAPIFY_KEY }}
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ inputs.environment }}
           cache-from: type=gha,scope=${{ inputs.environment }}
           cache-to: type=gha,mode=max,scope=${{ inputs.environment }},ignore-error=true
