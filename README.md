@@ -4,65 +4,67 @@
 
 ## Quick Start (Local Dev)
 
+Local dev uses a **nix flake** (Node + pnpm + the Prisma schema engine for NixOS). With [direnv](https://direnv.net) you can `direnv allow`; otherwise run everything inside `nix develop`.
+
 ```bash
-# 1. clone and install
+# 1. clone + enter the dev shell
 git clone <repo-url>
 cd esperanza
-npm install
+nix develop            # or: direnv allow
 
-# 2. copy env template
+# 2. env: copy the template and add your Geoapify key (see Maps below)
 cp .env.example .env
 
-# 3. start postgres in docker
-docker compose up -d
+# 3. install deps (pnpm)
+pnpm install
 
-# 4. run database migrations and seed
-npx prisma migrate dev
-npm run db:seed
+# 4. create the local SQLite db + seed it
+pnpm exec prisma migrate dev
+pnpm run db:seed
 
 # 5. run the app (hot reload)
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Seed accounts: `admin@esperanza.app` / `admin123`, `provider@esperanza.app` / `provider123`, `user@esperanza.app` / `user123`
+The database is a local **SQLite file** (`prisma/dev.db`) — no database server to run. Translation is optional; start a local LibreTranslate with `docker compose up -d libretranslate` if you want it.
 
-For deployment options and the current production runbook, see [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+Seed accounts: `admin@esperanza.app` / `admin123`, `provider@esperanza.app` / `provider123`, `user@esperanza.app` / `user123` (plus `resident01…30@esperanza.app` / `user123`).
 
-## Architecture
+> **Not on NixOS?** The app itself runs anywhere with Node 22 + pnpm; the flake just wires up Prisma's schema engine for NixOS. On other systems, `pnpm install && pnpm exec prisma migrate dev && pnpm dev` is enough.
 
-- **Nginx** — reverse proxy, HTTPS termination, rate limiting, security headers
-- **Next.js** — full-stack app (React frontend + API routes as backend)
-- **PostgreSQL** — stores users, demographics, events, RSVPs, analytics
+## Deployment
 
-All services run in Docker containers managed by Docker Compose.
+Esperanza deploys to the shared **NPTS AWS infrastructure** (`NPTS-tech/infra`) — ECS on EC2, behind a shared ALB, with the SQLite file and uploaded images on EFS. Pushing to the `stage` / `prod` branches triggers the CI pipeline (build → migrate via Lambda → push to ECR → ECS deploy).
+
+See [`MIGRATION_TO_NPTS_INFRA.md`](./MIGRATION_TO_NPTS_INFRA.md) for the full deployment runbook.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 16 (App Router), standalone output |
 | Language | TypeScript |
+| Package manager | pnpm 11 |
 | Styling | Tailwind CSS v4 |
-| UI Components | shadcn/ui (Radix + Tailwind) |
 | Icons | Lucide React |
-| Database | PostgreSQL 16 |
-| ORM | Prisma |
-| Auth | Auth.js (NextAuth v5) — JWT, HTTP-only cookies |
+| Database | SQLite (file on EFS in prod) |
+| ORM | Prisma 7 via the libsql driver adapter |
+| Auth | Better Auth (email/password, DB-backed sessions, HTTP-only cookies) |
 | i18n | next-intl (English / Spanish) |
-| Maps | Leaflet + OpenStreetMap |
-| PWA | @serwist/next |
-| Containers | Docker + Docker Compose |
-| Reverse Proxy | Nginx |
-| CI/CD | GitHub Actions |
+| Maps | MapLibre GL + OpenFreeMap tiles (keyless) |
+| Geocoding | Geoapify autocomplete (region-scoped), keyless Photon fallback |
+| Image uploads | Local filesystem / EFS (`UPLOAD_STORAGE_PATH`) |
+| Dev env | Nix flake + direnv |
+| Deploy | AWS ECS on NPTS infra (Docker image → ECR), GitHub Actions |
 
 ## User Roles
 
 | Role | Access |
 |---|---|
-| **User** | View events, RSVP, profile, services, map, transit |
-| **Provider** | User access + provider analytics, submit events for review |
+| **User** | View events, RSVP, profile, services, map |
+| **Provider** | User access + submit events for review, provider analytics |
 | **Admin** | Full access + approve/reject events, manage users, announcements, full analytics |
 
 ## Privacy Model
@@ -71,86 +73,60 @@ All services run in Docker containers managed by Docker Compose.
 - Providers see aggregate demographic data for their events — never emails or names
 - In-app behavior (searches, page views, direction requests) tracked anonymously
 - Only individual social service providers know a user's personal information
-- All auth tokens in HTTP-only cookies (not localStorage)
+- Auth sessions in HTTP-only cookies (not localStorage)
 
 ## Project Structure
 
 ```
 esperanza/
-├── docker-compose.yml          # dev (default): postgres only
-├── docker-compose.prod.yml     # production: postgres + next.js + nginx
-├── Dockerfile                  # multi-stage production build
-├── nginx/
-│   ├── Dockerfile              # prod reverse proxy (TLS templates + entrypoint)
-│   ├── nginx.http.conf         # HTTP until Let's Encrypt certs exist
-│   ├── nginx.https.conf        # HTTPS + redirect once certs exist
-│   └── nginx.conf              # reference copy (not used by prod compose)
+├── flake.nix / .envrc          # nix dev shell (node + pnpm + prisma engine)
+├── docker-compose.yml          # optional LibreTranslate for local translation
+├── Dockerfile                  # multi-stage production build (standalone)
 ├── prisma/
-│   ├── schema.prisma           # database schema
+│   ├── schema.prisma           # database schema (SQLite)
 │   ├── migrations/             # SQL migration history
-│   └── seed.ts                 # dev seed data (admin, provider, user)
+│   └── seed.ts                 # dev seed data
+├── prisma.config.ts            # Prisma 7 config (migrate datasource URL)
 ├── src/
-│   ├── app/                    # Next.js App Router
+│   ├── app/
 │   │   ├── [locale]/           # i18n route group (en/es)
 │   │   │   ├── auth/           # login, register
-│   │   │   ├── events/         # event list, detail, RSVP
-│   │   │   ├── services/       # service directory
-│   │   │   ├── map/            # embedded map
-│   │   │   ├── admin/          # admin dashboard (protected)
-│   │   │   └── provider/       # provider dashboard (protected)
-│   │   └── api/                # API routes (the backend)
-│   │       ├── auth/
-│   │       ├── events/
-│   │       ├── users/
-│   │       └── analytics/
-│   ├── components/             # shared UI components
-│   ├── lib/                    # utilities, db client, auth config
-│   │   ├── dal/                # data access layer (Prisma queries)
-│   │   └── validators/         # Zod input validation schemas
-│   ├── middleware.ts            # auth + locale + role gating
-│   └── messages/               # i18n JSON files (en.json, es.json)
-├── public/                     # static assets, PWA manifest
-├── mock/                       # reference MVP (not used in prod)
-├── .env.example                # env variable template
-├── .dockerignore
-├── package.json
-└── tsconfig.json
+│   │   │   ├── (app)/          # events, map, profile, admin, provider, …
+│   │   └── api/                # API routes (auth, events, users, uploads, …)
+│   ├── components/             # shared UI (maps, forms, calendar, …)
+│   ├── lib/                    # db client, auth, geocode, map, uploads, validators
+│   ├── generated/prisma/       # generated Prisma client (gitignored)
+│   └── middleware.ts           # auth presence + locale routing (edge-safe)
+├── translations/               # i18n JSON (en.json, es.json)
+├── public/                     # static assets, PWA manifest + service worker
+├── .github/workflows/          # NPTS CI (deploy.yml + prod.yml/stage.yml)
+├── MIGRATION_TO_NPTS_INFRA.md  # deployment runbook
+└── .env.example                # env variable template
 ```
 
-## Docker Commands
+## Maps & Geocoding
 
-```bash
-# --- Local Development (default) ---
-docker compose up -d                                          # start postgres
-docker compose down                                           # stop postgres
-docker compose logs -f                                        # view logs
-
-# --- Production (requires -f flag) ---
-docker compose -f docker-compose.prod.yml up -d --build       # build and start everything
-docker compose -f docker-compose.prod.yml down                # stop everything
-docker compose -f docker-compose.prod.yml logs -f             # view logs
-docker compose -f docker-compose.prod.yml exec postgres psql -U esperanza  # connect to DB
-```
+- **Tiles/rendering:** MapLibre GL with OpenFreeMap — free and keyless, nothing to configure.
+- **Address autocomplete:** Geoapify. Create a free key at [myprojects.geoapify.com](https://myprojects.geoapify.com), restrict it to your origins, and set `NEXT_PUBLIC_GEOAPIFY_KEY` in `.env`. Results are hard-scoped to the DFW metroplex (`NEXT_PUBLIC_GEOCODE_BBOX` to widen). Without a key it falls back to the keyless public Photon instance (slower).
 
 ## Localization (i18n)
-Esperanza uses `next-intl` for App-Router translations via the `[locale]` dynamic routing segment.
-- String dictionaries are stored centrally in `translations/en.json` and `translations/es.json`.
-- When adding new UI text, **do not hardcode strings**.
-- Add your strings under a logical namespace (e.g., `"Profile": { "title": "My Profile" }`) in both JSON files.
-- In **Client Components**, use `useTranslations("Namespace")`.
-- In **Server Components**, use `await getTranslations("Namespace")`.
-- Route navigation (`Link`, `useRouter`, `usePathname`, `redirect`) should always be imported from `@/i18n/routing` to ensure seamless prefix handling.
+
+Esperanza uses `next-intl` for App-Router translations via the `[locale]` routing segment.
+- String dictionaries live in `translations/en.json` and `translations/es.json`.
+- Don't hardcode UI strings — add them under a namespace (e.g. `"Profile": { "title": "My Profile" }`) in **both** files.
+- Client components: `useTranslations("Namespace")`. Server components: `await getTranslations("Namespace")`.
+- Import navigation (`Link`, `useRouter`, `usePathname`, `redirect`) from `@/i18n/routing` for correct locale prefixing.
 
 ## Security
 
 | Area | How |
 |---|---|
-| Passwords | bcrypt (12 salt rounds) |
-| Auth tokens | JWT in HTTP-only, Secure, SameSite cookies |
-| HTTPS | Let's Encrypt via Certbot on Nginx |
-| Database | Internal Docker network only (not exposed to internet) |
+| Passwords | Better Auth (scrypt), stored on the credential account row |
+| Sessions | Better Auth, HTTP-only / Secure / SameSite cookies |
+| HTTPS | Terminated at the NPTS ALB |
+| Database | SQLite file on EFS — not network-exposed |
 | SQL Injection | Prisma parameterized queries |
-| XSS | React auto-escaping + CSP headers via Nginx |
-| Rate Limiting | Nginx: 10r/s on auth endpoints, 30r/s on general API |
-| Input Validation | Zod schemas on all API routes |
-| Data Segregation | Demographics in separate table, role-based DAL |
+| XSS | React auto-escaping |
+| Input Validation | Zod schemas on API routes |
+| Authorization | Edge middleware (auth presence) + `requireRole()` guards on protected pages |
+| Data Segregation | Demographics in a separate table from identity |
