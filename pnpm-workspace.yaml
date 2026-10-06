@@ -2,20 +2,23 @@ verifyDepsBeforeRun: false
 
 packages: []
 
-# These transitive deps ship build scripts we intentionally skip: their binaries
-# come prebuilt (esbuild/swc/sharp/libsql platform packages), or we specifically
-# do NOT want them (prisma/@prisma/engines would fetch the linux-nixos engine,
-# which 404s — Prisma 7 uses the WASM query engine instead). Listing them here
-# tells pnpm the skip is intentional so install doesn't error.
-ignoredBuiltDependencies:
-  - protobufjs
-  - '@google/genai'
-  - better-sqlite3
-  - '@parcel/watcher'
-  - '@prisma/engines'
-  - '@swc/core'
-  - esbuild
-  - msw
-  - prisma
-  - sharp
-  - unrs-resolver
+# pnpm 11 blocks dependency build scripts unless each is explicitly allowed (true)
+# or denied (false) here. Declaring this block also stops the NPTS migration Lambda
+# from injecting its own approvals (it keys off allowBuilds/onlyBuiltDependencies).
+#
+# Only @prisma/engines is built — the migration Lambda needs the schema engine for
+# `prisma migrate deploy` (and its v7 postinstall builds cleanly on NixOS too).
+# Everything else is skipped: libsql/esbuild/swc/sharp ship prebuilt binaries, and
+# better-sqlite3 is an unused transitive of the Prisma CLI.
+allowBuilds:
+  "@prisma/engines": true
+  "@google/genai": false
+  "@parcel/watcher": false
+  "@swc/core": false
+  better-sqlite3: false
+  esbuild: false
+  msw: false
+  prisma: false
+  protobufjs: false
+  sharp: false
+  unrs-resolver: false
