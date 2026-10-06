@@ -1,11 +1,11 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { redirect } from "@/i18n/routing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ProfileClient } from "./profile_client";
 
 export default async function ProfilePage() {
     const [session, locale, t] = await Promise.all([
-        auth(),
+        getSession(),
         getLocale(),
         getTranslations("Profile"),
     ]);

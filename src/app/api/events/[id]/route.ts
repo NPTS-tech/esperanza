@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { update_event_schema } from "@/lib/validators/event";
 import { ensureBilingualEventFields } from "@/lib/services/event-translation";
-import { EventStatus } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,7 +17,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // Note: All non-visible events surface as 404 rather than 403 to avoid leaking the existence of unapproved events to users.
 export async function GET(_request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -83,7 +82,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 // Note: This is meant to keep permissions structural rather than conditional, might need refactoring later if needed
 export async function PATCH(request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -133,7 +132,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             "category",
         ] as const;
 
-        const update_data: typeof parsed.data & { status?: EventStatus } = { ...parsed.data };
+        const update_data: typeof parsed.data & { status?: string } = { ...parsed.data };
 
         // Admin edits should never force a re-review.
         // Keep whatever current status the event already has.
@@ -146,7 +145,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
                 (field) => update_data[field] !== undefined,
             );
             if (has_content_change) {
-                update_data.status = EventStatus.PENDING;
+                update_data.status = "PENDING";
             }
         }
 
@@ -231,7 +230,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 // Note: Hard delete that should also remove rspvs via cascading.
 export async function DELETE(_request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }

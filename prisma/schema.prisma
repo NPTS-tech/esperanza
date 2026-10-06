@@ -1,30 +1,88 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client"
+  output     = "../src/generated/prisma"
+  engineType = "client"
+  runtime    = "nodejs"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
 }
 
+// NOTE: SQLite has no native enum type. The former Postgres enums (Role,
+// EventStatus, TargetRole, AnalyticsEventType) are stored as String; allowed
+// values are enforced in the zod validators (src/lib/validators).
+
+// Better Auth owns this table (email/password). Core fields use Better Auth's
+// camelCase names; `created_at` is mapped back to createdAt in src/lib/auth.ts so
+// the app's existing queries keep working. Passwords live in the Account table.
 model User {
-  id               String           @id @default(uuid())
-  username         String?          @unique
-  email            String           @unique
-  password_hash    String
-  role             Role             @default(USER)
-  language_pref    String           @default("en")
-  share_with_providers Boolean      @default(true)
-  consented_at     DateTime?
-  created_at       DateTime         @default(now())
-  analytics        AnalyticsEvent[]
-  announcements    Announcement[]   @relation("AuthorAnnouncements")
-  demographics     Demographics?
-  events           Event[]          @relation("ProviderEvents")
-  rsvps            Rsvp[]
-  provider_profile ProviderProfile?
+  id                   String           @id @default(uuid())
+  name                 String
+  email                String           @unique
+  emailVerified        Boolean          @default(false)
+  image                String?
+  username             String?          @unique
+  role                 String           @default("USER")
+  language_pref        String           @default("en")
+  share_with_providers Boolean          @default(true)
+  consented_at         DateTime?
+  created_at           DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  sessions             Session[]
+  accounts             Account[]
+  analytics            AnalyticsEvent[]
+  announcements        Announcement[]   @relation("AuthorAnnouncements")
+  demographics         Demographics?
+  events               Event[]          @relation("ProviderEvents")
+  rsvps                Rsvp[]
+  provider_profile     ProviderProfile?
 
   @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
 }
 
 model Demographics {
@@ -73,25 +131,25 @@ model ProviderProfile {
 }
 
 model Event {
-  id             String      @id @default(uuid())
-  title_en       String
-  title_es       String
-  description_en String
-  description_es String
-  location_name  String
+  id               String   @id @default(uuid())
+  title_en         String
+  title_es         String
+  description_en   String
+  description_es   String
+  location_name    String
   location_address String?
-  latitude       Float
-  longitude      Float
-  start_time     DateTime
-  end_time       DateTime
-  provider_id    String
-  status         EventStatus @default(PENDING)
-  category       String
-  image_url      String?
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  provider       User        @relation("ProviderEvents", fields: [provider_id], references: [id])
-  rsvps          Rsvp[]
+  latitude         Float
+  longitude        Float
+  start_time       DateTime
+  end_time         DateTime
+  provider_id      String
+  status           String   @default("PENDING")
+  category         String
+  image_url        String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  provider         User     @relation("ProviderEvents", fields: [provider_id], references: [id])
+  rsvps            Rsvp[]
 
   @@map("events")
 }
@@ -109,53 +167,27 @@ model Rsvp {
 }
 
 model Announcement {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   title_en    String
   title_es    String
   body_en     String
   body_es     String
   author_id   String
-  target_role TargetRole @default(ALL)
-  created_at  DateTime   @default(now())
-  author      User       @relation("AuthorAnnouncements", fields: [author_id], references: [id])
+  target_role String   @default("ALL")
+  created_at  DateTime @default(now())
+  author      User     @relation("AuthorAnnouncements", fields: [author_id], references: [id])
 
   @@map("announcements")
 }
 
 model AnalyticsEvent {
-  id         String             @id @default(uuid())
+  id         String   @id @default(uuid())
   user_id    String?
-  event_type AnalyticsEventType
+  event_type String
   metadata   Json?
-  created_at DateTime           @default(now())
-  user       User?              @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  user       User?    @relation(fields: [user_id], references: [id])
 
   @@index([event_type, created_at])
   @@map("analytics_events")
-}
-
-enum Role {
-  USER
-  PROVIDER
-  ADMIN
-}
-
-enum EventStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CANCELLED
-}
-
-enum TargetRole {
-  ALL
-  USER
-  PROVIDER
-}
-
-enum AnalyticsEventType {
-  SEARCH
-  PAGE_VIEW
-  DIRECTION_REQUEST
-  RSVP
 }

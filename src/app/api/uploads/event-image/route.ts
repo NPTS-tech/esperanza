@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { get_supabase_admin, supabase_storage_bucket } from "@/lib/supabase_admin";
+import { promises as fs } from "fs";
+import path from "path";
+import { getSession } from "@/lib/auth";
+import { upload_storage_path } from "@/lib/uploads";
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const MIN_IMAGE_WIDTH = 600;
@@ -156,22 +158,7 @@ function extension_from_mime(mime: string): string {
 
 export async function POST(request: Request) {
   try {
-    let supabase_admin;
-    try {
-      supabase_admin = get_supabase_admin();
-    } catch (e) {
-      return NextResponse.json(
-        {
-          error:
-            e instanceof Error
-              ? e.message
-              : "Supabase storage is not configured",
-        },
-        { status: 500 },
-      );
-    }
-
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -239,30 +226,16 @@ export async function POST(request: Request) {
 
     const ext = extension_from_mime(file.type);
     const file_name = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
-    const object_path = `${session.user.id}/${file_name}`;
+    const object_path = `events/${session.user.id}/${file_name}`;
 
-    const { error: upload_error } = await supabase_admin.storage
-      .from(supabase_storage_bucket)
-      .upload(object_path, file, {
-        contentType: file.type,
-        cacheControl: "3600",
-        upsert: false,
-      });
+    // Write to disk: local dir in dev, EFS mount (/efs/uploads) on NPTS infra.
+    const dest = path.join(upload_storage_path(), object_path);
+    await fs.mkdir(path.dirname(dest), { recursive: true });
+    await fs.writeFile(dest, Buffer.from(await file.arrayBuffer()));
 
-    if (upload_error) {
-      console.error("Supabase upload error:", upload_error);
-      return NextResponse.json(
-        { error: "Failed to upload image" },
-        { status: 500 },
-      );
-    }
-
-    const { data } = supabase_admin.storage
-      .from(supabase_storage_bucket)
-      .getPublicUrl(object_path);
-
+    // Served back through the streaming GET route (files live outside Next's static dir in prod).
     return NextResponse.json({
-      url: data.publicUrl,
+      url: `/api/uploads/${object_path}`,
       path: object_path,
     });
   } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { useRouter } from "@/i18n/routing";
 import { useEffect } from "react";
 import EventForm from "@/components/event_form";

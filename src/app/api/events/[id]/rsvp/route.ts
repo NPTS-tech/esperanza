@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 async function resolve_rsvp_context(context: RouteContext) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),

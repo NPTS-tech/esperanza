@@ -1,0 +1,30 @@
+verifyDepsBeforeRun: false
+
+packages: []
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  '@prisma/engines': set this to true or false
+  '@swc/core': set this to true or false
+  better-sqlite3: set this to true or false
+  esbuild: set this to true or false
+  msw: set this to true or false
+  prisma: set this to true or false
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
+
+# These transitive deps ship build scripts we intentionally skip: their binaries
+# come prebuilt (esbuild/swc/sharp/libsql platform packages), or we specifically
+# do NOT want them (prisma/@prisma/engines would fetch the linux-nixos engine,
+# which 404s — Prisma 7 uses the WASM query engine instead). Listing them here
+# tells pnpm the skip is intentional so install doesn't error.
+ignoredBuiltDependencies:
+  - better-sqlite3
+  - '@parcel/watcher'
+  - '@prisma/engines'
+  - '@swc/core'
+  - esbuild
+  - msw
+  - prisma
+  - sharp
+  - unrs-resolver

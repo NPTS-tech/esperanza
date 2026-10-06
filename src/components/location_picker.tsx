@@ -3,32 +3,25 @@
 /**
  * LocationPicker
  *
- * A combined address-autocomplete + draggable-pin map widget.
- * Used when creating / editing events so providers never have to
+ * Address-autocomplete (Geoapify, or keyless Photon fallback) + draggable-pin map
+ * (MapLibre + OpenFreeMap). Used when creating / editing events so providers never
  * type raw coordinates.
  *
  * Flow:
- *  1. User types an address → Mapbox SearchBox shows dropdown suggestions
- *  2. User selects a suggestion → map flies to that location and drops a pin
- *  3. User can drag the pin to the exact spot (à la Uber Eats / DoorDash)
- *  4. Lat/lng are updated on every dragend
+ *  1. User types an address → geocoder shows dropdown suggestions
+ *  2. User selects one → map flies there and drops a pin
+ *  3. User can drag the pin to the exact spot; lat/lng update on dragend
+ *     (reverse-geocoded to a label)
  *
- * This component MUST be imported with `dynamic(..., { ssr: false })` because
- * both `mapbox-gl` and `@mapbox/search-js-react` reference browser globals at
- * module initialisation time.
+ * Import with `dynamic(..., { ssr: false })`: maplibre-gl touches browser globals
+ * at module init.
  */
 
-import { useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { SearchBox } from "@mapbox/search-js-react";
-
-const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
-
-/** Default map centre — Dallas metro */
-const DALLAS: [number, number] = [-96.797, 32.7767];
-
-// ─── Public types ────────────────────────────────────────────────────────────
+import { useEffect, useRef, useState } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { MAP_STYLE_URL, DALLAS_CENTER as DALLAS } from "@/lib/map";
+import { geocode_search, geocode_reverse, type GeoResult } from "@/lib/geocode";
 
 export interface LocationValue {
   location_name: string;
@@ -40,13 +33,9 @@ export interface LocationValue {
 interface LocationPickerProps {
   value: LocationValue;
   onChange: (v: LocationValue) => void;
-  /** Label rendered above the search box */
   label?: string;
-  /** Small hint shown beneath the map once a pin is placed */
   drag_hint?: string;
 }
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function LocationPicker({
   value,
@@ -55,15 +44,22 @@ export default function LocationPicker({
   drag_hint = "Drag the pin to refine the exact location",
 }: LocationPickerProps) {
   const container_ref = useRef<HTMLDivElement>(null);
-  const map_ref = useRef<mapboxgl.Map | null>(null);
-  const marker_ref = useRef<mapboxgl.Marker | null>(null);
+  const map_ref = useRef<maplibregl.Map | null>(null);
+  const marker_ref = useRef<maplibregl.Marker | null>(null);
   const reverse_request_id_ref = useRef(0);
+  const debounce_ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const search_abort_ref = useRef<AbortController | null>(null);
   const has_coords = value.latitude != null && value.longitude != null;
-  const supports_separate_address =
-    Object.prototype.hasOwnProperty.call(value, "location_address");
+  const supports_separate_address = Object.prototype.hasOwnProperty.call(
+    value,
+    "location_address",
+  );
 
-  // Keep mutable refs so drag-end closure always reads the latest values
-  // without causing the map init effect to re-run.
+  const [suggestions, setSuggestions] = useState<GeoResult[]>([]);
+  const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  // Keep mutable refs so closures read the latest values without re-running effects.
   const on_change_ref = useRef(onChange);
   const value_ref = useRef(value);
   useEffect(() => {
@@ -73,28 +69,25 @@ export default function LocationPicker({
     value_ref.current = value;
   }, [value]);
 
-  // ── Initialise map once ──────────────────────────────────────────────────
+  // ── Initialise map once ──
   useEffect(() => {
     if (!container_ref.current || map_ref.current) return;
-
-    mapboxgl.accessToken = TOKEN;
 
     const initial_center: [number, number] =
       value.longitude != null && value.latitude != null
         ? [value.longitude, value.latitude]
         : DALLAS;
 
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: container_ref.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: MAP_STYLE_URL,
       center: initial_center,
       zoom: value.longitude != null ? 15 : 11,
     });
 
-    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
     map_ref.current = map;
 
-    // If editing an existing event, place the marker on the saved coordinates
     if (value.longitude != null && value.latitude != null) {
       _place_marker([value.longitude, value.latitude]);
     }
@@ -134,54 +127,29 @@ export default function LocationPicker({
 
   useEffect(() => {
     if (!map_ref.current) return;
-
     const resize_map = () => map_ref.current?.resize();
-
     const timeout_id = window.setTimeout(resize_map, 0);
     window.addEventListener("resize", resize_map);
-
     return () => {
       window.clearTimeout(timeout_id);
       window.removeEventListener("resize", resize_map);
     };
   }, []);
 
-  // ── Internal helpers ─────────────────────────────────────────────────────
+  // Cancel pending search work on unmount.
+  useEffect(() => {
+    return () => {
+      if (debounce_ref.current) clearTimeout(debounce_ref.current);
+      search_abort_ref.current?.abort();
+    };
+  }, []);
 
-  async function reverse_geocode_label(
-    latitude: number,
-    longitude: number,
-  ): Promise<string | null> {
-    if (!TOKEN) return null;
-
-    try {
-      const url =
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json` +
-        `?access_token=${encodeURIComponent(TOKEN)}` +
-        "&types=poi,address,place" +
-        "&limit=1" +
-        "&language=en";
-
-      const res = await fetch(url);
-      if (!res.ok) return null;
-
-      const data = (await res.json()) as {
-        features?: Array<{ place_name?: string; text?: string }>;
-      };
-
-      const best = data.features?.[0];
-      return best?.place_name ?? best?.text ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Place (or replace) the draggable marker at the given coordinates. */
+  // ── Place (or replace) the draggable marker ──
   function _place_marker(lnglat: [number, number]) {
     if (!map_ref.current) return;
     marker_ref.current?.remove();
 
-    const marker = new mapboxgl.Marker({ color: "#6366f1", draggable: true })
+    const marker = new maplibregl.Marker({ color: "#6366f1", draggable: true })
       .setLngLat(lnglat)
       .addTo(map_ref.current);
 
@@ -190,7 +158,6 @@ export default function LocationPicker({
       const rounded_lat = parseFloat(lat.toFixed(6));
       const rounded_lng = parseFloat(lng.toFixed(6));
 
-      // Update coordinates immediately so form state stays in sync.
       on_change_ref.current({
         location_name: value_ref.current.location_name,
         location_address: value_ref.current.location_address,
@@ -198,11 +165,8 @@ export default function LocationPicker({
         longitude: rounded_lng,
       });
 
-      // Then resolve the nearest specific place/address for the label.
       const request_id = ++reverse_request_id_ref.current;
-      const resolved_label = await reverse_geocode_label(rounded_lat, rounded_lng);
-
-      // Ignore stale responses when user drags multiple times quickly.
+      const resolved_label = await geocode_reverse(rounded_lat, rounded_lng);
       if (request_id !== reverse_request_id_ref.current) return;
 
       if (resolved_label) {
@@ -212,9 +176,7 @@ export default function LocationPicker({
             supports_separate_address && current.location_name.trim().length > 0
               ? current.location_name
               : resolved_label,
-          location_address: supports_separate_address
-            ? resolved_label
-            : undefined,
+          location_address: supports_separate_address ? resolved_label : undefined,
           latitude: rounded_lat,
           longitude: rounded_lng,
         });
@@ -224,48 +186,60 @@ export default function LocationPicker({
     marker_ref.current = marker;
   }
 
-  // ── SearchBox result handler ─────────────────────────────────────────────
+  // ── Autocomplete input handlers ──
+  function handle_input(text: string) {
+    const current_text = (
+      value_ref.current.location_address ?? value_ref.current.location_name
+    ).trim();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handle_retrieve(res: any) {
-    const feature = res?.features?.[0];
-    if (!feature) return;
+    on_change_ref.current({
+      ...value_ref.current,
+      location_address: supports_separate_address ? text : undefined,
+      location_name: supports_separate_address
+        ? value_ref.current.location_name
+        : text,
+      // Typing invalidates the resolved pin until a suggestion is chosen.
+      latitude: text.trim() === current_text ? value_ref.current.latitude : null,
+      longitude: text.trim() === current_text ? value_ref.current.longitude : null,
+    });
 
-    // GeoJSON `Position` is number[] (may have altitude); we only need lng/lat
-    const lng = feature.geometry.coordinates[0] as number;
-    const lat = feature.geometry.coordinates[1] as number;
-    const props = feature.properties as Record<string, unknown>;
-    const resolved_address =
-      (props?.full_address as string | undefined) ??
-      (props?.name as string | undefined) ??
-      value_ref.current.location_address ??
-      value_ref.current.location_name;
-    const resolved_place_name =
-      (props?.name as string | undefined) ??
-      (feature.text as string | undefined) ??
-      value_ref.current.location_name;
+    if (debounce_ref.current) clearTimeout(debounce_ref.current);
+    debounce_ref.current = setTimeout(async () => {
+      // Cancel any in-flight request so only the latest keystroke's results apply.
+      search_abort_ref.current?.abort();
+      const ctrl = new AbortController();
+      search_abort_ref.current = ctrl;
+      setSearching(true);
+      setOpen(true);
+      const results = await geocode_search(text, DALLAS, ctrl.signal);
+      if (ctrl.signal.aborted) return; // superseded by a newer keystroke
+      setSuggestions(results);
+      setSearching(false);
+      setOpen(true);
+    }, 250);
+  }
 
-    map_ref.current?.flyTo({ center: [lng, lat], zoom: 15 });
-    _place_marker([lng, lat]);
+  function handle_select(r: GeoResult) {
+    setOpen(false);
+    setSearching(false);
+    setSuggestions([]);
+    map_ref.current?.flyTo({ center: [r.lon, r.lat], zoom: 15 });
+    _place_marker([r.lon, r.lat]);
 
     on_change_ref.current({
       location_name:
-        supports_separate_address && value_ref.current.location_name.trim().length > 0
+        supports_separate_address &&
+        value_ref.current.location_name.trim().length > 0
           ? value_ref.current.location_name
-          : resolved_place_name,
-      location_address: supports_separate_address
-        ? resolved_address
-        : undefined,
-      latitude: parseFloat(lat.toFixed(6)),
-      longitude: parseFloat(lng.toFixed(6)),
+          : r.name,
+      location_address: supports_separate_address ? r.label : undefined,
+      latitude: parseFloat(r.lat.toFixed(6)),
+      longitude: parseFloat(r.lon.toFixed(6)),
     });
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-3">
-      {/* Label */}
       {label && (
         <label
           className="block text-sm font-medium"
@@ -275,64 +249,75 @@ export default function LocationPicker({
         </label>
       )}
 
-      {/* Address autocomplete */}
-      <SearchBox
-        accessToken={TOKEN}
-        value={value.location_address ?? value.location_name}
-        onChange={(v: string) => {
-          const next_name = v.trimStart();
-          const current_text =
-            (value_ref.current.location_address ??
-              value_ref.current.location_name).trim();
-
-          on_change_ref.current({
-            ...value_ref.current,
-            location_address: supports_separate_address ? v : undefined,
-            location_name: supports_separate_address
-              ? value_ref.current.location_name
-              : v,
-            latitude: next_name === current_text ? value_ref.current.latitude : null,
-            longitude:
-              next_name === current_text ? value_ref.current.longitude : null,
-          });
-        }}
-        onRetrieve={handle_retrieve}
-        options={{
-          proximity: { lng: DALLAS[0], lat: DALLAS[1] },
-          language: "en",
-          limit: 5,
-        }}
-        theme={{
-          variables: {
-            fontFamily: "inherit",
-            unit: "14px",
-            padding: "0.5rem 0.75rem",
-            borderRadius: "0.5rem",
-            boxShadow: "none",
+      {/* Address autocomplete (Photon) */}
+      <div className="relative">
+        <input
+          type="text"
+          value={value.location_address ?? value.location_name}
+          onChange={(e) => handle_input(e.target.value)}
+          onFocus={() => suggestions.length > 0 && setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Search for an address or place…"
+          autoComplete="off"
+          className="w-full text-sm rounded-lg px-3 py-2"
+          style={{
             border: "1px solid var(--color-border)",
-            colorBackground: "var(--color-surface, #fff)",
-            colorText: "var(--color-text, #1e293b)",
-            colorPrimary: "#6366f1",
-          },
-        }}
-      />
+            background: "var(--color-surface, #fff)",
+            color: "var(--color-text, #1e293b)",
+          }}
+        />
+        {open && (searching || suggestions.length > 0) && (
+          <ul
+            className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg shadow-lg"
+            style={{
+              background: "var(--color-surface, #fff)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            {searching && (
+              <li
+                className="px-3 py-2 text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Searching…
+              </li>
+            )}
+            {!searching && suggestions.map((s, i) => (
+              <li key={`${s.lat},${s.lon},${i}`}>
+                <button
+                  type="button"
+                  // onMouseDown fires before the input's onBlur so the click registers.
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handle_select(s);
+                  }}
+                  className="block w-full text-left px-3 py-2 text-sm"
+                  style={{ color: "var(--color-text, #1e293b)" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--color-surface-hover, #f1f5f9)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                >
+                  {s.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      {/* Map container */}
+      {/* Map */}
       <div
         ref={container_ref}
         className="mt-2 h-75 w-full overflow-hidden rounded-lg sm:h-90 lg:h-110"
-        style={{
-          border: "1px solid var(--color-border)",
-        }}
+        style={{ border: "1px solid var(--color-border)" }}
       />
 
-      {/* Drag hint + coordinate readout (shown once a pin is placed) */}
       {has_coords && (
         <div className="flex items-center justify-between flex-wrap gap-1">
-          <span
-            className="text-xs"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
+          <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
             📍 {drag_hint}
           </span>
           <span

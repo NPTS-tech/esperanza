@@ -5,6 +5,9 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
     output: "standalone",
+    // Keep the libsql native driver external so standalone output tracing ships
+    // its prebuilt binary instead of trying to bundle it.
+    serverExternalPackages: ["@libsql/client", "@prisma/adapter-libsql"],
     async headers() {
         return [
             {

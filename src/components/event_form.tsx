@@ -9,7 +9,7 @@ import { EVENT_CATEGORIES } from "@/lib/validators/event";
 import type { EventData } from "@/components/event_card";
 import type { LocationValue } from "@/components/location_picker";
 
-// mapbox-gl and @mapbox/search-js-react access browser globals at import time;
+// maplibre-gl accesses browser globals at import time;
 // use dynamic import with ssr:false to keep Next.js SSR happy.
 const LocationPicker = dynamic(
   () => import("@/components/location_picker"),

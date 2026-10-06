@@ -1,4 +1,4 @@
-import type { Demographics } from "@prisma/client";
+import type { Demographics } from "@/generated/prisma/client";
 
 export type DallasCountyDemographicsInput = {
   race: string;

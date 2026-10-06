@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn } from "@/lib/auth-client";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { Globe } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -234,15 +234,14 @@ export default function RegisterPage() {
                     return;
                 }
 
-                const sign_in_result = await signIn("credentials", {
+                const { error: sign_in_error } = await signIn.email({
                     email: account.email,
                     password: account.password,
-                    redirect: false,
                 });
 
                 set_loading(false);
 
-                if (!sign_in_result?.ok) {
+                if (sign_in_error) {
                     set_error(t("signin_after_register_failed"));
                     return;
                 }

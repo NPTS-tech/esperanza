@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { Link, useRouter } from "@/i18n/routing";
 import EventForm from "@/components/event_form";
 import type { EventData } from "@/components/event_card";

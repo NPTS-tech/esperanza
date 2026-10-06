@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { get_provider_demographics_analytics } from "@/lib/provider_demographics_analytics";
 import { provider_demographics_query_schema } from "@/lib/validators/analytics";
 
@@ -19,7 +19,7 @@ function escape_csv_value(value: string | number) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

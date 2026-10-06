@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { redirect } from "@/i18n/routing";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ClientAppShell as AppShell } from "@/components/layout/client-app-shell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-    const [session, locale] = await Promise.all([auth(), getLocale()]);
+    const [session, locale] = await Promise.all([getSession(), getLocale()]);
     if (!session) {
         redirect({ href: "/auth/login", locale });
         return null;

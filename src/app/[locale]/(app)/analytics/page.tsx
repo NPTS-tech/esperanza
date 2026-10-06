@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import {
   CalendarDays,
   CheckCircle2,

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { MAP_STYLE_URL, DALLAS_CENTER } from "@/lib/map";
 import type { EventData } from "@/components/event_card";
 import { CATEGORY_CONFIG } from "@/lib/event_category_assets";
 
@@ -24,7 +25,6 @@ interface MapViewProps {
   onBoundsChange: (bounds: MapBounds) => void;
 }
 
-const DALLAS_CENTER: [number, number] = [-96.797, 32.7767];
 
 function escape_html(value: string): string {
   return value
@@ -86,11 +86,10 @@ export default function MapView({
   onBoundsChange,
 }: MapViewProps) {
   const locale        = useLocale();
-  const token         = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
   const container_ref = useRef<HTMLDivElement>(null);
-  const map_ref       = useRef<mapboxgl.Map | null>(null);
-  const markers_ref   = useRef<mapboxgl.Marker[]>([]);
-  const marker_map    = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const map_ref       = useRef<maplibregl.Map | null>(null);
+  const markers_ref   = useRef<maplibregl.Marker[]>([]);
+  const marker_map    = useRef<Map<string, maplibregl.Marker>>(new Map());
   const has_fit       = useRef(false);
 
   // Keep callback refs fresh without re-running effects
@@ -101,18 +100,16 @@ export default function MapView({
 
   // ── Init map once ──
   useEffect(() => {
-    if (!token || !container_ref.current || map_ref.current) return;
+    if (!container_ref.current || map_ref.current) return;
 
-    mapboxgl.accessToken = token;
-
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: container_ref.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: MAP_STYLE_URL,
       center: DALLAS_CENTER,
       zoom: 11,
     });
 
-    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     const fire_bounds = () => {
       const b = map.getBounds();
@@ -139,7 +136,7 @@ export default function MapView({
       map_ref.current = null;
       has_fit.current = false;
     };
-  }, [token]);
+  }, []);
 
   // ── Update markers whenever events / selection / locale changes ──
   useEffect(() => {
@@ -199,12 +196,12 @@ export default function MapView({
           ">View Details →</a>
         </div>`;
 
-      const marker = new mapboxgl.Marker({
+      const marker = new maplibregl.Marker({
         element: make_marker_element(event.category, is_sel),
         anchor: "bottom",
       })
         .setLngLat([event.longitude, event.latitude])
-        .setPopup(new mapboxgl.Popup({ closeButton: false, offset: 16 }).setHTML(popup_html))
+        .setPopup(new maplibregl.Popup({ closeButton: false, offset: 16 }).setHTML(popup_html))
         .addTo(map);
 
       marker.getElement().addEventListener("click", () => click_cb.current(event.id));
@@ -219,7 +216,7 @@ export default function MapView({
 
     // Fit bounds once on first data load only
     if (!has_fit.current && events.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
+      const bounds = new maplibregl.LngLatBounds();
       events.forEach((event) => bounds.extend([event.longitude, event.latitude]));
       map.fitBounds(bounds, { padding: 60, maxZoom: 14 });
       has_fit.current = true;
@@ -228,28 +225,6 @@ export default function MapView({
       map.flyTo({ center: DALLAS_CENTER, zoom: 11 });
     }
   }, [events, selected_id, locale]);
-
-  if (!token) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--color-surface-hover, #f1f5f9)",
-          borderRadius: "var(--radius)",
-          color: "var(--color-text-secondary)",
-          fontSize: 13,
-          textAlign: "center",
-          padding: 16,
-        }}
-      >
-        Missing NEXT_PUBLIC_MAPBOX_TOKEN
-      </div>
-    );
-  }
 
   return (
     <div

@@ -27,7 +27,11 @@ export default function CalendarView({ events }: CalendarViewProps) {
         parse,
         startOfWeek,
         getDay,
-        locales: { en: require("date-fns/locale/en-US"), es: require("date-fns/locale/es") },
+        // date-fns v4 exports locales as named members, not the module default.
+        locales: {
+          en: require("date-fns/locale/en-US").enUS,
+          es: require("date-fns/locale/es").es,
+        },
       }),
     [],
   );
@@ -42,8 +46,6 @@ export default function CalendarView({ events }: CalendarViewProps) {
       })),
     [events, locale],
   );
-
-  console.log("Calendar events:", mapped); // Debug
 
   if (mapped.length === 0) {
     return (
@@ -65,10 +67,6 @@ export default function CalendarView({ events }: CalendarViewProps) {
         defaultView={Views.MONTH}
         popup
         selectable
-        onSelectEvent={(event) => {
-          // Could navigate to event detail
-          console.log("Selected event:", event);
-        }}
       />
     </div>
   );

@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { CalendarDays } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { AdminEventsDashboard } from "../admin_events_dashboard";
 
 export default async function AdminEventsPage() {
-    const session = (await auth())!;
+    const session = await requireRole(["ADMIN"]);
 
     const t_admin = await getTranslations("Admin");
     const t_dashboard = await getTranslations("Dashboard");

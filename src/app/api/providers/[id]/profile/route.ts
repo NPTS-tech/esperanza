@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { update_provider_profile_schema } from "@/lib/validators/provider";
 
@@ -12,7 +12,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // If no profile row exists yet, returns an empty profile shape.
 export async function GET(_request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -59,7 +59,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 // USER - not authorized
 export async function PUT(request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }

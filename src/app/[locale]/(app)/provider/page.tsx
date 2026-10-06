@@ -1,9 +1,9 @@
-import { auth } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
 import { ProviderDashboard } from "./provider_dashboard";
 
 export default async function ProviderPage() {
-    const session = (await auth())!;
+    const session = await requireRole(["PROVIDER", "ADMIN"]);
 
     const t = await getTranslations("Provider");
 

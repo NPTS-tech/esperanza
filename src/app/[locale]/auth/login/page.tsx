@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn } from "@/lib/auth-client";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { Globe } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -28,23 +28,21 @@ export default function LoginPage() {
         set_error("");
         set_loading(true);
 
-        const result = await signIn("credentials", {
+        const { data, error: sign_in_error } = await signIn.email({
             email,
             password,
-            redirect: false,
         });
 
         set_loading(false);
 
-        if (!result?.ok) {
+        if (sign_in_error || !data) {
             set_error(t("invalid_credentials"));
             return;
         }
 
-        const session_res = await fetch("/api/auth/session");
-        const session_data = await session_res.json();
+        const role = (data.user as { role?: string }).role;
         const is_kiosk = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("kiosk") === "true";
-        if (session_data?.user?.role === "ADMIN") {
+        if (role === "ADMIN") {
             window.location.href = `/${activeLocale}/admin/analytics`;
         } else {
             const user_base = `/${activeLocale}`;

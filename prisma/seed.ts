@@ -1,5 +1,8 @@
-import type { EventStatus, Role } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "better-auth/crypto";
+
+// SQLite has no enums; these columns are plain strings.
+type Role = "USER" | "PROVIDER" | "ADMIN";
+type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 import {
   build_dallas_county_demographics_write_data,
@@ -361,7 +364,8 @@ async function get_password_hash(password: string) {
   const existing = password_hash_cache.get(password);
   if (existing) return existing;
 
-  const password_hash = await bcrypt.hash(password, 12);
+  // Better Auth's default credential hash (scrypt envelope), so these users can log in.
+  const password_hash = await hashPassword(password);
   password_hash_cache.set(password, password_hash);
   return password_hash;
 }
@@ -372,23 +376,44 @@ async function upsert_seed_account(account: SeedAccount) {
   const user = await db.user.upsert({
     where: { email: account.email },
     update: {
+      name: account.username,
       username: account.username,
-      password_hash,
       role: account.role,
       language_pref: account.language_pref,
       share_with_providers: account.share_with_providers,
       consented_at: new Date(),
     },
     create: {
+      name: account.username,
       username: account.username,
       email: account.email,
-      password_hash,
+      emailVerified: true,
       role: account.role,
       language_pref: account.language_pref,
       share_with_providers: account.share_with_providers,
       consented_at: new Date(),
     },
   });
+
+  // Better Auth stores the password on a "credential" account row, not on the user.
+  const existing_account = await db.account.findFirst({
+    where: { userId: user.id, providerId: "credential" },
+  });
+  if (existing_account) {
+    await db.account.update({
+      where: { id: existing_account.id },
+      data: { password: password_hash },
+    });
+  } else {
+    await db.account.create({
+      data: {
+        accountId: user.id,
+        providerId: "credential",
+        userId: user.id,
+        password: password_hash,
+      },
+    });
+  }
 
   await db.demographics.upsert({
     where: { user_id: user.id },

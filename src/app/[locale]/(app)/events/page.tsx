@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { Link } from "@/i18n/routing";
 import { List, CalendarDays, ChevronDown, ChevronUp, Plus, Check } from "lucide-react";
 import EventCard from "@/components/event_card";

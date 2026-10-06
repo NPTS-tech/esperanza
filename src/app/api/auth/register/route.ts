@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { APIError } from "better-auth/api";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { build_dallas_county_demographics_write_data } from "@/lib/dallas_county_profile";
 import { register_schema } from "@/lib/validators/auth";
@@ -37,23 +38,8 @@ export async function POST(request: Request) {
             );
         }
 
-        // check for existing user
-        const [existing_email_user, existing_username_user] = await Promise.all([
-            db.user.findUnique({
-                where: { email },
-            }),
-            db.user.findUnique({
-                where: { username },
-            }),
-        ]);
-
-        if (existing_email_user) {
-            return NextResponse.json(
-                { error: "An account with this email already exists" },
-                { status: 409 },
-            );
-        }
-
+        // username uniqueness (email uniqueness is enforced by Better Auth below)
+        const existing_username_user = await db.user.findUnique({ where: { username } });
         if (existing_username_user) {
             return NextResponse.json(
                 { error: "That username is already taken" },
@@ -61,47 +47,49 @@ export async function POST(request: Request) {
             );
         }
 
-        // hash password (12 salt rounds per tech doc security spec)
-        const password_hash = await bcrypt.hash(password, 12);
-
-        // create user + demographics in a transaction
-        const user = await db.$transaction(async (tx) => {
-            const new_user = await tx.user.create({
-                data: {
-                    username,
+        // Better Auth creates the user + credential account (hashes the password).
+        // Custom input fields are configured in src/lib/auth.ts.
+        let user_id: string;
+        try {
+            const result = await auth.api.signUpEmail({
+                body: {
+                    name: username,
                     email,
-                    password_hash,
+                    password,
+                    username,
                     language_pref,
                     share_with_providers,
-                    consented_at: consent ? new Date() : null,
-                },
+                    consented_at: new Date(),
+                } as unknown as { name: string; email: string; password: string },
             });
+            user_id = result.user.id;
+        } catch (e) {
+            if (e instanceof APIError) {
+                return NextResponse.json(
+                    { error: e.message || "An account with this email already exists" },
+                    { status: 409 },
+                );
+            }
+            throw e;
+        }
 
-            await tx.demographics.create({
-                data: {
-                    user_id: new_user.id,
-                    ...build_dallas_county_demographics_write_data(demographic_data),
-                },
-            });
-
-            return new_user;
+        await db.demographics.create({
+            data: {
+                user_id,
+                ...build_dallas_county_demographics_write_data(demographic_data),
+            },
         });
 
-        // structured log for monitoring successful registrations
-        console.info("User registered successfully", {
-            user_id: user.id,
-            has_demographics: true,
-        });
+        console.info("User registered successfully", { user_id, has_demographics: true });
 
-        // never return password_hash or other sensitive fields to the client
         return NextResponse.json(
             {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-                language_pref: user.language_pref,
-                share_with_providers: user.share_with_providers,
+                id: user_id,
+                username,
+                email,
+                role: "USER",
+                language_pref,
+                share_with_providers,
             },
             { status: 201 },
         );

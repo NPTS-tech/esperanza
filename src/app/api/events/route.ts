@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { create_event_schema, event_query_schema } from "@/lib/validators/event";
 import { ensureBilingualEventFields } from "@/lib/services/event-translation";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
 // GET /api/events — list events with filtering, search, and pagination
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -97,12 +97,12 @@ export async function GET(request: NextRequest) {
     if (search) {
       const search_condition: Prisma.EventWhereInput = {
         OR: [
-          { title_en: { contains: search, mode: "insensitive" } },
-          { title_es: { contains: search, mode: "insensitive" } },
-          { description_en: { contains: search, mode: "insensitive" } },
-          { description_es: { contains: search, mode: "insensitive" } },
-          { location_name: { contains: search, mode: "insensitive" } },
-          { location_address: { contains: search, mode: "insensitive" } },
+          { title_en: { contains: search } },
+          { title_es: { contains: search } },
+          { description_en: { contains: search } },
+          { description_es: { contains: search } },
+          { location_name: { contains: search } },
+          { location_address: { contains: search } },
         ],
       };
 
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
 // Note: Post-MVP, we may want to allow admins to create events on behalf of providers, which would require accepting an optional provider_id in the request body and validating it.
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

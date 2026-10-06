@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
 import { CalendarDays, Map, User, Building2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
@@ -7,7 +7,7 @@ import { getLocale } from "next-intl/server";
 
 export default async function HomePage() {
     const [session, t, locale] = await Promise.all([
-        auth(),
+        getSession(),
         getTranslations("Home"),
         getLocale(),
     ]);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
     build_dallas_county_demographics_write_data,
@@ -150,7 +150,7 @@ function serialize_profile(
 
 export async function GET() {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -176,7 +176,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }

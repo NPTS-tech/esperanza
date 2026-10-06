@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { Users as UsersIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { AdminUsersDashboard } from "../admin_users_dashboard";
 
 export default async function AdminUsersPage() {
-    const session = (await auth())!;
+    const session = await requireRole(["ADMIN"]);
 
   const t_admin = await getTranslations("Admin");
   const t_dashboard = await getTranslations("Dashboard");

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
 import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight } from "lucide-react";

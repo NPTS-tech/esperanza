@@ -8,6 +8,18 @@ node_modules/
 .env*.local
 *.log
 
+# generated prisma client (run `prisma generate`)
+src/generated/
+
+# local sqlite db + uploaded files (prod uses /efs)
+prisma/*.db
+prisma/*.db-journal
+uploads/
+
+# nix / direnv
+.direnv/
+.nix/
+
 # docker
 docker-compose.override.yml
 

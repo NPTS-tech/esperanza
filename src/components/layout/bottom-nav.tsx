@@ -66,7 +66,7 @@ export function BottomNav(props: BottomNavProps) {
                 const is_active =
                     item.href === "/"
                         ? props.currentPath === "/"
-                        : props.currentPath.startsWith(item.href);
+                        : props.currentPath.startsWith(item.href as string);
                 return (
                     <Link
                         key={item.key}

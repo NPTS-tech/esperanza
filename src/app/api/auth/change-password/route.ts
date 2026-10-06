@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
+import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { change_password_schema } from "@/lib/validators/auth";
 
 export async function POST(request: Request) {
     try {
-        const session = await auth();
-
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 },
-            );
-        }
-
         const body = await request.json();
         const parsed = change_password_schema.safeParse(body);
 
@@ -25,37 +16,26 @@ export async function POST(request: Request) {
             );
         }
 
-        const user = await db.user.findUnique({
-            where: { id: session.user.id },
-        });
-
-        if (!user) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 },
-            );
+        // Better Auth verifies the current password against the credential account
+        // and updates it (401 if unauthenticated, 400 if current password is wrong).
+        try {
+            await auth.api.changePassword({
+                body: {
+                    currentPassword: parsed.data.current_password,
+                    newPassword: parsed.data.new_password,
+                },
+                headers: await headers(),
+            });
+        } catch (e) {
+            if (e instanceof APIError) {
+                const status = e.status === "UNAUTHORIZED" ? 401 : 403;
+                return NextResponse.json(
+                    { error: e.message || "Current password is incorrect" },
+                    { status },
+                );
+            }
+            throw e;
         }
-
-        // verify current password
-        const current_valid = await bcrypt.compare(
-            parsed.data.current_password,
-            user.password_hash,
-        );
-
-        if (!current_valid) {
-            return NextResponse.json(
-                { error: "Current password is incorrect" },
-                { status: 403 },
-            );
-        }
-
-        // hash and update
-        const new_hash = await bcrypt.hash(parsed.data.new_password, 12);
-
-        await db.user.update({
-            where: { id: session.user.id },
-            data: { password_hash: new_hash },
-        });
 
         return NextResponse.json({ message: "Password updated successfully" });
     } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { update_event_status_schema } from "@/lib/validators/event";
 
@@ -9,7 +9,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // This route is ADMIN only.
 export async function PATCH(request: NextRequest, context: RouteContext) {
     try {
-        const session = await auth();
+        const session = await getSession();
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
