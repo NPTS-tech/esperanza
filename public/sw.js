@@ -1,4 +1,4 @@
-const CACHE_VERSION = "esperanza-v3";
+const CACHE_VERSION = "esperanza-v4";
 const PRECACHE = ["/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -60,5 +60,45 @@ self.addEventListener("fetch", (event) => {
                 return response;
             })
             .catch(() => caches.match(event.request))
+    );
+});
+
+// ---------------------------------------------------------------------------
+// Push notifications — DISPLAY side (live). The SEND side is deliberately not
+// built yet; see PUSH_NOTIFICATIONS.md for the remaining additive pieces
+// (PushSubscription table, /api/push/subscribe route, VAPID keys, send helper,
+// permission-prompt UI). Keeping these handlers in the SW now means the moment
+// a backend starts sending, notifications just work — no SW change required.
+//
+// Expected push payload (JSON): { title, body, url?, tag?, icon? }
+// ---------------------------------------------------------------------------
+self.addEventListener("push", (event) => {
+    let payload = {};
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch {
+        payload = { body: event.data ? event.data.text() : "" };
+    }
+    const options = {
+        body: payload.body || "",
+        icon: payload.icon || "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
+        tag: payload.tag,
+        data: { url: payload.url || "/" },
+    };
+    event.waitUntil(self.registration.showNotification(payload.title || "Esperanza", options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
+    const target = (event.notification.data && event.notification.data.url) || "/";
+    event.waitUntil(
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+            // Focus an already-open tab on the target path; otherwise open one.
+            for (const client of clients) {
+                if (new URL(client.url).pathname === target && "focus" in client) return client.focus();
+            }
+            return self.clients.openWindow(target);
+        })
     );
 });

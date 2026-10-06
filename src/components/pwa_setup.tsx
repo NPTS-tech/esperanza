@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { initInstallCapture } from "@/components/pwa/install-button";
 
 /**
  * PWA service worker registration.
@@ -11,6 +12,10 @@ const DISABLE_SW = process.env.NEXT_PUBLIC_DISABLE_PWA_SW === "true";
 
 export default function PWASetup() {
     useEffect(() => {
+        // Start listening for the install prompt ASAP — it can fire before the
+        // header (and its Install button) mounts. Independent of the SW below.
+        initInstallCapture();
+
         if (!("serviceWorker" in navigator)) return;
 
         const run = async () => {

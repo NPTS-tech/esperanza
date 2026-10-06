@@ -280,6 +280,14 @@
         "sign_out": "Cerrar sesión",
         "language_toggle": "English"
     },
+    "Install": {
+        "button": "Instalar app",
+        "ios_title": "Añadir a pantalla de inicio",
+        "ios_intro": "Instala Esperanza para un acceso rápido y una experiencia en pantalla completa.",
+        "ios_step1": "Toca el botón Compartir en la barra de Safari.",
+        "ios_step2": "Luego elige \"Añadir a pantalla de inicio\".",
+        "ios_done": "Entendido"
+    },
     "Map": {
         "heading": "Mapa de Eventos",
         "sidebar_count": "eventos",

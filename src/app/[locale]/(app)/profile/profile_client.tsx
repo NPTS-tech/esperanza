@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
+import { InstallButton } from "@/components/pwa/install-button";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
     get_default_primary_language_for_locale,
@@ -766,6 +767,8 @@ export function ProfileClient() {
                         </button>
                     </div>
                 )}
+
+                <InstallButton />
 
                 <div className="card p-4 md:hidden">
                     <button
