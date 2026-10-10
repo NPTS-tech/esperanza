@@ -38,29 +38,14 @@ export const dallas_county_demographics_schema = z.object({
     gender: z.enum(DALLAS_COUNTY_GENDER_OPTIONS, {
         required_error: "Gender is required",
     }),
-    ethnicity: z.enum(DALLAS_COUNTY_ETHNICITY_OPTIONS, {
-        required_error: "Ethnicity is required",
-    }),
     age_band: z.enum(DALLAS_COUNTY_AGE_BAND_OPTIONS, {
         required_error: "Age range is required",
-    }),
-    marital_status: z.enum(DALLAS_COUNTY_MARITAL_STATUS_OPTIONS, {
-        required_error: "Marital status is required",
     }),
     children_under_5_count: z.coerce.number().int().min(0).default(0),
     children_5_to_18_count: z.coerce.number().int().min(0).default(0),
     children_over_18_count: z.coerce.number().int().min(0).default(0),
     county_of_residence: z.enum(DALLAS_COUNTY_COUNTY_OPTIONS, {
         required_error: "County is required",
-    }),
-    employment_status: z.enum(DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS, {
-        required_error: "Employment status is required",
-    }),
-    annual_income_bracket: z.enum(DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS, {
-        required_error: "Annual income is required",
-    }),
-    education_level: z.enum(DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS, {
-        required_error: "Education is required",
     }),
     primary_language: z.enum(DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS, {
         required_error: "Primary language is required",

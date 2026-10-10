@@ -103,7 +103,7 @@ model Demographics {
   race                    String
   gender                  String
   // TODO: delete age field, it's unused
-  age                     Int
+  age                     Int?
   annual_personal_income  String?
   annual_household_income String?
   county                  String?

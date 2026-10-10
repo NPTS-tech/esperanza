@@ -18,6 +18,7 @@ import {
     DALLAS_COUNTY_RACE_OPTIONS,
 } from "@/lib/dallas_county_profile_options";
 import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
+import { register_schema } from "@/lib/validators/auth";
 
 export type Locale = "en" | "es";
 
@@ -102,6 +103,15 @@ function should_update_primary_language_for_locale_switch(demographics: Register
 
 function clear_register_draft() {
     register_draft = null;
+}
+
+
+function RequiredAsterisk() {
+    return (
+        <span className="text-red-500" aria-hidden="true">
+            *
+        </span>
+    );
 }
 
 export default function RegisterPage() {
@@ -316,28 +326,40 @@ export default function RegisterPage() {
                     {step === 1 && (
                         <>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("username")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("username")} <RequiredAsterisk />
+                                </label>
+                                
                                 <input type="text" className="input" required placeholder="neighbor_01"
                                     value={account.username} onChange={(e) => set_account({ ...account, username: e.target.value })} />
+                                <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{t("username_hint")}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("email")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("email")} <RequiredAsterisk />
+                                </label>
                                 <input type="email" className="input" required placeholder="you@example.com"
                                     value={account.email} onChange={(e) => set_account({ ...account, email: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("password")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("password")} <RequiredAsterisk />
+                                </label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.password} onChange={(e) => set_account({ ...account, password: e.target.value })} />
                                 <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{t("password_hint")}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("confirm_password")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("confirm_password")} <RequiredAsterisk />
+                                </label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.confirm_password} onChange={(e) => set_account({ ...account, confirm_password: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("preferred_language")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("preferred_language")} <RequiredAsterisk />
+                                </label>
                                 <select className="select"
                                     value={account.language_pref} onChange={(e) => {
                                         const new_lang = e.target.value as Locale;
@@ -359,7 +381,7 @@ export default function RegisterPage() {
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.race} required
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
@@ -367,7 +389,7 @@ export default function RegisterPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.gender} required
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
@@ -383,7 +405,7 @@ export default function RegisterPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age_band")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age_band")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.age_band} required
                                         onChange={(e) => set_demographics({ ...demographics, age_band: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
@@ -399,7 +421,7 @@ export default function RegisterPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.county_of_residence} required
                                         onChange={(e) => set_demographics({ ...demographics, county_of_residence: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
@@ -431,7 +453,7 @@ export default function RegisterPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("primary_language")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("primary_language")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.primary_language} required
                                         onChange={(e) => set_demographics({ ...demographics, primary_language: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
@@ -507,13 +529,16 @@ export default function RegisterPage() {
                                 </span>
                             </label>
                             <label className="flex items-start gap-3 text-sm pt-2" style={{ color: "var(--color-text)" }}>
+                                
                                 <input
                                     type="checkbox"
                                     checked={consent}
                                     onChange={(e) => set_consent(e.target.checked)}
                                     className="mt-1"
                                 />
+                                
                                 <span>{t("consent_checkbox")}</span>
+                                <RequiredAsterisk/>
                             </label>
                         </>
                     )}
