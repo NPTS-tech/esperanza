@@ -99,9 +99,10 @@ model Demographics {
   employment_status       String?
   annual_income_bracket   String?
   education_level         String?
-  primary_language        String?
+  primary_language        String
   race                    String
   gender                  String
+  // TODO: delete age field, it's unused
   age                     Int
   annual_personal_income  String?
   annual_household_income String?

@@ -189,13 +189,8 @@ export default function RegisterPage() {
             if (
                 !demographics.race ||
                 !demographics.gender ||
-                !demographics.ethnicity ||
                 !demographics.age_band ||
-                !demographics.marital_status ||
-                !demographics.county_of_residence ||
-                !demographics.employment_status ||
-                !demographics.annual_income_bracket ||
-                !demographics.education_level ||
+                !demographics.county_of_residence || 
                 !demographics.primary_language
             ) {
                 set_error(t("demographics_required"));
@@ -381,7 +376,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("ethnicity")}</label>
-                                    <select className="select" value={demographics.ethnicity} required
+                                    <select className="select" value={demographics.ethnicity}
                                         onChange={(e) => set_demographics({ ...demographics, ethnicity: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -397,7 +392,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("marital_status")}</label>
-                                    <select className="select" value={demographics.marital_status} required
+                                    <select className="select" value={demographics.marital_status}
                                         onChange={(e) => set_demographics({ ...demographics, marital_status: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -413,7 +408,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("employment_status")}</label>
-                                    <select className="select" value={demographics.employment_status} required
+                                    <select className="select" value={demographics.employment_status}
                                         onChange={(e) => set_demographics({ ...demographics, employment_status: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -421,7 +416,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("annual_income_bracket")}</label>
-                                    <select className="select" value={demographics.annual_income_bracket} required
+                                    <select className="select" value={demographics.annual_income_bracket} 
                                         onChange={(e) => set_demographics({ ...demographics, annual_income_bracket: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -429,7 +424,7 @@ export default function RegisterPage() {
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("education")}</label>
-                                    <select className="select" value={demographics.education_level} required
+                                    <select className="select" value={demographics.education_level}
                                         onChange={(e) => set_demographics({ ...demographics, education_level: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
                                         {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{o}</option>)}

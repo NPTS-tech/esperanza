@@ -4,6 +4,7 @@
   - Made the column `age` on table `demographics` required. This step will fail if there are existing NULL values in that column.
   - Made the column `county_of_residence` on table `demographics` required. This step will fail if there are existing NULL values in that column.
   - Made the column `gender` on table `demographics` required. This step will fail if there are existing NULL values in that column.
+  - Made the column `primary_language` on table `demographics` required. This step will fail if there are existing NULL values in that column.
   - Made the column `race` on table `demographics` required. This step will fail if there are existing NULL values in that column.
 
 */
@@ -23,7 +24,7 @@ CREATE TABLE "new_demographics" (
     "employment_status" TEXT,
     "annual_income_bracket" TEXT,
     "education_level" TEXT,
-    "primary_language" TEXT,
+    "primary_language" TEXT NOT NULL,
     "race" TEXT NOT NULL,
     "gender" TEXT NOT NULL,
     "age" INTEGER NOT NULL,
