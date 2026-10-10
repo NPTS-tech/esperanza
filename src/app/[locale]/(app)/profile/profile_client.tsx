@@ -271,6 +271,7 @@ export function ProfileClient() {
 
         try {
             const previous_language = profile?.language_pref ?? form.language_pref;
+            console.log(form.demographics)
             const res = await fetch("/api/users/me", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -282,7 +283,7 @@ export function ProfileClient() {
                 }),
             });
             const data = await res.json();
-
+                    console.log(data)
             if (!res.ok) {
                 show_toast(data.error || t("profile_update_error"), "error");
                 return;
@@ -602,7 +603,6 @@ export function ProfileClient() {
                             options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map((option) => ({ value: option, label: option }))}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("ethnicity", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -624,7 +624,6 @@ export function ProfileClient() {
                             options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("marital_status", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -646,7 +645,6 @@ export function ProfileClient() {
                             options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("employment_status", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -657,7 +655,6 @@ export function ProfileClient() {
                             options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((option) => ({ value: option, label: option }))}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("annual_income_bracket", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -668,7 +665,6 @@ export function ProfileClient() {
                             options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((option) => ({ value: option, label: option }))}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("education_level", value)}
-                            required
                             disabled={form_disabled}
                         />
 

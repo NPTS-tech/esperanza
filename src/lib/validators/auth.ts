@@ -50,6 +50,7 @@ export const dallas_county_demographics_schema = z.object({
     primary_language: z.enum(DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS, {
         required_error: "Primary language is required",
     }),
+    
 });
 
 export const register_schema = z.object({

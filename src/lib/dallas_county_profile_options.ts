@@ -1,6 +1,7 @@
 export const DALLAS_COUNTY_GENDER_OPTIONS = [
   "Female",
   "Male",
+  "Other"
 ] as const;
 
 export const DALLAS_COUNTY_RACE_OPTIONS = [
@@ -14,6 +15,7 @@ export const DALLAS_COUNTY_RACE_OPTIONS = [
 export const DALLAS_COUNTY_ETHNICITY_OPTIONS = [
   "Hispanic/Latino",
   "Not Hispanic/Latino",
+  "Rather Not Say"
 ] as const;
 
 export const DALLAS_COUNTY_AGE_BAND_OPTIONS = [
@@ -32,6 +34,7 @@ export const DALLAS_COUNTY_MARITAL_STATUS_OPTIONS = [
   "Separated",
   "Divorced",
   "Widowed",
+  "Rather Not Say"
 ] as const;
 
 export const DALLAS_COUNTY_CHILDREN_CATEGORIES = [
@@ -60,6 +63,7 @@ export const DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS = [
   "Temporary/Seasonal worker",
   "Currently unemployed",
   "Retired",
+  "Rather Not Say"
 ] as const;
 
 export const DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS = [
@@ -74,6 +78,7 @@ export const DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS = [
   "$80,000-$90,000",
   "$90,000-$100,000",
   "Over $100,000",
+  "Rather Not Say"
 ] as const;
 
 export const DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS = [
@@ -83,6 +88,7 @@ export const DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS = [
   "Associates degree",
   "Bachelor degree",
   "Graduate degree",
+  "Rather Not Say"
 ] as const;
 
 export const DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS = [

@@ -73,7 +73,6 @@ export async function POST(request: Request) {
             throw e;
         }
 
-        // linter freaks out here for some reason
         await db.demographics.create({
             data: {
                 user_id,
