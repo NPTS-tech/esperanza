@@ -222,6 +222,21 @@ body {
     color: #9d174d;
 }
 
+.badge-children {
+    background: #fce7f3;
+    color: #9d174d;
+}
+
+.badge-housing {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-other {
+    background: #f1f5f9;
+    color: #475569;
+}
+
 .badge-pending {
     background: #fef3c7;
     color: #92400e;

@@ -24,6 +24,7 @@ export async function POST(request: Request) {
             language_pref,
             share_with_providers,
             consent,
+            category_ids,
             ...demographic_data
         } = parsed.data;
 
@@ -80,7 +81,26 @@ export async function POST(request: Request) {
             },
         });
 
-        console.info("User registered successfully", { user_id, has_demographics: true });
+        // Optional interests picked in the (skippable) sign-up step.
+        // Unknown ids are ignored rather than failing the registration.
+        if (category_ids && category_ids.length > 0) {
+            const unique_ids = [...new Set(category_ids)];
+            const valid_ids = await db.eventCategory.findMany({
+                where: { id: { in: unique_ids } },
+                select: { id: true },
+            });
+            if (valid_ids.length > 0) {
+                await db.userInterestEventCategory.createMany({
+                    data: valid_ids.map(({ id: category_id }) => ({ user_id, category_id })),
+                });
+            }
+        }
+
+        console.info("User registered successfully", {
+            user_id,
+            has_demographics: true,
+            interest_count: category_ids?.length ?? 0,
+        });
 
         return NextResponse.json(
             {

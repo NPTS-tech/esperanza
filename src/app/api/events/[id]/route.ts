@@ -28,6 +28,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         const event = await db.event.findUnique({
             where: { id },
             include: {
+                category: true,
                 provider: {
                     select: {
                         id: true,
@@ -113,7 +114,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
         // Re-review gate
         // When a PROVIDER edits content on an already-APPROVED event, reset it
-        // to PENDING so the admin reviews the changes before it resurfaces publicly. 
+        // to PENDING so the admin reviews the changes before it resurfaces publicly.
         //
         // Note: Image-only changes (image_url) are excluded from this rule
         // as they do not affect the accuracy of event information.
@@ -130,8 +131,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             "longitude",
             "start_time",
             "end_time",
-            "category",
+            "category_id",
         ] as const;
+
+        // Category changes are validated against the seeded category table.
+        if (parsed.data.category_id !== undefined) {
+            const category = await db.eventCategory.findUnique({
+                where: { id: parsed.data.category_id },
+                select: { id: true },
+            });
+            if (!category) {
+                return NextResponse.json(
+                    { error: "Invalid category", details: { category_id: ["Unknown category"] } },
+                    { status: 400 },
+                );
+            }
+        }
 
         const update_data: typeof parsed.data & { status?: string } = { ...parsed.data };
 
@@ -206,6 +221,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             where: { id },
             data: update_data,
             include: {
+                category: true,
                 provider: {
                     select: {
                         id: true,

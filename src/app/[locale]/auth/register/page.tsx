@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
-import { Globe } from "lucide-react";
+import { Globe, Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import {
     DALLAS_COUNTY_AGE_BAND_OPTIONS,
@@ -18,6 +18,7 @@ import {
     DALLAS_COUNTY_RACE_OPTIONS,
 } from "@/lib/dallas_county_profile_options";
 import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
+import { category_label, use_categories } from "@/lib/event_categories";
 import { register_schema } from "@/lib/validators/auth";
 
 export type Locale = "en" | "es";
@@ -50,6 +51,7 @@ type RegisterDraft = {
     step: number;
     account: RegisterAccount;
     demographics: RegisterDemographics;
+    category_ids: string[];
     share_with_providers: boolean;
     consent: boolean;
 };
@@ -85,6 +87,7 @@ function create_register_draft(locale: Locale): RegisterDraft {
             education_level: "",
             primary_language: get_default_primary_language_for_locale(locale),
         },
+        category_ids: [],
         share_with_providers: true,
         consent: false,
     };
@@ -127,14 +130,17 @@ export default function RegisterPage() {
 
     const [account, set_account] = useState<RegisterAccount>(initial_draft.account);
     const [demographics, set_demographics] = useState<RegisterDemographics>(initial_draft.demographics);
+    const [category_ids, set_category_ids] = useState<string[]>(initial_draft.category_ids);
     const [share_with_providers, set_share_with_providers] = useState(initial_draft.share_with_providers);
     const [consent, set_consent] = useState(initial_draft.consent);
+    const { categories } = use_categories();
 
     function stash_register_draft(next_draft?: Partial<RegisterDraft>) {
         register_draft = {
             step,
             account,
             demographics,
+            category_ids,
             share_with_providers,
             consent,
             ...next_draft,
@@ -172,10 +178,11 @@ export default function RegisterPage() {
             step,
             account,
             demographics,
+            category_ids,
             share_with_providers,
             consent,
         };
-    }, [step, account, demographics, share_with_providers, consent]);
+    }, [step, account, demographics, category_ids, share_with_providers, consent]);
 
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
@@ -200,13 +207,16 @@ export default function RegisterPage() {
                 !demographics.race ||
                 !demographics.gender ||
                 !demographics.age_band ||
-                !demographics.county_of_residence || 
+                !demographics.county_of_residence ||
                 !demographics.primary_language
             ) {
                 set_error(t("demographics_required"));
                 return;
             }
             set_step(3);
+        } else if (step === 3) {
+            // Interests step is optional — continue with whatever was picked.
+            set_step(4);
         } else {
             if (!consent) {
                 set_error(t("consent_required"));
@@ -227,6 +237,7 @@ export default function RegisterPage() {
                         language_pref: account.language_pref,
                         share_with_providers,
                         consent,
+                        ...(category_ids.length > 0 ? { category_ids } : {}),
                         ...demographics,
                     }),
                 });
@@ -260,7 +271,7 @@ export default function RegisterPage() {
         }
     }
 
-    const step_names = [t("step_account"), t("step_demographics"), t("step_consent")];
+    const step_names = [t("step_account"), t("step_demographics"), t("step_interests"), t("step_consent")];
 
     return (
         <div>
@@ -291,7 +302,7 @@ export default function RegisterPage() {
 
             {/* Step indicator with numbered circles */}
             <div className="flex items-center justify-center mb-6 mx-auto w-full max-w-xs">
-                {[1, 2, 3].map((s, i) => (
+                {[1, 2, 3, 4].map((s, i) => (
                     <Fragment key={s}>
                         <div
                             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold leading-none transition-colors shrink-0"
@@ -302,7 +313,7 @@ export default function RegisterPage() {
                         >
                             {s}
                         </div>
-                        {i < 2 && (
+                        {i < 3 && (
                             <div
                                 className="h-0.5 flex-1 mx-1 transition-colors"
                                 style={{ background: s < step ? "var(--color-primary)" : "var(--color-border)" }}
@@ -312,7 +323,7 @@ export default function RegisterPage() {
                 ))}
             </div>
             <p className="text-xs text-center mb-4" style={{ color: "var(--color-text-secondary)" }}>
-                {t("step_label")} {step} {t("of")} 3 — {step_names[step - 1]}
+                {t("step_label")} {step} {t("of")} 4 — {step_names[step - 1]}
             </p>
 
             <div className="card p-6">
@@ -501,6 +512,64 @@ export default function RegisterPage() {
 
                     {step === 3 && (
                         <>
+                            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("interests_info")}
+                            </p>
+
+                            {categories.length === 0 ? (
+                                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                                    {t("interests_unavailable")}
+                                </p>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((cat) => {
+                                        const selected = category_ids.includes(cat.id);
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                onClick={() =>
+                                                    set_category_ids((current) =>
+                                                        current.includes(cat.id)
+                                                            ? current.filter((id) => id !== cat.id)
+                                                            : [...current, cat.id],
+                                                    )
+                                                }
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    padding: "7px 12px",
+                                                    borderRadius: 999,
+                                                    fontSize: 13,
+                                                    fontWeight: selected ? 600 : 400,
+                                                    border: `1.5px solid ${selected ? cat.color : "var(--color-border)"}`,
+                                                    background: selected ? `${cat.color}18` : "transparent",
+                                                    color: selected ? cat.color : "var(--color-text)",
+                                                    cursor: "pointer",
+                                                    transition: "background .12s, border-color .12s",
+                                                }}
+                                            >
+                                                <span aria-hidden="true">{cat.emoji}</span>
+                                                {category_label(cat, activeLocale)}
+                                                <Star
+                                                    size={13}
+                                                    style={{
+                                                        color: selected ? cat.color : "var(--color-text-secondary)",
+                                                        fill: selected ? cat.color : "none",
+                                                    }}
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {step === 4 && (
+                        <>
                             <div style={{ background: "var(--color-surface-hover)", borderRadius: "0.75rem", padding: "1rem" }} className="text-sm">
                                 <h3 className="font-semibold mb-2" style={{ color: "var(--color-text)" }}>{t("consent_title")}</h3>
                                 <p className="mb-3" style={{ color: "var(--color-text-secondary)" }}>
@@ -550,7 +619,7 @@ export default function RegisterPage() {
                             </button>
                         )}
                         <button type="submit" className="btn btn-primary flex-1" disabled={loading}>
-                            {loading ? t("creating_account") : step === 3 ? t("create_account_btn") : t("next")}
+                            {loading ? t("creating_account") : step === 4 ? t("create_account_btn") : t("next")}
                         </button>
                     </div>
                 </form>

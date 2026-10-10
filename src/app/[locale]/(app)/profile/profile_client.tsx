@@ -9,6 +9,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { InstallButton } from "@/components/pwa/install-button";
+import { category_label, use_categories } from "@/lib/event_categories";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
     get_default_primary_language_for_locale,
@@ -37,6 +38,7 @@ type ProfileResponse = {
     language_pref: Locale;
     share_with_providers: boolean;
     consented_at: string | null;
+    interests: string[];
     demographics: DallasCountyDemographicsInput;
     rsvps: {
         id: string;
@@ -200,9 +202,11 @@ export function ProfileClient() {
     const nav_t = useTranslations("Nav");
     const t = useTranslations("Profile");
     const { toasts, show_toast, dismiss } = useToast();
+    const { categories } = use_categories();
 
     const [profile, set_profile] = useState<ProfileResponse | null>(null);
     const [form, set_form] = useState<ProfileFormState>(DEFAULT_PROFILE_FORM(locale));
+    const [interest_ids, set_interest_ids] = useState<Set<string>>(new Set());
     const [loading_profile, set_loading_profile] = useState(true);
     const [load_error, set_load_error] = useState("");
     const [saving_profile, set_saving_profile] = useState(false);
@@ -215,6 +219,7 @@ export function ProfileClient() {
     const apply_profile_data = useCallback((data: ProfileResponse) => {
         set_profile(data);
         set_form(build_profile_form_state(data));
+        set_interest_ids(new Set(data.interests));
         set_is_editing(false);
     }, []);
 
@@ -406,6 +411,35 @@ export function ProfileClient() {
             show_toast(t("profile_update_error"), "error");
         } finally {
             set_saving_sharing(false);
+        }
+    }
+
+    async function handle_toggle_interest(category_id: string) {
+        const previous_ids = interest_ids;
+        const next_ids = new Set(previous_ids);
+        if (next_ids.has(category_id)) {
+            next_ids.delete(category_id);
+        } else {
+            next_ids.add(category_id);
+        }
+        set_interest_ids(next_ids);
+
+        try {
+            const res = await fetch("/api/users/me/interests", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category_ids: [...next_ids] }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || t("interests_update_error"));
+            }
+
+            set_interest_ids(new Set<string>(data.category_ids));
+        } catch {
+            set_interest_ids(previous_ids);
+            show_toast(t("interests_update_error"), "error");
         }
     }
 
@@ -708,6 +742,48 @@ export function ProfileClient() {
                                 disabled={form_disabled}
                             />
                         </div>
+                    </div>
+                </div>
+
+                <div className="card p-6 space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                            {t("interests_section")}
+                        </h2>
+                        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                            {t("interests_section_help")}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {categories.map((cat) => {
+                            const selected = interest_ids.has(cat.id);
+                            return (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => void handle_toggle_interest(cat.id)}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        padding: "7px 12px",
+                                        borderRadius: 999,
+                                        fontSize: 13,
+                                        fontWeight: selected ? 600 : 400,
+                                        border: `1.5px solid ${selected ? cat.color : "var(--color-border)"}`,
+                                        background: selected ? `${cat.color}18` : "transparent",
+                                        color: selected ? cat.color : "var(--color-text)",
+                                        cursor: "pointer",
+                                        transition: "background .12s, border-color .12s",
+                                    }}
+                                >
+                                    <span aria-hidden="true">{cat.emoji}</span>
+                                    {category_label(cat, locale)}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 

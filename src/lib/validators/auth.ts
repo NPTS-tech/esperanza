@@ -80,6 +80,8 @@ export const register_schema = z.object({
         .default("en"),
     share_with_providers: z.boolean().default(true),
     consent: z.boolean(),
+    // Optional event-category interests picked in the (skippable) sign-up step.
+    category_ids: z.array(z.string().uuid()).max(50).optional(),
     ...dallas_county_demographics_schema.shape,
 }).refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",

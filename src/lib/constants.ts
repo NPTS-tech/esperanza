@@ -58,15 +58,3 @@ export const INDUSTRY_OPTIONS = [
     "Other",
     "Not employed",
 ];
-
-export const EVENT_CATEGORIES = [
-    "Health",
-    "Employment",
-    "Education",
-    "Recreation",
-    "Transit",
-    "Senior",
-    "Childcare",
-    "Community",
-    "Other",
-];

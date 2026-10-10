@@ -37,6 +37,7 @@ model User {
   events               Event[]          @relation("ProviderEvents")
   rsvps                Rsvp[]
   provider_profile     ProviderProfile?
+  interests            UserInterestEventCategory[]
 
   @@map("users")
 }
@@ -131,6 +132,32 @@ model ProviderProfile {
   @@map("provider_profiles")
 }
 
+model EventCategory {
+  id        String                     @id @default(uuid())
+  slug      String                     @unique
+  name_en   String
+  name_es   String
+  color     String
+  emoji     String
+  events    Event[]
+  interests UserInterestEventCategory[]
+
+  @@map("event_categories")
+}
+
+// Which categories a user is interested in. Seeded (not admin-managed) for now;
+// powers the "Interests" filter on the events page and profile preferences.
+model UserInterestEventCategory {
+  user_id     String
+  category_id String
+  created_at  DateTime @default(now())
+  user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category    EventCategory    @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, category_id])
+  @@map("user_interest_event_categories")
+}
+
 model Event {
   id               String   @id @default(uuid())
   title_en         String
@@ -145,13 +172,15 @@ model Event {
   end_time         DateTime
   provider_id      String
   status           String   @default("PENDING")
-  category         String
+  category_id      String
   image_url        String?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
-  provider         User     @relation("ProviderEvents", fields: [provider_id], references: [id])
+  provider         User           @relation("ProviderEvents", fields: [provider_id], references: [id])
+  category         EventCategory  @relation(fields: [category_id], references: [id])
   rsvps            Rsvp[]
 
+  @@index([category_id])
   @@map("events")
 }
 

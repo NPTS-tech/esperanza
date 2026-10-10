@@ -7,8 +7,10 @@ export type BadgeVariant =
     | "recreation"
     | "transit"
     | "senior"
-    | "childcare"
-    | "community"
+    | "financial"
+    | "children"
+    | "housing"
+    | "other"
     | "pending"
     | "approved"
     | "rejected"
@@ -30,8 +32,10 @@ const VARIANT_CLASS: Record<BadgeVariant, string> = {
     recreation: "badge-recreation",
     transit: "badge-transit",
     senior: "badge-senior",
-    childcare: "badge-childcare",
-    community: "badge-community",
+    financial: "badge-financial",
+    children: "badge-children",
+    housing: "badge-housing",
+    other: "badge-other",
     pending: "badge-pending",
     approved: "badge-approved",
     rejected: "badge-rejected",
@@ -49,13 +53,22 @@ export function Badge({ variant, children, className }: BadgeProps) {
     );
 }
 
-export function get_category_badge_variant(category: string): BadgeVariant {
-    const slug = category.toLowerCase().replace(/\s+/g, "-") as BadgeVariant;
-    const known: BadgeVariant[] = [
-        "health", "employment", "education", "recreation",
-        "transit", "senior", "childcare", "community",
-    ];
-    return known.includes(slug) ? slug : "community";
+export function get_category_badge_variant(category: { slug: string }): BadgeVariant {
+    switch (category.slug) {
+        case "health":
+        case "employment":
+        case "education":
+        case "recreation":
+        case "transit":
+        case "financial":
+        case "children":
+        case "housing":
+            return category.slug;
+        case "senior_services":
+            return "senior";
+        default:
+            return "other";
+    }
 }
 
 export function get_status_badge_variant(status: string): BadgeVariant {

@@ -33,6 +33,11 @@ export const dallas_county_demographics_update_schema = z.object({
     education_level: dallas_county_demographics_schema.shape.education_level,
 });
 
+export const update_interests_schema = z.object({
+    // Full replacement list of category IDs the user is interested in.
+    category_ids: z.array(z.string().uuid()).max(50),
+});
+
 export const update_my_profile_schema = z
     .object({
         username: username_schema.optional(),
