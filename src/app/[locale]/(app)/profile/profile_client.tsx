@@ -25,6 +25,7 @@ import {
     DALLAS_COUNTY_MARITAL_STATUS_OPTIONS,
     DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
     DALLAS_COUNTY_RACE_OPTIONS,
+    RATHER_NOT_SAY,
 } from "@/lib/dallas_county_profile_options";
 
 type Locale = "en" | "es";
@@ -211,6 +212,15 @@ export function ProfileClient() {
     const [password_modal_open, set_password_modal_open] = useState(false);
     const [saving_password, set_saving_password] = useState(false);
     const [pw_form, set_pw_form] = useState({ current: "", new_pw: "", confirm: "" });
+
+    // Option values are persisted verbatim; only the display label is localized.
+    // The label lookup also drives the read-only profile view.
+    function demographic_option(value: string): SelectOption {
+        return {
+            value,
+            label: value === RATHER_NOT_SAY ? auth_t("rather_not_say") : value,
+        };
+    }
 
     const apply_profile_data = useCallback((data: ProfileResponse) => {
         set_profile(data);
@@ -577,7 +587,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("race")}
                             value={form.demographics.race}
-                            options={DALLAS_COUNTY_RACE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_RACE_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("race", value)}
                             required
@@ -588,7 +598,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("gender")}
                             value={form.demographics.gender}
-                            options={DALLAS_COUNTY_GENDER_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_GENDER_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("gender", value)}
                             required
@@ -599,7 +609,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("ethnicity")}
                             value={form.demographics.ethnicity ?? ""}
-                            options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map(demographic_option)}
                             placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("ethnicity", value)}
                             disabled={form_disabled}
@@ -609,7 +619,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("age_band")}
                             value={form.demographics.age_band}
-                            options={DALLAS_COUNTY_AGE_BAND_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_AGE_BAND_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("age_band", value)}
                             required
@@ -620,7 +630,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("marital_status")}
                             value={form.demographics.marital_status ?? ""}
-                            options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map(demographic_option)}
                             placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("marital_status", value)}
                             disabled={form_disabled}
@@ -630,7 +640,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("county")}
                             value={form.demographics.county_of_residence}
-                            options={DALLAS_COUNTY_COUNTY_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_COUNTY_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("county_of_residence", value)}
                             required
@@ -641,7 +651,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("employment_status")}
                             value={form.demographics.employment_status ?? ""}
-                            options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map(demographic_option)}
                             placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("employment_status", value)}
                             disabled={form_disabled}
@@ -651,7 +661,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("annual_income_bracket")}
                             value={form.demographics.annual_income_bracket ?? ""}
-                            options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map(demographic_option)}
                             placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("annual_income_bracket", value)}
                             disabled={form_disabled}
@@ -661,7 +671,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("education")}
                             value={form.demographics.education_level ?? ""}
-                            options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map(demographic_option)}
                             placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("education_level", value)}
                             disabled={form_disabled}
@@ -671,7 +681,7 @@ export function ProfileClient() {
                             editing={is_editing}
                             label={auth_t("primary_language")}
                             value={form.demographics.primary_language}
-                            options={DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("primary_language", value)}
                             required

@@ -1,3 +1,8 @@
+// Deliberate "no answer" answer for the optional census fields. Persisted
+// verbatim in English (see build_dallas_county_demographics_write_data);
+// display is localized via the Auth.rather_not_say translation key.
+export const RATHER_NOT_SAY = "Rather Not Say";
+
 export const DALLAS_COUNTY_GENDER_OPTIONS = [
   "Female",
   "Male",

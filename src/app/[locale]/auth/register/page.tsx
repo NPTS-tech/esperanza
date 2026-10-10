@@ -16,6 +16,7 @@ import {
     DALLAS_COUNTY_MARITAL_STATUS_OPTIONS,
     DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
     DALLAS_COUNTY_RACE_OPTIONS,
+    RATHER_NOT_SAY,
 } from "@/lib/dallas_county_profile_options";
 import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
 import { register_schema } from "@/lib/validators/auth";
@@ -129,6 +130,11 @@ export default function RegisterPage() {
     const [demographics, set_demographics] = useState<RegisterDemographics>(initial_draft.demographics);
     const [share_with_providers, set_share_with_providers] = useState(initial_draft.share_with_providers);
     const [consent, set_consent] = useState(initial_draft.consent);
+
+    // Option values are persisted verbatim; only the display label is localized.
+    function option_label(value: string): string {
+        return value === RATHER_NOT_SAY ? t("rather_not_say") : value;
+    }
 
     function stash_register_draft(next_draft?: Partial<RegisterDraft>) {
         register_draft = {
@@ -385,7 +391,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.race} required
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_RACE_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -393,7 +399,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.gender} required
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_GENDER_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -401,7 +407,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.ethnicity}
                                         onChange={(e) => set_demographics({ ...demographics, ethnicity: e.target.value })}>
                                         <option value="">{t("optional_placeholder")}</option>
-                                        {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -409,7 +415,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.age_band} required
                                         onChange={(e) => set_demographics({ ...demographics, age_band: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_AGE_BAND_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_AGE_BAND_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -417,7 +423,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.marital_status}
                                         onChange={(e) => set_demographics({ ...demographics, marital_status: e.target.value })}>
                                         <option value="">{t("optional_placeholder")}</option>
-                                        {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -425,7 +431,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.county_of_residence} required
                                         onChange={(e) => set_demographics({ ...demographics, county_of_residence: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_COUNTY_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -433,7 +439,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.employment_status}
                                         onChange={(e) => set_demographics({ ...demographics, employment_status: e.target.value })}>
                                         <option value="">{t("optional_placeholder")}</option>
-                                        {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -441,7 +447,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.annual_income_bracket} 
                                         onChange={(e) => set_demographics({ ...demographics, annual_income_bracket: e.target.value })}>
                                         <option value="">{t("optional_placeholder")}</option>
-                                        {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -449,7 +455,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.education_level}
                                         onChange={(e) => set_demographics({ ...demographics, education_level: e.target.value })}>
                                         <option value="">{t("optional_placeholder")}</option>
-                                        {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -457,7 +463,7 @@ export default function RegisterPage() {
                                     <select className="select" value={demographics.primary_language} required
                                         onChange={(e) => set_demographics({ ...demographics, primary_language: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                             </div>

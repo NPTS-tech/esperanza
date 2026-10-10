@@ -48,6 +48,7 @@
         "children_over_18_count": "Mayores de 18",
         "select_placeholder": "Seleccionar...",
         "optional_placeholder": "Dejar en blanco",
+        "rather_not_say": "Prefiero no decir",
         "share_with_providers": "Compartir información de perfil con proveedores",
         "share_with_providers_help": "Está activado por defecto. Podrás desactivarlo más tarde desde tu perfil.",
         "consent_title": "Consentimiento de recopilación de datos",
