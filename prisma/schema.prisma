@@ -88,30 +88,30 @@ model Verification {
 model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
-  ethnicity               String  @default("Rather Not Say")
+  ethnicity               String?
   age_band                String
-  marital_status          String  @default("Rather Not Say")
+  marital_status          String?
   children_under_5_count  Int     @default(0)
   children_5_to_18_count  Int     @default(0)
   children_over_18_count  Int     @default(0)
   county_of_residence     String
-  employment_status       String  @default("Rather Not Say")
-  annual_income_bracket   String  @default("Rather Not Say")
-  education_level         String  @default("Rather Not Say")
+  employment_status       String?
+  annual_income_bracket   String?
+  education_level         String?
   primary_language        String
   race                    String
   gender                  String
   // TODO: delete age field, it's unused
   age                     Int?
-  annual_personal_income  String  @default("Rather Not Say")
-  annual_household_income String  @default("Rather Not Say")
+  annual_personal_income  String?
+  annual_household_income String?
   county                  String
   has_children_under_18   Boolean @default(false)
   has_children_under_5    Boolean @default(false)
-  educational_attainment  String  @default("Rather Not Say")
+  educational_attainment  String?
   has_personal_vehicle    Boolean @default(false)
   is_employed             Boolean @default(false)
-  industry_area           String  @default("Rather Not Say")
+  industry_area           String?
   user                    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("demographics")

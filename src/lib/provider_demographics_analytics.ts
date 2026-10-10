@@ -79,7 +79,7 @@ function build_breakdown(
   const counts = new Map<string, number>();
 
   for (const row of rows) {
-    const value = row[field].trim();
+    const value = (row[field] ?? "").trim();
     counts.set(value, (counts.get(value) ?? 0) + 1);
   }
 

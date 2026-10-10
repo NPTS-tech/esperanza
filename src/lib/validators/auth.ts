@@ -31,6 +31,13 @@ export const username_schema = z
         "Username can only contain letters, numbers, periods, underscores, and hyphens",
     );
 
+// Optional demographics: the UI may submit "" (unanswered, persisted as NULL)
+// or "Rather Not Say" (a deliberate answer, persisted verbatim) via
+// build_dallas_county_demographics_write_data.
+function optional_option_schema(options: readonly [string, ...string[]]) {
+    return z.enum(options).or(z.literal("")).optional();
+}
+
 export const dallas_county_demographics_schema = z.object({
     race: z.enum(DALLAS_COUNTY_RACE_OPTIONS, {
         required_error: "Race is required",
@@ -50,7 +57,11 @@ export const dallas_county_demographics_schema = z.object({
     primary_language: z.enum(DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS, {
         required_error: "Primary language is required",
     }),
-    
+    ethnicity: optional_option_schema(DALLAS_COUNTY_ETHNICITY_OPTIONS),
+    marital_status: optional_option_schema(DALLAS_COUNTY_MARITAL_STATUS_OPTIONS),
+    employment_status: optional_option_schema(DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS),
+    annual_income_bracket: optional_option_schema(DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS),
+    education_level: optional_option_schema(DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS),
 });
 
 export const register_schema = z.object({

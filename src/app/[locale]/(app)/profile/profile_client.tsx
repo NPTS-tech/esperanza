@@ -271,7 +271,6 @@ export function ProfileClient() {
 
         try {
             const previous_language = profile?.language_pref ?? form.language_pref;
-            console.log(form.demographics)
             const res = await fetch("/api/users/me", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -283,7 +282,6 @@ export function ProfileClient() {
                 }),
             });
             const data = await res.json();
-                    console.log(data)
             if (!res.ok) {
                 show_toast(data.error || t("profile_update_error"), "error");
                 return;
@@ -418,6 +416,7 @@ export function ProfileClient() {
     ).toUpperCase();
     const form_disabled = !is_editing || saving_profile;
     const select_placeholder = auth_t("select_placeholder");
+    const optional_placeholder = auth_t("optional_placeholder");
     const language_options: SelectOption[] = [
         { value: "en", label: t("lang_english") },
         { value: "es", label: t("lang_spanish") },
@@ -599,9 +598,9 @@ export function ProfileClient() {
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("ethnicity")}
-                            value={form.demographics.ethnicity}
+                            value={form.demographics.ethnicity ?? ""}
                             options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("ethnicity", value)}
                             disabled={form_disabled}
                         />
@@ -620,9 +619,9 @@ export function ProfileClient() {
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("marital_status")}
-                            value={form.demographics.marital_status}
+                            value={form.demographics.marital_status ?? ""}
                             options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("marital_status", value)}
                             disabled={form_disabled}
                         />
@@ -641,9 +640,9 @@ export function ProfileClient() {
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("employment_status")}
-                            value={form.demographics.employment_status}
+                            value={form.demographics.employment_status ?? ""}
                             options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("employment_status", value)}
                             disabled={form_disabled}
                         />
@@ -651,9 +650,9 @@ export function ProfileClient() {
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("annual_income_bracket")}
-                            value={form.demographics.annual_income_bracket}
+                            value={form.demographics.annual_income_bracket ?? ""}
                             options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("annual_income_bracket", value)}
                             disabled={form_disabled}
                         />
@@ -661,9 +660,9 @@ export function ProfileClient() {
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("education")}
-                            value={form.demographics.education_level}
+                            value={form.demographics.education_level ?? ""}
                             options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("education_level", value)}
                             disabled={form_disabled}
                         />

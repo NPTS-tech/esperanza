@@ -79,27 +79,27 @@ function serialize_profile(
         demographics: {
             race: string;
             gender: string;
-            ethnicity: string;
+            ethnicity: string | null;
             age_band: string;
-            marital_status: string;
+            marital_status: string | null;
             children_under_5_count: number;
             children_5_to_18_count: number;
             children_over_18_count: number;
             county_of_residence: string;
-            employment_status: string;
-            annual_income_bracket: string;
-            education_level: string;
+            employment_status: string | null;
+            annual_income_bracket: string | null;
+            education_level: string | null;
             primary_language: string;
             age: number | null;
-            annual_personal_income: string;
-            annual_household_income: string;
+            annual_personal_income: string | null;
+            annual_household_income: string | null;
             county: string;
             has_children_under_18: boolean;
             has_children_under_5: boolean;
-            educational_attainment: string;
+            educational_attainment: string | null;
             has_personal_vehicle: boolean;
             is_employed: boolean;
-            industry_area: string;
+            industry_area: string | null;
         } | null;
         rsvps: {
             id: string;

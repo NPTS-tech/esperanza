@@ -47,6 +47,7 @@
         "children_5_to_18_count": "Between 5 - 18",
         "children_over_18_count": "Over 18",
         "select_placeholder": "Select...",
+        "optional_placeholder": "Leave blank",
         "share_with_providers": "Share profile information with providers",
         "share_with_providers_help": "Enabled by default. You can turn this off later from your profile settings.",
         "consent_title": "Data Collection Consent",

@@ -26,6 +26,11 @@ export const dallas_county_demographics_update_schema = z.object({
     children_over_18_count: z.coerce.number().int().min(0).optional(),
     county_of_residence: dallas_county_demographics_schema.shape.county_of_residence.optional(),
     primary_language: dallas_county_demographics_schema.shape.primary_language.optional(),
+    ethnicity: dallas_county_demographics_schema.shape.ethnicity,
+    marital_status: dallas_county_demographics_schema.shape.marital_status,
+    employment_status: dallas_county_demographics_schema.shape.employment_status,
+    annual_income_bracket: dallas_county_demographics_schema.shape.annual_income_bracket,
+    education_level: dallas_county_demographics_schema.shape.education_level,
 });
 
 export const update_my_profile_schema = z
