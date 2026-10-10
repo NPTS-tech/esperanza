@@ -91,17 +91,18 @@ model Demographics {
   ethnicity               String?
   age_band                String?
   marital_status          String?
+  // TODO: Understand if we want to have users able to opt-out of having number of children being defined. 
   children_under_5_count  Int     @default(0)
   children_5_to_18_count  Int     @default(0)
   children_over_18_count  Int     @default(0)
-  county_of_residence     String?
+  county_of_residence     String
   employment_status       String?
   annual_income_bracket   String?
   education_level         String?
   primary_language        String?
-  race                    String?
-  gender                  String?
-  age                     Int?
+  race                    String
+  gender                  String
+  age                     Int
   annual_personal_income  String?
   annual_household_income String?
   county                  String?
