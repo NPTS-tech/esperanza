@@ -1,9 +1,12 @@
-# Push Notifications — Architecture (deferred)
+# Push Notifications — Architecture
 
-Status: **in scope, not built.** The service worker's *display* side is already
-live (`public/sw.js` → `push` / `notificationclick`). Everything below is the
-*send* side. All of it is **additive** — none of it changes existing code, so
-it can land in one focused PR whenever we're ready.
+Status: **built (steps 1–5) for event reminders.** `PushSubscription` table,
+`/api/push/subscribe` (POST/DELETE), the opt-in in Profile → Event Reminders
+(`src/components/reminder_settings.tsx`), and `src/lib/push.ts`. Step 2 differs
+from the plan below: the public key is read at runtime as `VAPID_PUBLIC_KEY` and
+passed to the client as a prop, so no build arg is needed. Step 6 is not built;
+instead the Profile page re-posts the current subscription on each visit.
+Senders: `src/lib/reminders.ts`. Env vars: see `.env.example`.
 
 ## Approach
 

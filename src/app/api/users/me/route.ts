@@ -15,6 +15,9 @@ const my_profile_select = {
     language_pref: true,
     share_with_providers: true,
     consented_at: true,
+    reminder_push: true,
+    reminder_email: true,
+    reminder_lead_min: true,
     demographics: {
         select: {
             race: true,
@@ -76,6 +79,9 @@ function serialize_profile(
         language_pref: string;
         share_with_providers: boolean;
         consented_at: Date | null;
+        reminder_push: boolean;
+        reminder_email: boolean;
+        reminder_lead_min: number;
         demographics: {
             race: string | null;
             gender: string | null;
@@ -126,6 +132,9 @@ function serialize_profile(
         language_pref: user.language_pref,
         share_with_providers: user.share_with_providers,
         consented_at: user.consented_at,
+        reminder_push: user.reminder_push,
+        reminder_email: user.reminder_email,
+        reminder_lead_min: user.reminder_lead_min,
         demographics: normalize_dallas_county_demographics(
             user.demographics,
             user.language_pref,
@@ -230,6 +239,15 @@ export async function PATCH(request: NextRequest) {
                         : {}),
                     ...(parsed.data.share_with_providers !== undefined
                         ? { share_with_providers: parsed.data.share_with_providers }
+                        : {}),
+                    ...(parsed.data.reminder_push !== undefined
+                        ? { reminder_push: parsed.data.reminder_push }
+                        : {}),
+                    ...(parsed.data.reminder_email !== undefined
+                        ? { reminder_email: parsed.data.reminder_email }
+                        : {}),
+                    ...(parsed.data.reminder_lead_min !== undefined
+                        ? { reminder_lead_min: parsed.data.reminder_lead_min }
                         : {}),
                 },
             });

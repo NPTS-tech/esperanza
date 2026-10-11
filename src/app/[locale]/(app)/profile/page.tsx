@@ -22,7 +22,7 @@ export default async function ProfilePage() {
                     {t("heading")}
                 </h1>
             </div>
-            <ProfileClient />
+            <ProfileClient vapid_public_key={process.env.VAPID_PUBLIC_KEY ?? null} />
         </div>
     );
 }

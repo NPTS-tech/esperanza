@@ -17,26 +17,31 @@ datasource db {
 // camelCase names; `created_at` is mapped back to createdAt in src/lib/auth.ts so
 // the app's existing queries keep working. Passwords live in the Account table.
 model User {
-  id                   String           @id @default(uuid())
+  id                   String             @id @default(uuid())
   name                 String
-  email                String           @unique
-  emailVerified        Boolean          @default(false)
+  email                String             @unique
+  emailVerified        Boolean            @default(false)
   image                String?
-  username             String?          @unique
-  role                 String           @default("USER")
-  language_pref        String           @default("en")
-  share_with_providers Boolean          @default(true)
+  username             String?            @unique
+  role                 String             @default("USER")
+  language_pref        String             @default("en")
+  share_with_providers Boolean            @default(true)
   consented_at         DateTime?
-  created_at           DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  created_at           DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  // Event reminder preferences (see src/lib/reminders.ts).
+  reminder_push        Boolean            @default(true)
+  reminder_email       Boolean            @default(true)
+  reminder_lead_min    Int                @default(60)
   sessions             Session[]
   accounts             Account[]
   analytics            AnalyticsEvent[]
-  announcements        Announcement[]   @relation("AuthorAnnouncements")
+  announcements        Announcement[]     @relation("AuthorAnnouncements")
   demographics         Demographics?
-  events               Event[]          @relation("ProviderEvents")
+  events               Event[]            @relation("ProviderEvents")
   rsvps                Rsvp[]
   provider_profile     ProviderProfile?
+  push_subscriptions   PushSubscription[]
 
   @@map("users")
 }
@@ -155,15 +160,30 @@ model Event {
 }
 
 model Rsvp {
-  id         String   @id @default(uuid())
-  user_id    String
-  event_id   String
-  created_at DateTime @default(now())
-  event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  user_id          String
+  event_id         String
+  created_at       DateTime  @default(now())
+  // Set when the reminder goes out; cleared when the event's start_time changes.
+  reminder_sent_at DateTime?
+  event            Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, event_id])
   @@map("rsvps")
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  user_id    String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("push_subscriptions")
 }
 
 model Announcement {
