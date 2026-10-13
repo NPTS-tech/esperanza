@@ -12,11 +12,14 @@ async function main() {
     const a = await mk("a"); // default 60 min lead
     const b = await mk("b", { reminder_lead_min: 15 });
     const c = await mk("c", { reminder_push: false, reminder_email: false });
+    const cat = await db.eventCategory.create({
+        data: { slug: "x", name_en: "X", name_es: "X", color: "#000000", emoji: "x" },
+    });
     const ev = (status: string, mins: number) =>
         db.event.create({
             data: {
                 title_en: "T", title_es: "T", description_en: "d", description_es: "d",
-                location_name: "Park", latitude: 0, longitude: 0, category: "x",
+                location_name: "Park", latitude: 0, longitude: 0, category_id: cat.id,
                 start_time: new Date(now.getTime() + mins * 60000),
                 end_time: new Date(now.getTime() + (mins + 60) * 60000),
                 provider_id: a.id, status,
