@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       category,
+      interests,
       status,
       search,
       start_date,
@@ -76,9 +77,17 @@ export async function GET(request: NextRequest) {
       if (status) where.status = status;
     }
 
-    // Category filter — open to all roles
-    if (category) {
-      where.category = category;
+    // Category filters — open to all roles.
+    // `interests=true` restricts to the signed-in user's saved categories;
+    // a single `category` ID filters to exactly that category.
+    if (interests === "true") {
+      const interest_rows = await db.userInterestEventCategory.findMany({
+        where: { user_id: user_id },
+        select: { category_id: true },
+      });
+      where.category_id = { in: interest_rows.map((row) => row.category_id) };
+    } else if (category) {
+      where.category_id = category;
     }
 
     // Date range filter — open to all roles, applies to event start_time
@@ -125,6 +134,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { start_time: "asc" },
         include: {
+          category: true,
           provider: {
             select: {
               id: true,
@@ -198,6 +208,17 @@ export async function POST(request: NextRequest) {
 
     const initial_status = role === "ADMIN" ? "APPROVED" : "PENDING";
 
+    const category = await db.eventCategory.findUnique({
+      where: { id: parsed.data.category_id },
+      select: { id: true },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { error: "Invalid category", details: { category_id: ["Unknown category"] } },
+        { status: 400 },
+      );
+    }
+
     let bilingualFields;
     try {
       bilingualFields = await ensureBilingualEventFields(parsed.data);
@@ -226,6 +247,7 @@ export async function POST(request: NextRequest) {
         status: initial_status,
       },
       include: {
+        category: true,
         provider: {
           select: {
             id: true,

@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { MapPin, Clock, CalendarDays } from "lucide-react";
-import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
+import type { CategoryDto } from "@/lib/event_categories";
 
 export interface EventData {
   id: string;
@@ -19,7 +19,7 @@ export interface EventData {
   end_time: string;
   provider_id: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
-  category: string;
+  category: CategoryDto;
   image_url?: string | null;
   created_at: string;
   updated_at: string;
@@ -50,11 +50,12 @@ function format_time(date_string: string, locale: string) {
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const t = useTranslations("Events");
   const locale = useLocale();
 
   const title = locale === "es" ? event.title_es : event.title_en;
   const description = locale === "es" ? event.description_es : event.description_en;
+  const category_name = locale === "es" ? event.category.name_es : event.category.name_en;
+  const { color, emoji } = event.category;
 
   return (
     <Link href={`/events/${event.id}`} className="block no-underline group">
@@ -92,23 +93,18 @@ export default function EventCard({ event }: EventCardProps) {
               style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
             />
           ) : (
-            (() => {
-              const cfg = getCategoryPlaceholderStyle(event.category);
-              return (
-                <div
-                  className="flex items-center justify-center"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: `linear-gradient(135deg, ${cfg.color} 0%, rgba(0,0,0,0.2) 100%)`,
-                  }}
-                >
-                  <span aria-hidden="true" style={{ fontSize: "2rem", lineHeight: 1 }}>
-                    {cfg.emoji}
-                  </span>
-                </div>
-              );
-            })()
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: "100%",
+                height: "100%",
+                background: `linear-gradient(135deg, ${color} 0%, rgba(0,0,0,0.2) 100%)`,
+              }}
+            >
+              <span aria-hidden="true" style={{ fontSize: "2rem", lineHeight: 1 }}>
+                {emoji}
+              </span>
+            </div>
           )}
         </div>
 
@@ -125,7 +121,7 @@ export default function EventCard({ event }: EventCardProps) {
           className="text-[10px] font-semibold uppercase tracking-widest mb-3"
           style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
         >
-          {t(`cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any)}
+          {category_name}
         </p>
 
         {/* Description */}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useLocale } from "next-intl";
 import { CalendarDays, CheckCircle, AlertCircle, Ticket, UploadCloud } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge, get_category_badge_variant, get_status_badge_variant } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { format_date } from "@/lib/utils";
-import { EVENT_CATEGORIES } from "@/lib/validators/event";
+import { category_label, type CategoryDto, use_categories } from "@/lib/event_categories";
 import type { LocationValue } from "@/components/location_picker";
 
 const LocationPicker = dynamic(
@@ -96,7 +97,7 @@ type ProviderEvent = {
     provider_id: string;
     provider_email: string;
     status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
-    category: string;
+    category: CategoryDto;
     image_url: string | null;
     created_at: string;
     rsvp_count: number;
@@ -108,10 +109,27 @@ const INITIAL_FORM: FormState = {
     start_time: "", end_time: "", category: "", image_url: "",
 };
 
+function parse_category(value: unknown): CategoryDto | null {
+    if (
+        typeof value === "object" &&
+        value !== null &&
+        typeof (value as CategoryDto).id === "string" &&
+        typeof (value as CategoryDto).slug === "string" &&
+        typeof (value as CategoryDto).name_en === "string" &&
+        typeof (value as CategoryDto).name_es === "string" &&
+        typeof (value as CategoryDto).color === "string" &&
+        typeof (value as CategoryDto).emoji === "string"
+    ) {
+        return value as CategoryDto;
+    }
+    return null;
+}
+
 function to_provider_event(
     api_event: Record<string, unknown>,
     fallback_provider_email: string,
 ): ProviderEvent | null {
+    const category = parse_category(api_event.category);
     if (
         typeof api_event.id !== "string" ||
         typeof api_event.title_en !== "string" ||
@@ -125,7 +143,7 @@ function to_provider_event(
         typeof api_event.end_time !== "string" ||
         typeof api_event.provider_id !== "string" ||
         typeof api_event.status !== "string" ||
-        typeof api_event.category !== "string" ||
+        category === null ||
         typeof api_event.created_at !== "string"
     ) {
         return null;
@@ -168,7 +186,7 @@ function to_provider_event(
                 ? provider.email
                 : fallback_provider_email,
         status,
-        category: api_event.category,
+        category,
         image_url: typeof api_event.image_url === "string" ? api_event.image_url : null,
         created_at: api_event.created_at,
         rsvp_count: typeof count?.rsvps === "number" ? count.rsvps : 0,
@@ -185,6 +203,8 @@ function add_hour(value: string): string {
 }
 
 export function ProviderDashboard(props: ProviderDashboardProps) {
+    const locale = useLocale();
+    const { categories } = use_categories();
     const [events, set_events] = useState<ProviderEvent[]>([]);
     const [form, set_form] = useState<FormState>(INITIAL_FORM);
     const [uploading_image, set_uploading_image] = useState(false);
@@ -404,7 +424,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             longitude: form.longitude ?? 0,
             start_time: new Date(form.start_time).toISOString(),
             end_time: new Date(form.end_time).toISOString(),
-            category: form.category || "Community",
+            category_id: form.category,
         };
 
         if (form.image_url.trim()) {
@@ -680,10 +700,12 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                         </div>
                     </div>
                     <FormField label={props.category}>
-                        <Select value={form.category} onChange={(e) => update_form("category", e.target.value)}>
-                            <option value="">{props.category_placeholder}</option>
-                            {EVENT_CATEGORIES.map((cat) => (
-                                <option key={cat} value={cat}>{cat}</option>
+                        <Select value={form.category} onChange={(e) => update_form("category", e.target.value)} required>
+                            <option value="" disabled>
+                                {props.category_placeholder}
+                            </option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>{category_label(cat, locale)}</option>
                             ))}
                         </Select>
                     </FormField>
@@ -782,7 +804,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     <tr key={evt.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                                         <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>{evt.title_en}</td>
                                         <td className="px-4 py-2">
-                                            <Badge variant={get_category_badge_variant(evt.category)}>{evt.category}</Badge>
+                                            <Badge variant={get_category_badge_variant(evt.category)}>{category_label(evt.category, locale)}</Badge>
                                         </td>
                                         <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>{format_date(evt.start_time)}</td>
                                         <td className="px-4 py-2">

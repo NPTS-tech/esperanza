@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             where: { id },
             data: { status: parsed.data.status },
             include: {
+                category: true,
                 provider: {
                     select: { id: true, email: true },
                 },

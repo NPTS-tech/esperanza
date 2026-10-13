@@ -31,6 +31,13 @@ export const username_schema = z
         "Username can only contain letters, numbers, periods, underscores, and hyphens",
     );
 
+// Optional demographics: the UI may submit "" (unanswered, persisted as NULL)
+// or "Rather Not Say" (a deliberate answer, persisted verbatim) via
+// build_dallas_county_demographics_write_data.
+function optional_option_schema(options: readonly [string, ...string[]]) {
+    return z.enum(options).or(z.literal("")).optional();
+}
+
 export const dallas_county_demographics_schema = z.object({
     race: z.enum(DALLAS_COUNTY_RACE_OPTIONS, {
         required_error: "Race is required",
@@ -38,14 +45,8 @@ export const dallas_county_demographics_schema = z.object({
     gender: z.enum(DALLAS_COUNTY_GENDER_OPTIONS, {
         required_error: "Gender is required",
     }),
-    ethnicity: z.enum(DALLAS_COUNTY_ETHNICITY_OPTIONS, {
-        required_error: "Ethnicity is required",
-    }),
     age_band: z.enum(DALLAS_COUNTY_AGE_BAND_OPTIONS, {
         required_error: "Age range is required",
-    }),
-    marital_status: z.enum(DALLAS_COUNTY_MARITAL_STATUS_OPTIONS, {
-        required_error: "Marital status is required",
     }),
     children_under_5_count: z.coerce.number().int().min(0).default(0),
     children_5_to_18_count: z.coerce.number().int().min(0).default(0),
@@ -53,18 +54,14 @@ export const dallas_county_demographics_schema = z.object({
     county_of_residence: z.enum(DALLAS_COUNTY_COUNTY_OPTIONS, {
         required_error: "County is required",
     }),
-    employment_status: z.enum(DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS, {
-        required_error: "Employment status is required",
-    }),
-    annual_income_bracket: z.enum(DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS, {
-        required_error: "Annual income is required",
-    }),
-    education_level: z.enum(DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS, {
-        required_error: "Education is required",
-    }),
     primary_language: z.enum(DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS, {
         required_error: "Primary language is required",
     }),
+    ethnicity: optional_option_schema(DALLAS_COUNTY_ETHNICITY_OPTIONS),
+    marital_status: optional_option_schema(DALLAS_COUNTY_MARITAL_STATUS_OPTIONS),
+    employment_status: optional_option_schema(DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS),
+    annual_income_bracket: optional_option_schema(DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS),
+    education_level: optional_option_schema(DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS),
 });
 
 export const register_schema = z.object({
@@ -83,6 +80,8 @@ export const register_schema = z.object({
         .default("en"),
     share_with_providers: z.boolean().default(true),
     consent: z.boolean(),
+    // Optional event-category interests picked in the (skippable) sign-up step.
+    category_ids: z.array(z.string().uuid()).max(50).optional(),
     ...dallas_county_demographics_schema.shape,
 }).refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",

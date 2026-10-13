@@ -21,17 +21,22 @@ export const user_query_schema = z.object({
 export const dallas_county_demographics_update_schema = z.object({
     race: dallas_county_demographics_schema.shape.race.optional(),
     gender: dallas_county_demographics_schema.shape.gender.optional(),
-    ethnicity: dallas_county_demographics_schema.shape.ethnicity.optional(),
     age_band: dallas_county_demographics_schema.shape.age_band.optional(),
-    marital_status: dallas_county_demographics_schema.shape.marital_status.optional(),
     children_under_5_count: z.coerce.number().int().min(0).optional(),
     children_5_to_18_count: z.coerce.number().int().min(0).optional(),
     children_over_18_count: z.coerce.number().int().min(0).optional(),
     county_of_residence: dallas_county_demographics_schema.shape.county_of_residence.optional(),
-    employment_status: dallas_county_demographics_schema.shape.employment_status.optional(),
-    annual_income_bracket: dallas_county_demographics_schema.shape.annual_income_bracket.optional(),
-    education_level: dallas_county_demographics_schema.shape.education_level.optional(),
     primary_language: dallas_county_demographics_schema.shape.primary_language.optional(),
+    ethnicity: dallas_county_demographics_schema.shape.ethnicity,
+    marital_status: dallas_county_demographics_schema.shape.marital_status,
+    employment_status: dallas_county_demographics_schema.shape.employment_status,
+    annual_income_bracket: dallas_county_demographics_schema.shape.annual_income_bracket,
+    education_level: dallas_county_demographics_schema.shape.education_level,
+});
+
+export const update_interests_schema = z.object({
+    // Full replacement list of category IDs the user is interested in.
+    category_ids: z.array(z.string().uuid()).max(50),
 });
 
 export const update_my_profile_schema = z

@@ -8,7 +8,6 @@ import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
 import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight } from "lucide-react";
 import type { EventData } from "@/components/event_card";
-import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
   ssr: false,
@@ -198,7 +197,7 @@ export default function EventDetailPage() {
     locale === "es" ? event.description_es : event.description_en;
   const description_alt =
     locale === "es" ? event.description_en : event.description_es;
-  const category_label = t(`cat_${event.category.toLowerCase().replace(/\s+/g, "_")}` as any);
+  const category_label = locale === "es" ? event.category.name_es : event.category.name_en;
   const manage_event_label = locale === "es" ? "Gestionar evento" : "Manage event";
 
   const is_own = session?.user?.id === event.provider_id;
@@ -235,7 +234,7 @@ export default function EventDetailPage() {
           </div>
         ) : (
           (() => {
-            const cfg = getCategoryPlaceholderStyle(event.category);
+            const cfg = event.category;
             return (
               <div
                 className="flex items-center justify-center"

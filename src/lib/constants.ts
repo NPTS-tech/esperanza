@@ -59,17 +59,5 @@ export const INDUSTRY_OPTIONS = [
     "Not employed",
 ];
 
-export const EVENT_CATEGORIES = [
-    "Health",
-    "Employment",
-    "Education",
-    "Recreation",
-    "Transit",
-    "Senior",
-    "Childcare",
-    "Community",
-    "Other",
-];
-
 // Event reminder lead times offered in Profile settings, in minutes (default 60).
 export const REMINDER_LEAD_OPTIONS = [15, 30, 60, 120, 1440] as const;

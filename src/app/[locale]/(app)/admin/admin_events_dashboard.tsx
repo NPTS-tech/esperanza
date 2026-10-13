@@ -5,6 +5,7 @@ import { CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
+import type { CategoryDto } from "@/lib/event_categories";
 
 export type AdminEventsDashboardProps = {
   title: string;
@@ -43,7 +44,7 @@ type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 type ApiEvent = {
   id: string;
   title_en: string;
-  category: string;
+  category: CategoryDto;
   start_time: string;
   created_at: string;
   status: EventStatus;
@@ -73,8 +74,8 @@ function get_status_badge_class(status: EventStatus): string {
   return "badge";
 }
 
-function get_category_badge_class(category: string): string {
-  const slug = category.toLowerCase().replace(/\s+/g, "");
+function get_category_badge_class(category: CategoryDto): string {
+  const slug = category.slug.replace(/_/g, "");
   return `badge badge-${slug}`;
 }
 
@@ -340,7 +341,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     </td>
                     <td className="px-4 py-2">
                       <span className={get_category_badge_class(evt.category)}>
-                        {evt.category}
+                        {locale === "es" ? evt.category.name_es : evt.category.name_en}
                       </span>
                     </td>
                     <td
@@ -452,7 +453,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                   </td>
                   <td className="px-4 py-2">
                     <span className={get_category_badge_class(evt.category)}>
-                      {evt.category}
+                      {locale === "es" ? evt.category.name_es : evt.category.name_en}
                     </span>
                   </td>
                   <td

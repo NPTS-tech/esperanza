@@ -9,6 +9,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { InstallButton } from "@/components/pwa/install-button";
+import { category_label, use_categories } from "@/lib/event_categories";
 import { ReminderSettings, type ReminderPrefs } from "@/components/reminder_settings";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
@@ -26,6 +27,7 @@ import {
     DALLAS_COUNTY_MARITAL_STATUS_OPTIONS,
     DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
     DALLAS_COUNTY_RACE_OPTIONS,
+    RATHER_NOT_SAY,
 } from "@/lib/dallas_county_profile_options";
 
 type Locale = "en" | "es";
@@ -38,6 +40,7 @@ type ProfileResponse = ReminderPrefs & {
     language_pref: Locale;
     share_with_providers: boolean;
     consented_at: string | null;
+    interests: string[];
     demographics: DallasCountyDemographicsInput;
     rsvps: {
         id: string;
@@ -201,9 +204,11 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
     const nav_t = useTranslations("Nav");
     const t = useTranslations("Profile");
     const { toasts, show_toast, dismiss } = useToast();
+    const { categories } = use_categories();
 
     const [profile, set_profile] = useState<ProfileResponse | null>(null);
     const [form, set_form] = useState<ProfileFormState>(DEFAULT_PROFILE_FORM(locale));
+    const [interest_ids, set_interest_ids] = useState<Set<string>>(new Set());
     const [loading_profile, set_loading_profile] = useState(true);
     const [load_error, set_load_error] = useState("");
     const [saving_profile, set_saving_profile] = useState(false);
@@ -213,9 +218,19 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
     const [saving_password, set_saving_password] = useState(false);
     const [pw_form, set_pw_form] = useState({ current: "", new_pw: "", confirm: "" });
 
+    // Option values are persisted verbatim; only the display label is localized.
+    // The label lookup also drives the read-only profile view.
+    function demographic_option(value: string): SelectOption {
+        return {
+            value,
+            label: value === RATHER_NOT_SAY ? auth_t("rather_not_say") : value,
+        };
+    }
+
     const apply_profile_data = useCallback((data: ProfileResponse) => {
         set_profile(data);
         set_form(build_profile_form_state(data));
+        set_interest_ids(new Set(data.interests));
         set_is_editing(false);
     }, []);
 
@@ -283,7 +298,6 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                 }),
             });
             const data = await res.json();
-
             if (!res.ok) {
                 show_toast(data.error || t("profile_update_error"), "error");
                 return;
@@ -411,6 +425,35 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
         }
     }
 
+    async function handle_toggle_interest(category_id: string) {
+        const previous_ids = interest_ids;
+        const next_ids = new Set(previous_ids);
+        if (next_ids.has(category_id)) {
+            next_ids.delete(category_id);
+        } else {
+            next_ids.add(category_id);
+        }
+        set_interest_ids(next_ids);
+
+        try {
+            const res = await fetch("/api/users/me/interests", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category_ids: [...next_ids] }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || t("interests_update_error"));
+            }
+
+            set_interest_ids(new Set<string>(data.category_ids));
+        } catch {
+            set_interest_ids(previous_ids);
+            show_toast(t("interests_update_error"), "error");
+        }
+    }
+
     const initials = (
         profile?.username?.[0] ??
         profile?.email?.[0] ??
@@ -418,6 +461,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
     ).toUpperCase();
     const form_disabled = !is_editing || saving_profile;
     const select_placeholder = auth_t("select_placeholder");
+    const optional_placeholder = auth_t("optional_placeholder");
     const language_options: SelectOption[] = [
         { value: "en", label: t("lang_english") },
         { value: "es", label: t("lang_spanish") },
@@ -578,7 +622,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                             editing={is_editing}
                             label={auth_t("race")}
                             value={form.demographics.race}
-                            options={DALLAS_COUNTY_RACE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_RACE_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("race", value)}
                             required
@@ -589,7 +633,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                             editing={is_editing}
                             label={auth_t("gender")}
                             value={form.demographics.gender}
-                            options={DALLAS_COUNTY_GENDER_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_GENDER_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("gender", value)}
                             required
@@ -599,11 +643,10 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("ethnicity")}
-                            value={form.demographics.ethnicity}
-                            options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            value={form.demographics.ethnicity ?? ""}
+                            options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map(demographic_option)}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("ethnicity", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -611,7 +654,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                             editing={is_editing}
                             label={auth_t("age_band")}
                             value={form.demographics.age_band}
-                            options={DALLAS_COUNTY_AGE_BAND_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_AGE_BAND_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("age_band", value)}
                             required
@@ -621,11 +664,10 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("marital_status")}
-                            value={form.demographics.marital_status}
-                            options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            value={form.demographics.marital_status ?? ""}
+                            options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map(demographic_option)}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("marital_status", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -633,7 +675,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                             editing={is_editing}
                             label={auth_t("county")}
                             value={form.demographics.county_of_residence}
-                            options={DALLAS_COUNTY_COUNTY_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_COUNTY_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("county_of_residence", value)}
                             required
@@ -643,33 +685,30 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("employment_status")}
-                            value={form.demographics.employment_status}
-                            options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            value={form.demographics.employment_status ?? ""}
+                            options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map(demographic_option)}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("employment_status", value)}
-                            required
                             disabled={form_disabled}
                         />
 
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("annual_income_bracket")}
-                            value={form.demographics.annual_income_bracket}
-                            options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            value={form.demographics.annual_income_bracket ?? ""}
+                            options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map(demographic_option)}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("annual_income_bracket", value)}
-                            required
                             disabled={form_disabled}
                         />
 
                         <ProfileSelectField
                             editing={is_editing}
                             label={auth_t("education")}
-                            value={form.demographics.education_level}
-                            options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((option) => ({ value: option, label: option }))}
-                            placeholder={select_placeholder}
+                            value={form.demographics.education_level ?? ""}
+                            options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map(demographic_option)}
+                            placeholder={optional_placeholder}
                             onChange={(value) => set_demographic("education_level", value)}
-                            required
                             disabled={form_disabled}
                         />
 
@@ -677,7 +716,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                             editing={is_editing}
                             label={auth_t("primary_language")}
                             value={form.demographics.primary_language}
-                            options={DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                            options={DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map(demographic_option)}
                             placeholder={select_placeholder}
                             onChange={(value) => set_demographic("primary_language", value)}
                             required
@@ -714,6 +753,48 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                                 disabled={form_disabled}
                             />
                         </div>
+                    </div>
+                </div>
+
+                <div className="card p-6 space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                            {t("interests_section")}
+                        </h2>
+                        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                            {t("interests_section_help")}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {categories.map((cat) => {
+                            const selected = interest_ids.has(cat.id);
+                            return (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => void handle_toggle_interest(cat.id)}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        padding: "7px 12px",
+                                        borderRadius: 999,
+                                        fontSize: 13,
+                                        fontWeight: selected ? 600 : 400,
+                                        border: `1.5px solid ${selected ? cat.color : "var(--color-border)"}`,
+                                        background: selected ? `${cat.color}18` : "transparent",
+                                        color: selected ? cat.color : "var(--color-text)",
+                                        cursor: "pointer",
+                                        transition: "background .12s, border-color .12s",
+                                    }}
+                                >
+                                    <span aria-hidden="true">{cat.emoji}</span>
+                                    {category_label(cat, locale)}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 

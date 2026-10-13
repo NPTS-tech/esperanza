@@ -4,8 +4,8 @@ import { getSession } from "@/lib/auth";
 import { get_provider_demographics_analytics } from "@/lib/provider_demographics_analytics";
 import { provider_demographics_query_schema } from "@/lib/validators/analytics";
 
-function escape_csv_value(value: string | number) {
-  const string_value = String(value);
+function escape_csv_value(value: string | number | undefined) {
+  const string_value = value == null ? "" : String(value);
   if (
     string_value.includes(",") ||
     string_value.includes("\"") ||

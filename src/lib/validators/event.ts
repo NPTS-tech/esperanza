@@ -1,19 +1,8 @@
 import { z } from "zod";
 
-// TODO: Admin UI for managing categories post-MVP? For now, hardcoded in both backend and frontend.
-export const EVENT_CATEGORIES = [
-    "Health",
-    "Employment",
-    "Financial",
-    "Recreation",
-    "Transit",
-    "Senior Services",
-    "Education",
-    "Community",
-    "Other",
-] as const;
-
-export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+// Categories live in the database (EventCategory table, seeded in prisma/seed.ts
+// and served by GET /api/categories). The API only accepts category_id values,
+// which routes verify against the DB before writing.
 
 // Custom refinements for event validation
 const age_range_refinement = (data: {
@@ -43,7 +32,7 @@ export const create_event_schema = z
             message: "Start time must be in the future",
         }),
         end_time: z.coerce.date(),
-        category: z.enum(EVENT_CATEGORIES),
+        category_id: z.string().uuid("Category is required"),
 
         // Optional demographic age targeting.
         // Drives senior service notifications (65+) and any other age-gated recommendations.
@@ -133,7 +122,7 @@ export const update_event_schema = z
         longitude: z.coerce.number().min(-180).max(180).optional(),
         start_time: z.coerce.date().optional(),
         end_time: z.coerce.date().optional(),
-        category: z.enum(EVENT_CATEGORIES).optional(),
+        category_id: z.string().uuid("Category is required").optional(),
         target_age_min: z.coerce
             .number()
             .int()
@@ -175,10 +164,13 @@ export const update_event_status_schema = z.object({
 });
 
 // event_query_schema, used by GET /api/events for validating query parameters.
+// `category` is a category ID; `interests=true` filters to the signed-in user's
+// saved categories instead of a single category.
 export const event_query_schema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(1000).default(20),
-    category: z.enum(EVENT_CATEGORIES).optional(),
+    category: z.string().uuid().optional(),
+    interests: z.enum(["true"]).optional(),
     status: z
         .enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"])
         .optional(),

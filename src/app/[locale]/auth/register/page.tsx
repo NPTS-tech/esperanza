@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
-import { Globe } from "lucide-react";
+import { Globe, Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import {
     DALLAS_COUNTY_AGE_BAND_OPTIONS,
@@ -16,8 +16,11 @@ import {
     DALLAS_COUNTY_MARITAL_STATUS_OPTIONS,
     DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS,
     DALLAS_COUNTY_RACE_OPTIONS,
+    RATHER_NOT_SAY,
 } from "@/lib/dallas_county_profile_options";
 import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
+import { category_label, use_categories } from "@/lib/event_categories";
+import { register_schema } from "@/lib/validators/auth";
 
 export type Locale = "en" | "es";
 
@@ -32,16 +35,16 @@ type RegisterAccount = {
 type RegisterDemographics = {
     race: string;
     gender: string;
-    ethnicity: string;
+    ethnicity: string | undefined;
     age_band: string;
-    marital_status: string;
+    marital_status: string | undefined;
     children_under_5_count: number;
     children_5_to_18_count: number;
     children_over_18_count: number;
     county_of_residence: string;
-    employment_status: string;
-    annual_income_bracket: string;
-    education_level: string;
+    employment_status: string | undefined;
+    annual_income_bracket: string | undefined;
+    education_level: string | undefined;
     primary_language: string;
 };
 
@@ -49,6 +52,7 @@ type RegisterDraft = {
     step: number;
     account: RegisterAccount;
     demographics: RegisterDemographics;
+    category_ids: string[];
     share_with_providers: boolean;
     consent: boolean;
 };
@@ -84,6 +88,7 @@ function create_register_draft(locale: Locale): RegisterDraft {
             education_level: "",
             primary_language: get_default_primary_language_for_locale(locale),
         },
+        category_ids: [],
         share_with_providers: true,
         consent: false,
     };
@@ -104,6 +109,15 @@ function clear_register_draft() {
     register_draft = null;
 }
 
+
+function RequiredAsterisk() {
+    return (
+        <span className="text-red-500" aria-hidden="true">
+            *
+        </span>
+    );
+}
+
 export default function RegisterPage() {
     const router = useRouter();
     const pathname = usePathname();
@@ -117,14 +131,22 @@ export default function RegisterPage() {
 
     const [account, set_account] = useState<RegisterAccount>(initial_draft.account);
     const [demographics, set_demographics] = useState<RegisterDemographics>(initial_draft.demographics);
+    const [category_ids, set_category_ids] = useState<string[]>(initial_draft.category_ids);
     const [share_with_providers, set_share_with_providers] = useState(initial_draft.share_with_providers);
     const [consent, set_consent] = useState(initial_draft.consent);
+    const { categories } = use_categories();
+
+    // Option values are persisted verbatim; only the display label is localized.
+    function option_label(value: string): string {
+        return value === RATHER_NOT_SAY ? t("rather_not_say") : value;
+    }
 
     function stash_register_draft(next_draft?: Partial<RegisterDraft>) {
         register_draft = {
             step,
             account,
             demographics,
+            category_ids,
             share_with_providers,
             consent,
             ...next_draft,
@@ -162,10 +184,11 @@ export default function RegisterPage() {
             step,
             account,
             demographics,
+            category_ids,
             share_with_providers,
             consent,
         };
-    }, [step, account, demographics, share_with_providers, consent]);
+    }, [step, account, demographics, category_ids, share_with_providers, consent]);
 
     async function handle_submit(e: React.FormEvent) {
         e.preventDefault();
@@ -189,19 +212,17 @@ export default function RegisterPage() {
             if (
                 !demographics.race ||
                 !demographics.gender ||
-                !demographics.ethnicity ||
                 !demographics.age_band ||
-                !demographics.marital_status ||
                 !demographics.county_of_residence ||
-                !demographics.employment_status ||
-                !demographics.annual_income_bracket ||
-                !demographics.education_level ||
                 !demographics.primary_language
             ) {
                 set_error(t("demographics_required"));
                 return;
             }
             set_step(3);
+        } else if (step === 3) {
+            // Interests step is optional — continue with whatever was picked.
+            set_step(4);
         } else {
             if (!consent) {
                 set_error(t("consent_required"));
@@ -222,6 +243,7 @@ export default function RegisterPage() {
                         language_pref: account.language_pref,
                         share_with_providers,
                         consent,
+                        ...(category_ids.length > 0 ? { category_ids } : {}),
                         ...demographics,
                     }),
                 });
@@ -255,7 +277,7 @@ export default function RegisterPage() {
         }
     }
 
-    const step_names = [t("step_account"), t("step_demographics"), t("step_consent")];
+    const step_names = [t("step_account"), t("step_demographics"), t("step_interests"), t("step_consent")];
 
     return (
         <div>
@@ -286,7 +308,7 @@ export default function RegisterPage() {
 
             {/* Step indicator with numbered circles */}
             <div className="flex items-center justify-center mb-6 mx-auto w-full max-w-xs">
-                {[1, 2, 3].map((s, i) => (
+                {[1, 2, 3, 4].map((s, i) => (
                     <Fragment key={s}>
                         <div
                             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold leading-none transition-colors shrink-0"
@@ -297,7 +319,7 @@ export default function RegisterPage() {
                         >
                             {s}
                         </div>
-                        {i < 2 && (
+                        {i < 3 && (
                             <div
                                 className="h-0.5 flex-1 mx-1 transition-colors"
                                 style={{ background: s < step ? "var(--color-primary)" : "var(--color-border)" }}
@@ -307,7 +329,7 @@ export default function RegisterPage() {
                 ))}
             </div>
             <p className="text-xs text-center mb-4" style={{ color: "var(--color-text-secondary)" }}>
-                {t("step_label")} {step} {t("of")} 3 — {step_names[step - 1]}
+                {t("step_label")} {step} {t("of")} 4 — {step_names[step - 1]}
             </p>
 
             <div className="card p-6">
@@ -321,28 +343,40 @@ export default function RegisterPage() {
                     {step === 1 && (
                         <>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("username")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("username")} <RequiredAsterisk />
+                                </label>
+                                
                                 <input type="text" className="input" required placeholder="neighbor_01"
                                     value={account.username} onChange={(e) => set_account({ ...account, username: e.target.value })} />
+                                <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{t("username_hint")}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("email")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("email")} <RequiredAsterisk />
+                                </label>
                                 <input type="email" className="input" required placeholder="you@example.com"
                                     value={account.email} onChange={(e) => set_account({ ...account, email: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("password")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("password")} <RequiredAsterisk />
+                                </label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.password} onChange={(e) => set_account({ ...account, password: e.target.value })} />
                                 <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>{t("password_hint")}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("confirm_password")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("confirm_password")} <RequiredAsterisk />
+                                </label>
                                 <input type="password" className="input" required placeholder="••••••••"
                                     value={account.confirm_password} onChange={(e) => set_account({ ...account, confirm_password: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>{t("preferred_language")}</label>
+                                <label className="text-sm font-medium block mb-1" style={{ color: "var(--color-text)" }}>
+                                    {t("preferred_language")} <RequiredAsterisk />
+                                </label>
                                 <select className="select"
                                     value={account.language_pref} onChange={(e) => {
                                         const new_lang = e.target.value as Locale;
@@ -364,83 +398,83 @@ export default function RegisterPage() {
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("race")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.race} required
                                         onChange={(e) => set_demographics({ ...demographics, race: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_RACE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_RACE_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("gender")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.gender} required
                                         onChange={(e) => set_demographics({ ...demographics, gender: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_GENDER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_GENDER_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("ethnicity")}</label>
-                                    <select className="select" value={demographics.ethnicity} required
+                                    <select className="select" value={demographics.ethnicity}
                                         onChange={(e) => set_demographics({ ...demographics, ethnicity: e.target.value })}>
-                                        <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        <option value="">{t("optional_placeholder")}</option>
+                                        {DALLAS_COUNTY_ETHNICITY_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age_band")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("age_band")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.age_band} required
                                         onChange={(e) => set_demographics({ ...demographics, age_band: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_AGE_BAND_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_AGE_BAND_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("marital_status")}</label>
-                                    <select className="select" value={demographics.marital_status} required
+                                    <select className="select" value={demographics.marital_status}
                                         onChange={(e) => set_demographics({ ...demographics, marital_status: e.target.value })}>
-                                        <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        <option value="">{t("optional_placeholder")}</option>
+                                        {DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("county")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.county_of_residence} required
                                         onChange={(e) => set_demographics({ ...demographics, county_of_residence: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_COUNTY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_COUNTY_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("employment_status")}</label>
-                                    <select className="select" value={demographics.employment_status} required
+                                    <select className="select" value={demographics.employment_status}
                                         onChange={(e) => set_demographics({ ...demographics, employment_status: e.target.value })}>
-                                        <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        <option value="">{t("optional_placeholder")}</option>
+                                        {DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("annual_income_bracket")}</label>
-                                    <select className="select" value={demographics.annual_income_bracket} required
+                                    <select className="select" value={demographics.annual_income_bracket} 
                                         onChange={(e) => set_demographics({ ...demographics, annual_income_bracket: e.target.value })}>
-                                        <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        <option value="">{t("optional_placeholder")}</option>
+                                        {DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("education")}</label>
-                                    <select className="select" value={demographics.education_level} required
+                                    <select className="select" value={demographics.education_level}
                                         onChange={(e) => set_demographics({ ...demographics, education_level: e.target.value })}>
-                                        <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        <option value="">{t("optional_placeholder")}</option>
+                                        {DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("primary_language")}</label>
+                                    <label className="text-xs block mb-1" style={{ color: "var(--color-text-secondary)" }}>{t("primary_language")} <RequiredAsterisk /> </label>
                                     <select className="select" value={demographics.primary_language} required
                                         onChange={(e) => set_demographics({ ...demographics, primary_language: e.target.value })}>
                                         <option value="">{t("select_placeholder")}</option>
-                                        {DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+                                        {DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map((o) => <option key={o}>{option_label(o)}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -484,6 +518,64 @@ export default function RegisterPage() {
 
                     {step === 3 && (
                         <>
+                            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("interests_info")}
+                            </p>
+
+                            {categories.length === 0 ? (
+                                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                                    {t("interests_unavailable")}
+                                </p>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((cat) => {
+                                        const selected = category_ids.includes(cat.id);
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                onClick={() =>
+                                                    set_category_ids((current) =>
+                                                        current.includes(cat.id)
+                                                            ? current.filter((id) => id !== cat.id)
+                                                            : [...current, cat.id],
+                                                    )
+                                                }
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    padding: "7px 12px",
+                                                    borderRadius: 999,
+                                                    fontSize: 13,
+                                                    fontWeight: selected ? 600 : 400,
+                                                    border: `1.5px solid ${selected ? cat.color : "var(--color-border)"}`,
+                                                    background: selected ? `${cat.color}18` : "transparent",
+                                                    color: selected ? cat.color : "var(--color-text)",
+                                                    cursor: "pointer",
+                                                    transition: "background .12s, border-color .12s",
+                                                }}
+                                            >
+                                                <span aria-hidden="true">{cat.emoji}</span>
+                                                {category_label(cat, activeLocale)}
+                                                <Star
+                                                    size={13}
+                                                    style={{
+                                                        color: selected ? cat.color : "var(--color-text-secondary)",
+                                                        fill: selected ? cat.color : "none",
+                                                    }}
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {step === 4 && (
+                        <>
                             <div style={{ background: "var(--color-surface-hover)", borderRadius: "0.75rem", padding: "1rem" }} className="text-sm">
                                 <h3 className="font-semibold mb-2" style={{ color: "var(--color-text)" }}>{t("consent_title")}</h3>
                                 <p className="mb-3" style={{ color: "var(--color-text-secondary)" }}>
@@ -512,13 +604,16 @@ export default function RegisterPage() {
                                 </span>
                             </label>
                             <label className="flex items-start gap-3 text-sm pt-2" style={{ color: "var(--color-text)" }}>
+                                
                                 <input
                                     type="checkbox"
                                     checked={consent}
                                     onChange={(e) => set_consent(e.target.checked)}
                                     className="mt-1"
                                 />
+                                
                                 <span>{t("consent_checkbox")}</span>
+                                <RequiredAsterisk/>
                             </label>
                         </>
                     )}
@@ -530,7 +625,7 @@ export default function RegisterPage() {
                             </button>
                         )}
                         <button type="submit" className="btn btn-primary flex-1" disabled={loading}>
-                            {loading ? t("creating_account") : step === 3 ? t("create_account_btn") : t("next")}
+                            {loading ? t("creating_account") : step === 4 ? t("create_account_btn") : t("next")}
                         </button>
                     </div>
                 </form>
