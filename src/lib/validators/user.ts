@@ -3,6 +3,7 @@ import {
     dallas_county_demographics_schema,
     username_schema,
 } from "./auth";
+import { REMINDER_LEAD_OPTIONS } from "@/lib/constants";
 
 export const update_user_role_schema = z.object({
     role: z.enum(["USER", "PROVIDER", "ADMIN"], {
@@ -43,6 +44,13 @@ export const update_my_profile_schema = z
         username: username_schema.optional(),
         language_pref: z.enum(["en", "es"]).optional(),
         share_with_providers: z.boolean().optional(),
+        reminder_push: z.boolean().optional(),
+        reminder_email: z.boolean().optional(),
+        reminder_lead_min: z
+            .number()
+            .int()
+            .refine((n) => (REMINDER_LEAD_OPTIONS as readonly number[]).includes(n))
+            .optional(),
         demographics: dallas_county_demographics_update_schema.optional(),
     })
     .refine(
@@ -50,6 +58,9 @@ export const update_my_profile_schema = z
             data.username !== undefined ||
             data.language_pref !== undefined ||
             data.share_with_providers !== undefined ||
+            data.reminder_push !== undefined ||
+            data.reminder_email !== undefined ||
+            data.reminder_lead_min !== undefined ||
             data.demographics !== undefined,
         {
             message: "At least one field is required",

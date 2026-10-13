@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { InstallButton } from "@/components/pwa/install-button";
 import { category_label, use_categories } from "@/lib/event_categories";
+import { ReminderSettings, type ReminderPrefs } from "@/components/reminder_settings";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
     get_default_primary_language_for_locale,
@@ -31,7 +32,7 @@ import {
 
 type Locale = "en" | "es";
 
-type ProfileResponse = {
+type ProfileResponse = ReminderPrefs & {
     id: string;
     username: string | null;
     email: string;
@@ -195,7 +196,7 @@ function build_profile_form_state(data: ProfileResponse): ProfileFormState {
     };
 }
 
-export function ProfileClient() {
+export function ProfileClient({ vapid_public_key }: { vapid_public_key: string | null }) {
     const locale = useLocale();
     const pathname = usePathname();
     const router = useRouter();
@@ -828,6 +829,14 @@ export function ProfileClient() {
                         </span>
                     </label>
                 </div>
+
+                <ReminderSettings
+                    initial={profile}
+                    vapid_public_key={vapid_public_key}
+                    on_result={(ok) =>
+                        show_toast(ok ? t("profile_updated") : t("profile_update_error"), ok ? "success" : "error")
+                    }
+                />
 
                 {is_editing && (
                     <div className="flex justify-end gap-2">

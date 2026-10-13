@@ -217,6 +217,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             }
         }
 
+        // A rescheduled event needs a fresh reminder at the new time.
+        if (
+            update_data.start_time !== undefined &&
+            update_data.start_time.getTime() !== existing.start_time.getTime()
+        ) {
+            await db.rsvp.updateMany({
+                where: { event_id: id },
+                data: { reminder_sent_at: null },
+            });
+        }
+
         const updated = await db.event.update({
             where: { id },
             data: update_data,

@@ -58,3 +58,6 @@ export const INDUSTRY_OPTIONS = [
     "Other",
     "Not employed",
 ];
+
+// Event reminder lead times offered in Profile settings, in minutes (default 60).
+export const REMINDER_LEAD_OPTIONS = [15, 30, 60, 120, 1440] as const;

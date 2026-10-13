@@ -20,6 +20,9 @@ const my_profile_select = {
             category_id: true,
         },
     },
+    reminder_push: true,
+    reminder_email: true,
+    reminder_lead_min: true,
     demographics: {
         select: {
             race: true,
@@ -93,37 +96,39 @@ type CategoryDto = {
 type MyProfileUser = {
     id: string;
     username: string | null;
-    email: string;
-    role: string;
-    language_pref: string;
-    share_with_providers: boolean;
-    consented_at: Date | null;
-    interests: { category_id: string }[];
-    demographics: {
-        race: string;
-        gender: string;
-        ethnicity: string | null;
-        age_band: string;
-        marital_status: string | null;
-        children_under_5_count: number;
-        children_5_to_18_count: number;
-        children_over_18_count: number;
-        county_of_residence: string;
-        employment_status: string | null;
-        annual_income_bracket: string | null;
-        education_level: string | null;
-        primary_language: string;
-        age: number | null;
-        annual_personal_income: string | null;
-        annual_household_income: string | null;
-        county: string;
-        has_children_under_18: boolean;
-        has_children_under_5: boolean;
-        educational_attainment: string | null;
-        has_personal_vehicle: boolean;
-        is_employed: boolean;
-        industry_area: string | null;
-    } | null;
+        email: string;
+        role: string;
+        language_pref: string;
+        share_with_providers: boolean;
+        consented_at: Date | null;
+        reminder_push: boolean;
+        reminder_email: boolean;
+        reminder_lead_min: number;
+        demographics: {
+            race: string | null;
+            gender: string | null;
+            ethnicity: string | null;
+            age_band: string | null;
+            marital_status: string | null;
+            children_under_5_count: number;
+            children_5_to_18_count: number;
+            children_over_18_count: number;
+            county_of_residence: string | null;
+            employment_status: string | null;
+            annual_income_bracket: string | null;
+            education_level: string | null;
+            primary_language: string | null;
+            age: number | null;
+            annual_personal_income: string | null;
+            annual_household_income: string | null;
+            county: string | null;
+            has_children_under_18: boolean;
+            has_children_under_5: boolean;
+            educational_attainment: string | null;
+            has_personal_vehicle: boolean;
+            is_employed: boolean;
+            industry_area: string | null;
+        } | null;
     rsvps: {
         id: string;
         created_at: Date;
@@ -151,6 +156,9 @@ function serialize_profile(user: MyProfileUser) {
         share_with_providers: user.share_with_providers,
         consented_at: user.consented_at,
         interests: user.interests.map((interest) => interest.category_id),
+        reminder_push: user.reminder_push,
+        reminder_email: user.reminder_email,
+        reminder_lead_min: user.reminder_lead_min,
         demographics: normalize_dallas_county_demographics(
             user.demographics,
             user.language_pref,
@@ -255,6 +263,15 @@ export async function PATCH(request: NextRequest) {
                         : {}),
                     ...(parsed.data.share_with_providers !== undefined
                         ? { share_with_providers: parsed.data.share_with_providers }
+                        : {}),
+                    ...(parsed.data.reminder_push !== undefined
+                        ? { reminder_push: parsed.data.reminder_push }
+                        : {}),
+                    ...(parsed.data.reminder_email !== undefined
+                        ? { reminder_email: parsed.data.reminder_email }
+                        : {}),
+                    ...(parsed.data.reminder_lead_min !== undefined
+                        ? { reminder_lead_min: parsed.data.reminder_lead_min }
                         : {}),
                 },
             });

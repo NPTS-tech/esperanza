@@ -64,11 +64,8 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ---------------------------------------------------------------------------
-// Push notifications — DISPLAY side (live). The SEND side is deliberately not
-// built yet; see PUSH_NOTIFICATIONS.md for the remaining additive pieces
-// (PushSubscription table, /api/push/subscribe route, VAPID keys, send helper,
-// permission-prompt UI). Keeping these handlers in the SW now means the moment
-// a backend starts sending, notifications just work — no SW change required.
+// Push notifications — DISPLAY side. The send side is src/lib/push.ts; see
+// PUSH_NOTIFICATIONS.md.
 //
 // Expected push payload (JSON): { title, body, url?, tag?, icon? }
 // ---------------------------------------------------------------------------
