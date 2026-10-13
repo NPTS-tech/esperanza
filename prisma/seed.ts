@@ -41,6 +41,14 @@ type SeedAccount = {
   demographics: DallasCountyDemographicsInput;
 };
 
+type SeedCategory = {
+  slug: string;
+  name_en: string;
+  name_es: string;
+  color: string;
+  emoji: string;
+};
+
 type SeedEvent = {
   title_en: string;
   title_es: string;
@@ -53,8 +61,25 @@ type SeedEvent = {
   start_time: Date;
   end_time: Date;
   status: EventStatus;
-  category: string;
+  category: string; // EventCategory slug
 };
+
+// Keep in sync with the SeedCategories block in
+// prisma/migrations/20261010223025_event_categories_interests/migration.sql.
+const SEED_CATEGORIES: SeedCategory[] = [
+  { slug: "health", name_en: "Health", name_es: "Salud", color: "#ef4444", emoji: "🏥" },
+  { slug: "employment", name_en: "Employment", name_es: "Empleo", color: "#3b82f6", emoji: "💼" },
+  { slug: "financial", name_en: "Financial", name_es: "Finanzas", color: "#22c55e", emoji: "💰" },
+  { slug: "recreation", name_en: "Recreation", name_es: "Recreación", color: "#f97316", emoji: "⚽" },
+  { slug: "transit", name_en: "Transit", name_es: "Tránsito", color: "#8b5cf6", emoji: "🚌" },
+  { slug: "senior_services", name_en: "Senior Services", name_es: "Servicios para Mayores", color: "#06b6d4", emoji: "🤝" },
+  { slug: "education", name_en: "Education", name_es: "Educación", color: "#eab308", emoji: "📚" },
+  { slug: "children", name_en: "Children", name_es: "Niños", color: "#ec4899", emoji: "🧸" },
+  { slug: "housing", name_en: "Housing", name_es: "Vivienda", color: "#f59e0b", emoji: "🏠" },
+];
+
+// Interests for the demo resident account so the "Interests" filter has data.
+const DEMO_USER_INTEREST_SLUGS = ["health", "education", "housing"];
 
 const RESIDENT_PASSWORD = "user123";
 const GENERATED_RESIDENT_COUNT = 30;
@@ -229,7 +254,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.797,
       ...build_event_window(-3, 6, 9),
       status: "APPROVED",
-      category: "Health",
+      category: "health",
     },
     {
       title_en: "Job Skills Workshop",
@@ -244,7 +269,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.8011,
       ...build_event_window(-6, 3, 14),
       status: "APPROVED",
-      category: "Employment",
+      category: "employment",
     },
     {
       title_en: "Family Resource Night",
@@ -259,7 +284,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.7831,
       ...build_event_window(-13, 3, 17),
       status: "APPROVED",
-      category: "Community",
+      category: "children",
     },
     {
       title_en: "Senior Benefits Clinic",
@@ -274,7 +299,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.8288,
       ...build_event_window(-28, 4, 10),
       status: "APPROVED",
-      category: "Senior Services",
+      category: "senior_services",
     },
     {
       title_en: "Transit Pass Enrollment Day",
@@ -289,7 +314,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.8842,
       ...build_event_window(-64, 5, 11),
       status: "APPROVED",
-      category: "Transit",
+      category: "transit",
     },
     {
       title_en: "Back-to-School Community Expo",
@@ -304,7 +329,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.662,
       ...build_event_window(-182, 5, 12),
       status: "APPROVED",
-      category: "Education",
+      category: "education",
     },
     {
       title_en: "Winter Housing Assistance Fair",
@@ -319,7 +344,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.7619,
       ...build_event_window(-420, 4, 9),
       status: "APPROVED",
-      category: "Financial",
+      category: "housing",
     },
     {
       title_en: "Neighborhood Cleanup Kickoff",
@@ -334,7 +359,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.8326,
       ...build_event_window(5, 3, 8),
       status: "APPROVED",
-      category: "Community",
+      category: "recreation",
     },
     {
       title_en: "Family Movie Night",
@@ -349,7 +374,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.8326,
       ...build_event_window(12, 3, 19),
       status: "PENDING",
-      category: "Recreation",
+      category: "recreation",
     },
     {
       title_en: "Tax Assistance Clinic (Cancelled)",
@@ -364,7 +389,7 @@ function build_seed_events(): SeedEvent[] {
       longitude: -96.797,
       ...build_event_window(-20, 4, 10),
       status: "CANCELLED",
-      category: "Financial",
+      category: "financial",
     },
   ];
 }
@@ -439,6 +464,22 @@ async function upsert_seed_account(account: SeedAccount) {
 async function main() {
   console.log("\n Esperanza — Seeding database...\n");
 
+  const category_ids_by_slug = new Map<string, string>();
+  for (const category of SEED_CATEGORIES) {
+    const upserted = await db.eventCategory.upsert({
+      where: { slug: category.slug },
+      update: {
+        name_en: category.name_en,
+        name_es: category.name_es,
+        color: category.color,
+        emoji: category.emoji,
+      },
+      create: category,
+    });
+    category_ids_by_slug.set(category.slug, upserted.id);
+    console.log(`   ✅ Category: ${category.name_en} (${category.slug})`);
+  }
+
   const generated_residents = Array.from(
     { length: GENERATED_RESIDENT_COUNT },
     (_, index) => build_generated_resident(index),
@@ -488,9 +529,25 @@ async function main() {
 
   const created_events = [];
   for (const event of build_seed_events()) {
+    const category_id = category_ids_by_slug.get(event.category);
+    if (!category_id) {
+      throw new Error(`Unknown seed category slug: ${event.category}`);
+    }
+
     const created_event = await db.event.create({
       data: {
-        ...event,
+        title_en: event.title_en,
+        title_es: event.title_es,
+        description_en: event.description_en,
+        description_es: event.description_es,
+        location_name: event.location_name,
+        location_address: event.location_address,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        status: event.status,
+        category_id,
         provider_id: provider.id,
       },
     });
@@ -553,6 +610,22 @@ async function main() {
   }
 
   console.log(`   ✅ RSVPs refreshed: ${rsvp_count}`);
+
+  // Demo resident interests so the "Interests" filter on the events page has data.
+  const demo_user = seeded_users.get("user@esperanza.app");
+  if (demo_user) {
+    await db.userInterestEventCategory.deleteMany({
+      where: { user_id: demo_user.id },
+    });
+    for (const slug of DEMO_USER_INTEREST_SLUGS) {
+      const category_id = category_ids_by_slug.get(slug);
+      if (!category_id) continue;
+      await db.userInterestEventCategory.create({
+        data: { user_id: demo_user.id, category_id },
+      });
+    }
+    console.log(`   ✅ Interests refreshed for user@esperanza.app: ${DEMO_USER_INTEREST_SLUGS.join(", ")}`);
+  }
 
   await db.announcement.deleteMany({
     where: { title_en: sample_announcement.title_en },

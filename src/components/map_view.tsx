@@ -6,10 +6,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MAP_STYLE_URL, DALLAS_CENTER } from "@/lib/map";
 import type { EventData } from "@/components/event_card";
-import { CATEGORY_CONFIG } from "@/lib/event_category_assets";
-
-// Re-export so map_page and others can keep importing from here
-export { CATEGORY_CONFIG };
+import { category_label, type CategoryDto } from "@/lib/event_categories";
 
 export interface MapBounds {
   north: number;
@@ -36,8 +33,8 @@ function escape_html(value: string): string {
 }
 
 // Build a custom category marker (emoji + colored pin)
-function make_marker_element(category: string, selected: boolean) {
-  const cfg = CATEGORY_CONFIG[category] ?? CATEGORY_CONFIG["Other"];
+function make_marker_element(category: Pick<CategoryDto, "color" | "emoji">, selected: boolean) {
+  const cfg = category;
   const size = selected ? 42 : 32;
   const tri = selected ? 9 : 7;
   const shadow = selected ? 12 : 5;
@@ -150,8 +147,9 @@ export default function MapView({
 
     events.forEach(event => {
       const is_sel = event.id === selected_id;
-      const cfg    = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG["Other"];
+      const cfg    = event.category;
       const title  = locale === "es" ? event.title_es : event.title_en;
+      const cat_label = category_label(event.category, locale);
       const loc    = locale === "es" ? "es-US" : "en-US";
 
       const date_str = new Date(event.start_time).toLocaleDateString(loc, {
@@ -161,7 +159,7 @@ export default function MapView({
         hour: "numeric", minute: "2-digit",
       });
       const safe_title = escape_html(title);
-      const safe_cat = escape_html(event.category);
+      const safe_cat = escape_html(cat_label);
       const safe_loc = escape_html(event.location_name);
       const safe_id = encodeURIComponent(event.id);
 

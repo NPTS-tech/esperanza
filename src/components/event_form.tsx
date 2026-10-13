@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { UploadCloud, Clock3 } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { EVENT_CATEGORIES } from "@/lib/validators/event";
+import { category_label, use_categories } from "@/lib/event_categories";
 import type { EventData } from "@/components/event_card";
 import type { LocationValue } from "@/components/location_picker";
 
@@ -112,9 +112,11 @@ export default function EventForm({
   on_delete_redirect,
 }: EventFormProps) {
   const t = useTranslations("Events");
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const image_input_id = "event-image-upload";
+  const { categories } = use_categories();
 
   const is_admin_edit_context =
     mode === "edit" && pathname.includes("/admin/events/");
@@ -135,7 +137,7 @@ export default function EventForm({
     event_date: string;
     start_time: string;
     end_time: string;
-    category: string;
+    category_id: string;
     image_url: string;
   }>({
     title_en: initial_data?.title_en ?? "",
@@ -149,7 +151,7 @@ export default function EventForm({
     event_date: to_date_input(initial_data?.start_time) || default_date,
     start_time: to_time_input(initial_data?.start_time) || default_start_time,
     end_time: to_time_input(initial_data?.end_time) || default_end_time,
-    category: initial_data?.category ?? "",
+    category_id: initial_data?.category.id ?? "",
     image_url: initial_data?.image_url ?? "",
   });
 
@@ -424,7 +426,7 @@ export default function EventForm({
       longitude: form.longitude,
       start_time: start_iso,
       end_time: end_iso,
-      category: form.category,
+      category_id: form.category_id,
     };
 
     if (form.image_url.trim()) {
@@ -926,8 +928,8 @@ export default function EventForm({
           {t("form_category")} *
         </label>
         <select
-          name="category"
-          value={form.category}
+          name="category_id"
+          value={form.category_id}
           onChange={handle_change}
           required
           className="select"
@@ -935,9 +937,9 @@ export default function EventForm({
           <option value="" disabled>
             {t("form_category")}
           </option>
-          {EVENT_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {t(`cat_${cat.toLowerCase().replace(/\s+/g, "_")}` as any)}
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {category_label(cat, locale)}
             </option>
           ))}
         </select>

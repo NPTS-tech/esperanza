@@ -4,22 +4,13 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { ChevronRight } from "lucide-react";
-import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
+import type { EventData } from "@/components/event_card";
 import { format_date } from "@/lib/utils";
 
 type RsvpItem = {
     id: string;
     created_at: string;
-    event: {
-        id: string;
-        title_en: string;
-        title_es: string;
-        start_time: string;
-        category: string;
-        image_url: string | null;
-        location_name: string;
-        location_address: string | null;
-    };
+    event: Pick<EventData, "id" | "title_en" | "title_es" | "start_time" | "category" | "image_url" | "location_name" | "location_address">;
 };
 
 type MeResponse = {
@@ -117,7 +108,7 @@ export function ReservationsClient() {
                                             />
                                         ) : (
                                             (() => {
-                                                const cfg = getCategoryPlaceholderStyle(rsvp.event.category);
+                                                const cfg = rsvp.event.category;
                                                 return (
                                                     <div
                                                         className="w-full h-full flex items-center justify-center"

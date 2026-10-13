@@ -41,6 +41,7 @@ model User {
   events               Event[]            @relation("ProviderEvents")
   rsvps                Rsvp[]
   provider_profile     ProviderProfile?
+  interests            UserInterestEventCategory[]
   push_subscriptions   PushSubscription[]
 
   @@map("users")
@@ -94,22 +95,23 @@ model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
   ethnicity               String?
-  age_band                String?
+  age_band                String
   marital_status          String?
   children_under_5_count  Int     @default(0)
   children_5_to_18_count  Int     @default(0)
   children_over_18_count  Int     @default(0)
-  county_of_residence     String?
+  county_of_residence     String
   employment_status       String?
   annual_income_bracket   String?
   education_level         String?
-  primary_language        String?
-  race                    String?
-  gender                  String?
+  primary_language        String
+  race                    String
+  gender                  String
+  // TODO: delete age field, it's unused
   age                     Int?
   annual_personal_income  String?
   annual_household_income String?
-  county                  String?
+  county                  String
   has_children_under_18   Boolean @default(false)
   has_children_under_5    Boolean @default(false)
   educational_attainment  String?
@@ -135,6 +137,32 @@ model ProviderProfile {
   @@map("provider_profiles")
 }
 
+model EventCategory {
+  id        String                     @id @default(uuid())
+  slug      String                     @unique
+  name_en   String
+  name_es   String
+  color     String
+  emoji     String
+  events    Event[]
+  interests UserInterestEventCategory[]
+
+  @@map("event_categories")
+}
+
+// Which categories a user is interested in. Seeded (not admin-managed) for now;
+// powers the "Interests" filter on the events page and profile preferences.
+model UserInterestEventCategory {
+  user_id     String
+  category_id String
+  created_at  DateTime @default(now())
+  user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category    EventCategory    @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, category_id])
+  @@map("user_interest_event_categories")
+}
+
 model Event {
   id               String   @id @default(uuid())
   title_en         String
@@ -149,13 +177,15 @@ model Event {
   end_time         DateTime
   provider_id      String
   status           String   @default("PENDING")
-  category         String
+  category_id      String
   image_url        String?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
-  provider         User     @relation("ProviderEvents", fields: [provider_id], references: [id])
+  provider         User           @relation("ProviderEvents", fields: [provider_id], references: [id])
+  category         EventCategory  @relation(fields: [category_id], references: [id])
   rsvps            Rsvp[]
 
+  @@index([category_id])
   @@map("events")
 }
 

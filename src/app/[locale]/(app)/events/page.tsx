@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "@/lib/auth-client";
 import { Link } from "@/i18n/routing";
-import { List, CalendarDays, ChevronDown, ChevronUp, Plus, Check } from "lucide-react";
+import { List, CalendarDays, ChevronDown, ChevronUp, Plus, Check, Star } from "lucide-react";
 import EventCard from "@/components/event_card";
 import CalendarView from "@/components/calendar_view";
 import type { EventData } from "@/components/event_card";
-import { EVENT_CATEGORIES } from "@/lib/validators/event";
+import { category_label, type CategoryDto, use_categories } from "@/lib/event_categories";
 
 interface PaginatedResponse {
   events: EventData[];
@@ -130,13 +130,26 @@ function TimeFilterDropdown({
 }
 
 // ── Category dropdown ────────────────────────────────────────────────
+// Rows come from the seeded event_categories table. The special
+// "interests" value filters to the signed-in user's saved categories,
+// and each row has a star to save/remove that interest inline.
 function CategoryDropdown({
   category,
   set_category,
+  categories,
+  interest_ids,
+  on_toggle_interest,
+  show_interests,
+  locale,
   t,
 }: {
   category: string;
   set_category: (c: string) => void;
+  categories: CategoryDto[];
+  interest_ids: Set<string>;
+  on_toggle_interest: (id: string) => void;
+  show_interests: boolean;
+  locale: string;
   t: ReturnType<typeof useTranslations>;
 }) {
   const [open, set_open] = useState(false);
@@ -151,9 +164,30 @@ function CategoryDropdown({
     return () => document.removeEventListener("mousedown", handle);
   }, [open]);
 
-  const label = category
-    ? t(`cat_${category.toLowerCase().replace(/\s+/g, "_")}` as any)
-    : t("filter_all");
+  const selected_category = categories.find((c) => c.id === category);
+  const label =
+    category === "interests"
+      ? t("filter_interests")
+      : selected_category
+        ? category_label(selected_category, locale)
+        : t("filter_all");
+
+  const row_style = (selected: boolean) => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: "8px 14px",
+    fontSize: 13,
+    fontWeight: selected ? 600 : 400,
+    background: selected ? "var(--color-surface-hover)" : "transparent",
+    color: "var(--color-text)",
+    border: "none",
+    cursor: "pointer",
+    textAlign: "left" as const,
+    fontFamily: "inherit",
+    transition: "background .1s",
+  });
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -193,7 +227,7 @@ function CategoryDropdown({
             border: "1px solid var(--color-border)",
             borderRadius: 10,
             boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
-            minWidth: 200,
+            minWidth: 220,
             padding: "4px 0",
             maxHeight: 320,
             overflowY: "auto",
@@ -203,22 +237,7 @@ function CategoryDropdown({
           {/* All option */}
           <button
             onClick={() => { set_category(""); set_open(false); }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-              padding: "8px 14px",
-              fontSize: 13,
-              fontWeight: !category ? 600 : 400,
-              background: !category ? "var(--color-surface-hover)" : "transparent",
-              color: "var(--color-text)",
-              border: "none",
-              cursor: "pointer",
-              textAlign: "left",
-              fontFamily: "inherit",
-              transition: "background .1s",
-            }}
+            style={row_style(!category)}
             onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = !category ? "var(--color-surface-hover)" : "transparent")}
             role="option"
@@ -228,40 +247,91 @@ function CategoryDropdown({
             {!category && <Check size={13} style={{ color: "var(--color-primary)" }} />}
           </button>
 
+          {/* Interests option — right under All */}
+          {show_interests && (
+            <button
+              onClick={() => { set_category("interests"); set_open(false); }}
+              style={row_style(category === "interests")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = category === "interests" ? "var(--color-surface-hover)" : "transparent")}
+              role="option"
+              aria-selected={category === "interests"}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Star
+                  size={13}
+                  style={{
+                    color: interest_ids.size > 0 ? "#f59e0b" : "var(--color-text-secondary)",
+                    fill: interest_ids.size > 0 ? "#f59e0b" : "none",
+                  }}
+                />
+                {t("filter_interests")}
+              </span>
+              {category === "interests" && <Check size={13} style={{ color: "var(--color-primary)" }} />}
+            </button>
+          )}
+
           {/* Divider */}
           <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
 
-          {/* Categories */}
-          {EVENT_CATEGORIES.map((cat) => {
-            const is_sel = category === cat;
+          {/* Categories — click row to filter, star to save the interest */}
+          {categories.map((cat) => {
+            const is_sel = category === cat.id;
+            const is_interest = interest_ids.has(cat.id);
             return (
-              <button
-                key={cat}
-                onClick={() => { set_category(cat); set_open(false); }}
+              <div
+                key={cat.id}
                 style={{
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  padding: "8px 14px",
-                  fontSize: 13,
-                  fontWeight: is_sel ? 600 : 400,
+                  alignItems: "stretch",
                   background: is_sel ? "var(--color-surface-hover)" : "transparent",
-                  color: "var(--color-text)",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontFamily: "inherit",
                   transition: "background .1s",
                 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = is_sel ? "var(--color-surface-hover)" : "transparent")}
-                role="option"
-                aria-selected={is_sel}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = "var(--color-surface-hover)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = is_sel ? "var(--color-surface-hover)" : "transparent")}
               >
-                {t(`cat_${cat.toLowerCase().replace(/\s+/g, "_")}` as any)}
-                {is_sel && <Check size={13} style={{ color: "var(--color-primary)" }} />}
-              </button>
+                <button
+                  onClick={() => { set_category(cat.id); set_open(false); }}
+                  style={{ ...row_style(is_sel), flex: 1, background: "none" }}
+                  role="option"
+                  aria-selected={is_sel}
+                >
+                  <span style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                    {category_label(cat, locale)}
+                  </span>
+                  {is_sel && <Check size={13} style={{ color: "var(--color-primary)", flexShrink: 0 }} />}
+                </button>
+                {show_interests && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      on_toggle_interest(cat.id);
+                    }}
+                    aria-label={is_interest ? t("remove_from_interests") : t("add_to_interests")}
+                    aria-pressed={is_interest}
+                    title={is_interest ? t("remove_from_interests") : t("add_to_interests")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 34,
+                      flexShrink: 0,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Star
+                      size={14}
+                      style={{
+                        color: is_interest ? "#f59e0b" : "var(--color-text-secondary)",
+                        fill: is_interest ? "#f59e0b" : "none",
+                      }}
+                    />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
@@ -331,11 +401,15 @@ function ViewToggle({
 // ── Page ─────────────────────────────────────────────────────────────
 export default function EventsPage() {
   const t = useTranslations("Events");
+  const locale = useLocale();
   const { data: session } = useSession();
+  const { categories } = use_categories();
 
   const [events, set_events]           = useState<EventData[]>([]);
   const [pagination, set_pagination]   = useState({ page: 1, limit: 20, total: 0, total_pages: 0 });
+  // "" = All, "interests" = user's saved categories, otherwise a category ID
   const [category, set_category]       = useState<string>("");
+  const [interest_ids, set_interest_ids] = useState<Set<string>>(new Set());
   const [search, set_search]           = useState("");
   const [debounced_search, set_debounced_search] = useState("");
   const [loading, set_loading]         = useState(true);
@@ -343,7 +417,50 @@ export default function EventsPage() {
   const [page, set_page]               = useState(1);
   const [view, set_view]               = useState<"list" | "calendar">("list");
   const [timeFilter, setTimeFilter]    = useState<"all" | "past" | "future">("future");
-  
+
+  const is_signed_in = Boolean(session?.user);
+
+  // Load the signed-in user's interests once
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelled = false;
+    fetch("/api/users/me/interests")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.category_ids) {
+          set_interest_ids(new Set<string>(data.category_ids));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  async function toggle_interest(category_id: string) {
+    const previous = interest_ids;
+    const next = new Set(previous);
+    if (next.has(category_id)) {
+      next.delete(category_id);
+    } else {
+      next.add(category_id);
+    }
+    set_interest_ids(next);
+
+    try {
+      const res = await fetch("/api/users/me/interests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category_ids: [...next] }),
+      });
+      if (!res.ok) throw new Error("Failed to update interests");
+      const data = await res.json();
+      set_interest_ids(new Set<string>(data.category_ids));
+    } catch {
+      set_interest_ids(previous);
+    }
+  }
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => { set_debounced_search(search); set_page(1); }, 400);
@@ -351,7 +468,7 @@ export default function EventsPage() {
   }, [search]);
 
   // Reset page on category/filter change
-  useEffect(() => { set_page(1); }, [category, timeFilter, status]);
+  useEffect(() => { set_page(1); }, [category, timeFilter]);
 
   const fetch_events = useCallback(async () => {
     set_loading(true);
@@ -360,9 +477,13 @@ export default function EventsPage() {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     params.set("limit", view === "calendar" ? "100" : "20");
-  
-    
-    if (category) params.set("category", category);
+
+
+    if (category === "interests") {
+      params.set("interests", "true");
+    } else if (category) {
+      params.set("category", category);
+    }
     if (debounced_search.trim()) params.set("search", debounced_search.trim());
 
     // Calculate date range for time filter
@@ -384,7 +505,7 @@ export default function EventsPage() {
     } finally {
       set_loading(false);
     }
-  }, [page, category, debounced_search, t, view, timeFilter, status]);
+  }, [page, category, debounced_search, t, view, timeFilter, interest_ids]);
 
   useEffect(() => { fetch_events(); }, [fetch_events]);
 
@@ -438,6 +559,11 @@ export default function EventsPage() {
         <CategoryDropdown
           category={category}
           set_category={(c) => { set_category(c); }}
+          categories={categories}
+          interest_ids={interest_ids}
+          on_toggle_interest={(id) => { void toggle_interest(id); }}
+          show_interests={is_signed_in}
+          locale={locale}
           t={t}
         />
         <TimeFilterDropdown
@@ -483,7 +609,6 @@ export default function EventsPage() {
                 title_es: e.title_es,
                 start_time: e.start_time,
                 end_time: e.end_time,
-                category: e.category,
                 location_name: e.location_name,
               }))}
             />

@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { Link } from "@/i18n/routing";
 import type { EventData } from "@/components/event_card";
-import { EVENT_CATEGORIES } from "@/lib/validators/event";
-import { CATEGORY_CONFIG, type MapBounds } from "@/components/map_view";
+import { category_label, use_categories } from "@/lib/event_categories";
+import { type MapBounds } from "@/components/map_view";
 
 // Loaded client-only — no SSR for Mapbox
 const MapView = dynamic(() => import("@/components/map_view"), {
@@ -59,6 +59,7 @@ export function MapPageClient({
   const [selected_id, set_selected_id] = useState<string | null>(null);
   const [map_bounds, set_map_bounds]   = useState<MapBounds | null>(null);
   const [cats_open, set_cats_open]     = useState(false);
+  const { categories } = use_categories();
 
   // Fetch approved events on mount
   useEffect(() => {
@@ -97,14 +98,14 @@ export function MapPageClient({
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return events.filter(e => {
-      if (active_cats.size > 0 && !active_cats.has(e.category)) return false;
+      if (active_cats.size > 0 && !active_cats.has(e.category.id)) return false;
       if (!q) return true;
       const title = locale === "es" ? e.title_es : e.title_en;
       return (
         title.toLowerCase().includes(q) ||
         e.location_name.toLowerCase().includes(q) ||
         (e.location_address ?? "").toLowerCase().includes(q) ||
-        e.category.toLowerCase().includes(q)
+        category_label(e.category, locale).toLowerCase().includes(q)
       );
     });
   }, [events, active_cats, search, locale]);
@@ -208,13 +209,13 @@ export function MapPageClient({
             {filter_all}
           </button>
 
-          {EVENT_CATEGORIES.map(cat => {
-            const on  = active_cats.has(cat);
-            const cfg = CATEGORY_CONFIG[cat];
+          {categories.map(cat => {
+            const on  = active_cats.has(cat.id);
+            const cfg = cat;
             return (
               <button
-                key={cat}
-                onClick={() => toggle_cat(cat)}
+                key={cat.id}
+                onClick={() => toggle_cat(cat.id)}
                 style={{
                   padding: "3px 9px",
                   borderRadius: 999,
@@ -230,7 +231,7 @@ export function MapPageClient({
                 }}
               >
                 <span>{cfg.emoji}</span>
-                <span>{cat}</span>
+                <span>{category_label(cat, locale)}</span>
               </button>
             );
           })}
@@ -388,7 +389,7 @@ function MiniEventCard({
   view_details: string;
   onClick: () => void;
 }) {
-  const cfg   = CATEGORY_CONFIG[event.category] ?? CATEGORY_CONFIG["Other"];
+  const cfg = event.category;
   const title = locale === "es" ? event.title_es : event.title_en;
   const loc   = locale === "es" ? "es-US" : "en-US";
 
@@ -438,7 +439,7 @@ function MiniEventCard({
             letterSpacing: ".06em",
           }}
         >
-          {cfg.emoji} {event.category}
+          {cfg.emoji} {category_label(event.category, locale)}
         </span>
       </div>
 

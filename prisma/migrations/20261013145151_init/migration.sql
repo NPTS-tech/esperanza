@@ -11,7 +11,10 @@ CREATE TABLE "users" (
     "share_with_providers" BOOLEAN NOT NULL DEFAULT true,
     "consented_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    "reminder_push" BOOLEAN NOT NULL DEFAULT true,
+    "reminder_email" BOOLEAN NOT NULL DEFAULT true,
+    "reminder_lead_min" INTEGER NOT NULL DEFAULT 60
 );
 
 -- CreateTable
@@ -60,22 +63,22 @@ CREATE TABLE "demographics" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "user_id" TEXT NOT NULL,
     "ethnicity" TEXT,
-    "age_band" TEXT,
+    "age_band" TEXT NOT NULL,
     "marital_status" TEXT,
     "children_under_5_count" INTEGER NOT NULL DEFAULT 0,
     "children_5_to_18_count" INTEGER NOT NULL DEFAULT 0,
     "children_over_18_count" INTEGER NOT NULL DEFAULT 0,
-    "county_of_residence" TEXT,
+    "county_of_residence" TEXT NOT NULL,
     "employment_status" TEXT,
     "annual_income_bracket" TEXT,
     "education_level" TEXT,
-    "primary_language" TEXT,
-    "race" TEXT,
-    "gender" TEXT,
+    "primary_language" TEXT NOT NULL,
+    "race" TEXT NOT NULL,
+    "gender" TEXT NOT NULL,
     "age" INTEGER,
     "annual_personal_income" TEXT,
     "annual_household_income" TEXT,
-    "county" TEXT,
+    "county" TEXT NOT NULL,
     "has_children_under_18" BOOLEAN NOT NULL DEFAULT false,
     "has_children_under_5" BOOLEAN NOT NULL DEFAULT false,
     "educational_attainment" TEXT,
@@ -99,6 +102,27 @@ CREATE TABLE "provider_profiles" (
 );
 
 -- CreateTable
+CREATE TABLE "event_categories" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "slug" TEXT NOT NULL,
+    "name_en" TEXT NOT NULL,
+    "name_es" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
+    "emoji" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "user_interest_event_categories" (
+    "user_id" TEXT NOT NULL,
+    "category_id" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY ("user_id", "category_id"),
+    CONSTRAINT "user_interest_event_categories_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "user_interest_event_categories_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "event_categories" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "events" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "title_en" TEXT NOT NULL,
@@ -113,11 +137,12 @@ CREATE TABLE "events" (
     "end_time" DATETIME NOT NULL,
     "provider_id" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
-    "category" TEXT NOT NULL,
+    "category_id" TEXT NOT NULL,
     "image_url" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "events_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "events_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "events_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "event_categories" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -126,8 +151,20 @@ CREATE TABLE "rsvps" (
     "user_id" TEXT NOT NULL,
     "event_id" TEXT NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reminder_sent_at" DATETIME,
     CONSTRAINT "rsvps_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "rsvps_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "push_subscriptions" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "user_id" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "push_subscriptions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -169,7 +206,19 @@ CREATE UNIQUE INDEX "demographics_user_id_key" ON "demographics"("user_id");
 CREATE UNIQUE INDEX "provider_profiles_user_id_key" ON "provider_profiles"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "event_categories_slug_key" ON "event_categories"("slug");
+
+-- CreateIndex
+CREATE INDEX "events_category_id_idx" ON "events"("category_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "rsvps_user_id_event_id_key" ON "rsvps"("user_id", "event_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "push_subscriptions_endpoint_key" ON "push_subscriptions"("endpoint");
+
+-- CreateIndex
+CREATE INDEX "push_subscriptions_user_id_idx" ON "push_subscriptions"("user_id");
 
 -- CreateIndex
 CREATE INDEX "analytics_events_event_type_created_at_idx" ON "analytics_events"("event_type", "created_at");

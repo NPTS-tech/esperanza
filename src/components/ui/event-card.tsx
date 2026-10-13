@@ -2,7 +2,6 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Badge, get_category_badge_variant } from "@/components/ui/badge";
 import { format_date } from "@/lib/utils";
-import { getCategoryPlaceholderStyle } from "@/lib/event_category_assets";
 import type { EventData } from "@/components/event_card";
 
 type EventCardProps = {
@@ -24,6 +23,7 @@ export function EventCard({
     onClick,
 }: EventCardProps) {
     const title = locale === "es" ? event.title_es : event.title_en;
+    const category_name = locale === "es" ? event.category.name_es : event.category.name_en;
 
     return (
         <div
@@ -38,10 +38,7 @@ export function EventCard({
                     height: compact ? "80px" : "140px",
                     background: event.image_url
                         ? undefined
-                        : (() => {
-                            const cfg = getCategoryPlaceholderStyle(event.category);
-                            return `linear-gradient(135deg, ${cfg.color} 0%, rgba(0,0,0,0.2) 100%)`;
-                          })(),
+                        : `linear-gradient(135deg, ${event.category.color} 0%, rgba(0,0,0,0.2) 100%)`,
                 }}
             >
                 {event.image_url ? (
@@ -52,7 +49,7 @@ export function EventCard({
                     />
                 ) : (
                     <span aria-hidden="true" style={{ fontSize: compact ? "1.5rem" : "2.25rem", lineHeight: 1 }}>
-                        {getCategoryPlaceholderStyle(event.category).emoji}
+                        {event.category.emoji}
                     </span>
                 )}
             </div>
@@ -61,7 +58,7 @@ export function EventCard({
                 {/* Badges */}
                 <div className="flex flex-wrap gap-1.5">
                     <Badge variant={get_category_badge_variant(event.category)}>
-                        {event.category}
+                        {category_name}
                     </Badge>
                 </div>
 
