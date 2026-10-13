@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@/generated/prisma/client";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
@@ -84,67 +85,9 @@ const my_profile_select = {
     },
 } as const;
 
-type CategoryDto = {
-    id: string;
-    slug: string;
-    name_en: string;
-    name_es: string;
-    color: string;
-    emoji: string;
-};
-
-type MyProfileUser = {
-    id: string;
-    username: string | null;
-        email: string;
-        role: string;
-        language_pref: string;
-        share_with_providers: boolean;
-        consented_at: Date | null;
-        reminder_push: boolean;
-        reminder_email: boolean;
-        reminder_lead_min: number;
-        demographics: {
-            race: string | null;
-            gender: string | null;
-            ethnicity: string | null;
-            age_band: string | null;
-            marital_status: string | null;
-            children_under_5_count: number;
-            children_5_to_18_count: number;
-            children_over_18_count: number;
-            county_of_residence: string | null;
-            employment_status: string | null;
-            annual_income_bracket: string | null;
-            education_level: string | null;
-            primary_language: string | null;
-            age: number | null;
-            annual_personal_income: string | null;
-            annual_household_income: string | null;
-            county: string | null;
-            has_children_under_18: boolean;
-            has_children_under_5: boolean;
-            educational_attainment: string | null;
-            has_personal_vehicle: boolean;
-            is_employed: boolean;
-            industry_area: string | null;
-        } | null;
-    rsvps: {
-        id: string;
-        created_at: Date;
-        event: {
-            id: string;
-            title_en: string;
-            title_es: string;
-            start_time: Date;
-            category: CategoryDto;
-            status: string;
-            image_url: string | null;
-            location_name: string;
-            location_address: string | null;
-        };
-    }[];
-};
+type MyProfileUser = Prisma.UserGetPayload<{
+    select: typeof my_profile_select;
+}>;
 
 function serialize_profile(user: MyProfileUser) {
     return {
