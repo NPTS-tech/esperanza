@@ -11,7 +11,10 @@ CREATE TABLE "users" (
     "share_with_providers" BOOLEAN NOT NULL DEFAULT true,
     "consented_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    "reminder_push" BOOLEAN NOT NULL DEFAULT true,
+    "reminder_email" BOOLEAN NOT NULL DEFAULT true,
+    "reminder_lead_min" INTEGER NOT NULL DEFAULT 60
 );
 
 -- CreateTable
@@ -148,8 +151,20 @@ CREATE TABLE "rsvps" (
     "user_id" TEXT NOT NULL,
     "event_id" TEXT NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reminder_sent_at" DATETIME,
     CONSTRAINT "rsvps_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "rsvps_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "push_subscriptions" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "user_id" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "push_subscriptions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -198,6 +213,12 @@ CREATE INDEX "events_category_id_idx" ON "events"("category_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "rsvps_user_id_event_id_key" ON "rsvps"("user_id", "event_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "push_subscriptions_endpoint_key" ON "push_subscriptions"("endpoint");
+
+-- CreateIndex
+CREATE INDEX "push_subscriptions_user_id_idx" ON "push_subscriptions"("user_id");
 
 -- CreateIndex
 CREATE INDEX "analytics_events_event_type_created_at_idx" ON "analytics_events"("event_type", "created_at");
