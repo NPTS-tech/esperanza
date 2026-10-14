@@ -14,7 +14,7 @@ src/generated/
 # local sqlite db + uploaded files (prod uses /efs)
 prisma/*.db
 prisma/*.db-journal
-uploads/
+/uploads/
 
 # nix / direnv
 .direnv/
