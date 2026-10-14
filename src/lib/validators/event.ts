@@ -4,6 +4,13 @@ import { z } from "zod";
 // and served by GET /api/categories). The API only accepts category_id values,
 // which routes verify against the DB before writing.
 
+// Uploads come back as same-origin paths (/api/uploads/...), which z.string().url() rejects.
+const image_url_schema = z
+    .string()
+    .refine((v) => v.startsWith("/api/uploads/") || URL.canParse(v), "Must be a valid URL")
+    .optional()
+    .nullable();
+
 // Custom refinements for event validation
 const age_range_refinement = (data: {
     target_age_min?: number | null;
@@ -51,7 +58,7 @@ export const create_event_schema = z
             .optional()
             .nullable(),
 
-        image_url: z.string().url("Must be a valid URL").optional().nullable(),
+        image_url: image_url_schema,
     })
     .superRefine((data, ctx) => {
         const has_title_en = !!data.title_en?.trim();
@@ -137,7 +144,7 @@ export const update_event_schema = z
             .max(120)
             .optional()
             .nullable(),
-        image_url: z.string().url("Must be a valid URL").optional().nullable(),
+        image_url: image_url_schema,
     })
     .refine(
         (data) => {
