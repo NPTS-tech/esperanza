@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { Home, CalendarDays, Map, User, Plus, Bookmark } from "lucide-react";
+import { Home, CalendarDays, Map, User, Plus, Bookmark, BarChart3 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ type BottomNavProps = {
     nav_profile: string;
     nav_my_events: string;
     nav_submit_event: string;
+    nav_analytics: string;
 };
 
 type NavItem = {
@@ -29,6 +30,7 @@ function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
         return [
             { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
             { key: "events", label: labels.nav_events, href: "/admin", icon: <CalendarDays size={SZ} /> },
+            { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
             { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
         ];
     }
@@ -37,6 +39,7 @@ function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
             { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
             { key: "my_events", label: labels.nav_my_events, href: "/provider", icon: <CalendarDays size={SZ} /> },
             { key: "submit", label: labels.nav_submit_event, href: "/events/create", icon: <Plus size={SZ} /> },
+            { key: "analytics", label: labels.nav_analytics, href: "/analytics", icon: <BarChart3 size={SZ} /> },
             { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
         ];
     }
@@ -50,6 +53,11 @@ function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
 
 export function BottomNav(props: BottomNavProps) {
     const items = get_nav_items(props.role, props);
+    // Longest matching href wins, so "/admin" doesn't light up on "/admin/analytics".
+    const active_href = items
+        .map((item) => item.href as string)
+        .filter((href) => (href === "/" ? props.currentPath === "/" : props.currentPath.startsWith(href)))
+        .sort((a, b) => b.length - a.length)[0];
 
     return (
         <nav
@@ -63,10 +71,7 @@ export function BottomNav(props: BottomNavProps) {
             aria-label="Mobile navigation"
         >
             {items.map((item) => {
-                const is_active =
-                    item.href === "/"
-                        ? props.currentPath === "/"
-                        : props.currentPath.startsWith(item.href as string);
+                const is_active = item.href === active_href;
                 return (
                     <Link
                         key={item.key}
