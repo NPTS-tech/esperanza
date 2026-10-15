@@ -711,7 +711,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                     </FormField>
                     <FormField label={props.image_url}>
                         <div className="space-y-2">
-                            <Input
+                            <input
                                 id={image_input_id}
                                 type="file"
                                 accept="image/png,image/jpeg,image/webp"
