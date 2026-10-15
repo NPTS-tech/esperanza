@@ -246,7 +246,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
         </div>
       </div>
 
-      <div className="card p-4 md:p-6">
+      <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
         <h2
           className="text-lg font-semibold mb-4"
           style={{ color: "var(--color-text)" }}
@@ -275,7 +275,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     {props.event_title}
                   </th>
                   <th
-                    className="hidden @4xl:table-cell text-left text-xs font-semibold px-3 py-2"
+                    className="hidden @5xl:table-cell text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.provider}
@@ -325,13 +325,13 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                         </Link>
                     </td>
                     <td
-                      className="hidden @4xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
+                      className="hidden @5xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {evt.provider.email}
                     </td>
                     <td className="px-3 py-2">
-                      <span className={get_category_badge_class(evt.category)}>
+                      <span className={get_category_badge_class(evt.category)} style={{ whiteSpace: "normal" }}>
                         {locale === "es" ? evt.category.name_es : evt.category.name_en}
                       </span>
                     </td>
@@ -366,7 +366,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
         )}
       </div>
 
-      <div className="card p-4 md:p-6">
+      <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
         <h2
           className="text-lg font-semibold mb-2"
           style={{ color: "var(--color-text)" }}
@@ -395,7 +395,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                   {props.event_title}
                 </th>
                 <th
-                  className="hidden @4xl:table-cell text-left text-xs font-semibold px-3 py-2"
+                  className="hidden @5xl:table-cell text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.provider}
@@ -439,13 +439,13 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     {evt.title_en}
                   </td>
                   <td
-                    className="hidden @4xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
+                    className="hidden @5xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {evt.provider.email}
                   </td>
                   <td className="px-3 py-2">
-                    <span className={get_category_badge_class(evt.category)}>
+                    <span className={get_category_badge_class(evt.category)} style={{ whiteSpace: "normal" }}>
                       {locale === "es" ? evt.category.name_es : evt.category.name_en}
                     </span>
                   </td>

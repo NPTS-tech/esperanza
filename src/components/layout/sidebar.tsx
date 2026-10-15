@@ -80,7 +80,7 @@ export function Sidebar(props: SidebarProps) {
 
             <div className="hidden lg:flex flex-col gap-3 px-2 lg:px-3 pb-5 pt-4" style={{ paddingBottom: "calc(1.25rem + var(--safe-area-bottom))" }}>
                 <div className="hidden lg:block px-1">
-                    <LanguageToggle locale={props.locale} variant="dropdown" />
+                    <LanguageToggle locale={props.locale} variant="dropdown" placement="up" />
                 </div>
             </div>
         </aside>

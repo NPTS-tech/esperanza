@@ -781,7 +781,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             </div>
 
             {/* My events table */}
-            <div className="card p-4 md:p-6">
+            <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
                 <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
                     {props.my_events}
                 </h2>

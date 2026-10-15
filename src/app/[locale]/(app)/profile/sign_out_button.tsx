@@ -29,8 +29,8 @@ export function SignOutButton({ label }: { label: string }) {
             type="button"
             onClick={() => void handle_sign_out()}
             disabled={signing_out}
-            className="btn btn-secondary text-sm whitespace-nowrap"
-            style={{ color: "#ef4444" }}
+            className="btn text-sm whitespace-nowrap bg-transparent hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)]"
+            style={{ color: "var(--color-danger)", border: "1.5px solid var(--color-danger)" }}
         >
             <LogOut size={16} aria-hidden="true" />
             {signing_out ? `${label}…` : label}

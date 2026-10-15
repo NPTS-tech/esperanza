@@ -170,7 +170,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
         </div>
       </div>
 
-      <div className="card p-4 md:p-6">
+      <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
         <h2
           className="text-lg font-semibold mb-4"
           style={{ color: "var(--color-text)" }}
@@ -227,37 +227,37 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
+                    className="text-left text-xs font-semibold px-3 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.email}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.role}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.created}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     RSVPs
                   </th>
                   <th
-                    className="hidden @3xl:table-cell text-left text-xs font-semibold px-4 py-2"
+                    className="hidden @3xl:table-cell text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     Age / County
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.actions}
@@ -271,12 +271,12 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                     style={{ borderBottom: "1px solid var(--color-border)" }}
                   >
                     <td
-                      className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[240px] truncate"
+                      className="px-3 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[240px] truncate"
                       style={{ color: "var(--color-text)" }}
                     >
                       {u.email}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <Select
                         value={u.role}
                         onChange={(e) =>
@@ -292,19 +292,19 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                       </Select>
                     </td>
                     <td
-                      className="px-4 py-2 text-sm whitespace-nowrap"
+                      className="px-3 py-2 text-sm whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {format_date_parts(u.created_at, locale).date}
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {u._count.rsvps}
                     </td>
                     <td
-                      className="hidden @3xl:table-cell px-4 py-2 text-xs whitespace-nowrap"
+                      className="hidden @3xl:table-cell px-3 py-2 text-xs whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {u.demographics &&
@@ -320,7 +320,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                             .join(" · ")
                         : "—"}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <button
                         type="button"
                         onClick={() => handle_delete_user(u.id)}

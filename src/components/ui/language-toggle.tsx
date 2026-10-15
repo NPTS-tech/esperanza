@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Check } from "lucide-react";
 import { useRouter, usePathname } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 const LANGUAGES = [
     { code: "en", label: "English", short: "EN" },
@@ -16,9 +17,11 @@ type LanguageToggleProps = {
      * "segmented" — inline EN | ES toggle bar (auth pages)
      */
     variant?: "dropdown" | "segmented";
+    /** Dropdown menu direction. "up" for toggles pinned to the bottom of the screen (sidebar). */
+    placement?: "down" | "up";
 };
 
-export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleProps) {
+export function LanguageToggle({ locale, variant = "dropdown", placement = "down" }: LanguageToggleProps) {
     const router = useRouter();
     const pathname = usePathname();
     const [open, set_open] = useState(false);
@@ -126,7 +129,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
             {/* Dropdown panel */}
             {open && (
                 <div
-                    className="absolute right-0 mt-1.5 w-36 rounded-[var(--radius)] shadow-lg overflow-hidden"
+                    className={cn("absolute w-36 rounded-[var(--radius)] shadow-lg overflow-hidden", placement === "up" ? "left-0 bottom-full mb-1.5" : "right-0 mt-1.5")}
                     style={{
                         background: "var(--color-surface)",
                         border: "1px solid var(--color-border)",
