@@ -195,7 +195,14 @@ function build_profile_form_state(data: ProfileResponse): ProfileFormState {
     };
 }
 
-export function ProfileClient({ vapid_public_key }: { vapid_public_key: string | null }) {
+export function ProfileClient({
+    vapid_public_key,
+    org_section,
+}: {
+    vapid_public_key: string | null;
+    /** Providers see their organization profile here instead of the demographics section. */
+    org_section?: React.ReactNode;
+}) {
     const locale = useLocale();
     const pathname = usePathname();
     const router = useRouter();
@@ -292,7 +299,9 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                     username: form.username.trim(),
                     language_pref: form.language_pref,
                     share_with_providers: form.share_with_providers,
-                    demographics: form.demographics,
+                    ...(profile?.role !== "PROVIDER"
+                        ? { demographics: form.demographics }
+                        : {}),
                 }),
             });
             const data = await res.json();
@@ -535,7 +544,10 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                 </div>
             </div>
 
-            <form onSubmit={handle_save_profile} className="space-y-4">
+            {/* Forms can't nest (providers get the org-profile form below), so the save button
+                targets this form by id instead of the form wrapping every card. */}
+            <form id="profile-form" onSubmit={handle_save_profile} />
+            <div className="space-y-4">
                 <div className="card p-6 space-y-5">
                     <div>
                         <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
@@ -592,6 +604,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                     </div>
                 </div>
 
+                {profile.role === "PROVIDER" ? org_section : (
                 <div className="card p-6 space-y-5">
                     <div>
                         <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
@@ -740,6 +753,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         </div>
                     </div>
                 </div>
+                )}
 
                 <div className="card p-6 space-y-4">
                     <div>
@@ -835,6 +849,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         </button>
                         <button
                             type="submit"
+                            form="profile-form"
                             className="btn btn-primary"
                             disabled={saving_profile}
                         >
@@ -845,7 +860,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
 
                 <InstallButton />
 
-            </form>
+            </div>
 
             <Modal
                 open={password_modal_open}

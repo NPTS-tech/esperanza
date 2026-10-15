@@ -38,7 +38,7 @@ type SeedAccount = {
   role: Role;
   language_pref: "en" | "es";
   share_with_providers: boolean;
-  demographics: DallasCountyDemographicsInput;
+  demographics?: DallasCountyDemographicsInput;
 };
 
 type SeedCategory = {
@@ -81,6 +81,19 @@ const SEED_CATEGORIES: SeedCategory[] = [
 // Interests for the demo resident account so the "Interests" filter has data.
 const DEMO_USER_INTEREST_SLUGS = ["health", "education", "housing"];
 
+// Programs offered by the demo provider (event categories), matching its seed events.
+const DEMO_PROVIDER_PROGRAM_SLUGS = [
+  "health",
+  "employment",
+  "children",
+  "senior_services",
+  "education",
+  "housing",
+];
+
+const DEMO_PROVIDER_BENEFICIARIES =
+  "Low-income families with children under 18 and seniors living in Dallas County";
+
 const RESIDENT_PASSWORD = "user123";
 const GENERATED_RESIDENT_COUNT = 30;
 
@@ -115,21 +128,6 @@ const base_accounts: SeedAccount[] = [
     role: "PROVIDER",
     language_pref: "en",
     share_with_providers: true,
-    demographics: {
-      race: "Black or African American",
-      gender: "Male",
-      ethnicity: "Not Hispanic/Latino",
-      age_band: "46-55",
-      marital_status: "Married",
-      children_under_5_count: 0,
-      children_5_to_18_count: 2,
-      children_over_18_count: 0,
-      county_of_residence: "Dallas",
-      employment_status: "Employed full-time",
-      annual_income_bracket: "$50,000-$60,000",
-      education_level: "Bachelor degree",
-      primary_language: "English",
-    },
   },
   {
     username: "user",
@@ -449,14 +447,18 @@ async function upsert_seed_account(account: SeedAccount) {
     });
   }
 
-  await db.demographics.upsert({
-    where: { user_id: user.id },
-    update: build_dallas_county_demographics_write_data(account.demographics),
-    create: {
-      user_id: user.id,
-      ...build_dallas_county_demographics_write_data(account.demographics),
-    },
-  });
+  if (account.demographics) {
+    await db.demographics.upsert({
+      where: { user_id: user.id },
+      update: build_dallas_county_demographics_write_data(account.demographics),
+      create: {
+        user_id: user.id,
+        ...build_dallas_county_demographics_write_data(account.demographics),
+      },
+    });
+  } else {
+    await db.demographics.deleteMany({ where: { user_id: user.id } });
+  }
 
   return user;
 }
@@ -512,6 +514,7 @@ async function main() {
       website_url: "https://esperanza.app/providers/demo",
       contact_email: "provider@esperanza.app",
       contact_phone: "(214) 555-0100",
+      beneficiaries: DEMO_PROVIDER_BENEFICIARIES,
     },
     create: {
       user_id: provider.id,
@@ -520,8 +523,22 @@ async function main() {
       website_url: "https://esperanza.app/providers/demo",
       contact_email: "provider@esperanza.app",
       contact_phone: "(214) 555-0100",
+      beneficiaries: DEMO_PROVIDER_BENEFICIARIES,
     },
   });
+
+  await db.providerProgramCategory.deleteMany({
+    where: { user_id: provider.id },
+  });
+  await db.providerProgramCategory.createMany({
+    data: DEMO_PROVIDER_PROGRAM_SLUGS.flatMap((slug) => {
+      const category_id = category_ids_by_slug.get(slug);
+      return category_id ? [{ user_id: provider.id, category_id }] : [];
+    }),
+  });
+  console.log(
+    `   ✅ Provider programs refreshed: ${DEMO_PROVIDER_PROGRAM_SLUGS.join(", ")}`,
+  );
 
   await db.event.deleteMany({
     where: { provider_id: provider.id },

@@ -41,6 +41,7 @@ model User {
   events               Event[]            @relation("ProviderEvents")
   rsvps                Rsvp[]
   provider_profile     ProviderProfile?
+  provider_programs    ProviderProgramCategory[]
   interests            UserInterestEventCategory[]
   push_subscriptions   PushSubscription[]
 
@@ -91,6 +92,9 @@ model Verification {
   @@map("verifications")
 }
 
+// TODO: Currently, Demographics is required for all users that sign up. 
+// The UI hides that providers don't need to
+// Need to fix how providers are created to begin with. 
 model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
@@ -132,9 +136,21 @@ model ProviderProfile {
   website_url   String?
   contact_email String?
   contact_phone String?
+  beneficiaries String?
   user          User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("provider_profiles")
+}
+
+model ProviderProgramCategory {
+  user_id     String
+  category_id String
+  created_at  DateTime @default(now())
+  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category    EventCategory @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, category_id])
+  @@map("provider_program_categories")
 }
 
 model EventCategory {
@@ -146,6 +162,7 @@ model EventCategory {
   emoji     String
   events    Event[]
   interests UserInterestEventCategory[]
+  provider_programs ProviderProgramCategory[]
 
   @@map("event_categories")
 }
