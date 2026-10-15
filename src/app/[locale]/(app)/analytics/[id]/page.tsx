@@ -114,13 +114,14 @@ function DailyTrendChart({
   const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   return (
-    <div className="flex items-end justify-between gap-1 h-40 overflow-x-auto pb-2">
+    <div className="flex items-end justify-between gap-1 h-48 overflow-x-auto pb-2">
       {data.map((item, idx) => (
         <div
           key={idx}
           className="shrink-0 flex flex-col items-center"
           title={`${item.date}: ${item.count} RSVPs (${item.cumulative_count} cumulative)`}
         >
+          <span className="text-[10px] mb-1" style={{ color: "var(--color-text-secondary)" }}>{item.count}</span>
           <div
             style={{
               width: "24px",
@@ -158,13 +159,14 @@ function HourlyTrendChart({
   const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   return (
-    <div className="flex items-end justify-between gap-1 h-40">
+    <div className="flex items-end justify-between gap-1 h-48">
       {data.map((item) => (
         <div
           key={item.hour}
           className="flex-1 flex flex-col items-center"
           title={`${format_hour(item.hour)}: ${item.count} RSVPs`}
         >
+          <span className="text-[10px] mb-1" style={{ color: "var(--color-text-secondary)" }}>{item.count > 0 ? item.count : ""}</span>
           <div
             style={{
               width: "100%",
@@ -359,7 +361,7 @@ export default function EventAnalyticsPage() {
       </div>
 
       {/* Analytics grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 @sm:grid-cols-2 @3xl:grid-cols-4 gap-4 mb-8">
         {/* Total RSVPs */}
         <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
           <div className="flex items-center justify-between mb-3">
@@ -541,7 +543,7 @@ export default function EventAnalyticsPage() {
             <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--color-text)" }}>
               Family & Children
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 @xl:grid-cols-2 gap-6">
               <div>
                 <p
                   className="text-xs font-semibold uppercase mb-4"
@@ -614,7 +616,7 @@ export default function EventAnalyticsPage() {
           </div>
 
           {/* Demographics Breakdowns Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 @2xl:grid-cols-2 gap-6">
             <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
               <DemographicBreakdown
                 title="Age Groups"
@@ -654,7 +656,7 @@ export default function EventAnalyticsPage() {
 
           {/* Additional Demographics */}
           <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 @xl:grid-cols-2 gap-6">
               <DemographicBreakdown
                 title="Income Bracket"
                 data={data.demographics.annual_income_bracket}
@@ -689,7 +691,7 @@ export default function EventAnalyticsPage() {
             <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--color-text)" }}>
               Attendee Patterns
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @sm:grid-cols-3 gap-4">
               <div
                 className="p-6 rounded-lg"
                 style={{

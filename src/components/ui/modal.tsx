@@ -81,7 +81,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
 
     return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? title_id : undefined}
@@ -96,7 +96,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
             {/* Panel */}
             <div
                 ref={panel_ref}
-                className={cn("card relative w-full p-6 shadow-lg", SIZE_CLASS[size])}
+                className={cn("card card-no-hover relative w-full p-6 shadow-lg max-h-[calc(100dvh-2rem)] overflow-y-auto", SIZE_CLASS[size])}
                 style={{ zIndex: 1 }}
             >
                 {/* Header */}
@@ -112,7 +112,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
                     )}
                     <button
                         onClick={onClose}
-                        className="ml-auto p-1 rounded-md transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                        className="ml-auto p-2 pointer-coarse:p-3 rounded-md transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                         style={{ color: "var(--color-text-secondary)", outlineColor: "var(--color-primary)" }}
                         aria-label="Close dialog"
                     >

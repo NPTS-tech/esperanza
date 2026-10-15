@@ -306,7 +306,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* Summary Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5 gap-4 mb-8">
             <div className="card p-6" style={{ border: "1px solid var(--color-border)" }}>
               <div className="flex items-center justify-between mb-3">
                 <p
@@ -408,7 +408,7 @@ export default function AnalyticsPage() {
               <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
                 Event Performance Summary
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 @xl:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-text)" }}>
                     Status Breakdown
@@ -506,7 +506,7 @@ export default function AnalyticsPage() {
                   ) : demographics?.summary.shared_user_count ? (
                     <>
                       {/* Demographics Summary Cards */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 @sm:grid-cols-2 @3xl:grid-cols-4 gap-4">
                         <div
                           className="card p-6"
                           style={{ border: "1px solid var(--color-border)" }}
@@ -554,16 +554,10 @@ export default function AnalyticsPage() {
 
                         <a
                           href={demographics_export_href}
-                          className="card p-6 flex items-center justify-center cursor-pointer no-underline transition-colors"
+                          className="card p-6 flex items-center justify-center cursor-pointer no-underline transition-opacity hover:opacity-90"
                           style={{
                             border: "1px solid var(--color-border)",
                             background: "var(--color-primary)",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.opacity = "0.9";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
                           }}
                         >
                           <div className="text-center">
@@ -576,7 +570,7 @@ export default function AnalyticsPage() {
                       </div>
 
                       {/* Demographic Breakdowns */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 @2xl:grid-cols-2 gap-6">
                         {BREAKDOWN_CARD_FIELDS.slice(0, 3).map((field) => {
                           const items = demographics.breakdowns[field.key].slice(0, 5);
                           return (
@@ -626,7 +620,7 @@ export default function AnalyticsPage() {
                         })}
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 @2xl:grid-cols-2 gap-6">
                         {BREAKDOWN_CARD_FIELDS.slice(3).map((field) => {
                           const items = demographics.breakdowns[field.key].slice(0, 5);
                           return (
@@ -684,7 +678,7 @@ export default function AnalyticsPage() {
                         >
                           {t("analytics_children_title")}
                         </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 @sm:grid-cols-3 gap-4">
                           <div
                             className="p-4 rounded-lg"
                             style={{
@@ -788,21 +782,8 @@ export default function AnalyticsPage() {
                       className="block no-underline"
                     >
                       <div
-                        className="p-4 rounded-lg flex items-center justify-between cursor-pointer transition-colors"
-                        style={{
-                          background: "var(--color-surface)",
-                          border: "1px solid var(--color-border)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.borderColor =
-                            "var(--color-primary)";
-                          (e.currentTarget as HTMLDivElement).style.background =
-                            "var(--color-surface)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.borderColor =
-                            "var(--color-border)";
-                        }}
+                        className="p-4 rounded-lg flex items-center justify-between cursor-pointer transition-colors border border-[var(--color-border)] hover:border-[var(--color-primary)]"
+                        style={{ background: "var(--color-surface)" }}
                       >
                         <div className="flex-1 min-w-0">
                           <h3

@@ -10,7 +10,7 @@ export default async function AdminAnalyticsPage() {
     const t_dashboard = await getTranslations("Dashboard");
 
     return (
-        <div className="max-w-6xl mx-auto px-4 pt-8">
+        <div className="max-w-6xl mx-auto pt-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
                     <BarChart3 size={48} style={{ color: "var(--color-primary)" }} />

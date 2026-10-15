@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Check } from "lucide-react";
 import { useRouter, usePathname } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 const LANGUAGES = [
     { code: "en", label: "English", short: "EN" },
@@ -16,9 +17,11 @@ type LanguageToggleProps = {
      * "segmented" — inline EN | ES toggle bar (auth pages)
      */
     variant?: "dropdown" | "segmented";
+    /** Dropdown menu direction. "up" for toggles pinned to the bottom of the screen (sidebar). */
+    placement?: "down" | "up";
 };
 
-export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleProps) {
+export function LanguageToggle({ locale, variant = "dropdown", placement = "down" }: LanguageToggleProps) {
     const router = useRouter();
     const pathname = usePathname();
     const [open, set_open] = useState(false);
@@ -67,7 +70,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                             onClick={() => switch_to(lang.code)}
                             aria-pressed={active}
                             aria-label={`Switch to ${lang.label}`}
-                            className="px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                            className="min-h-9 pointer-coarse:min-h-11 px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                             style={{
                                 background: active ? "var(--color-primary)" : "var(--color-surface)",
                                 color: active ? "white" : "var(--color-text-secondary)",
@@ -91,7 +94,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Language: ${current.label}. Click to change`}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="min-h-9 pointer-coarse:min-h-11 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                 style={{
                     color: "var(--color-text-secondary)",
                     border: "1px solid var(--color-border)",
@@ -126,7 +129,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
             {/* Dropdown panel */}
             {open && (
                 <div
-                    className="absolute right-0 mt-1.5 w-36 rounded-[var(--radius)] shadow-lg overflow-hidden"
+                    className={cn("absolute w-36 rounded-[var(--radius)] shadow-lg overflow-hidden", placement === "up" ? "left-0 bottom-full mb-1.5" : "right-0 mt-1.5")}
                     style={{
                         background: "var(--color-surface)",
                         border: "1px solid var(--color-border)",
@@ -144,7 +147,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                                 role="option"
                                 aria-selected={active}
                                 onClick={() => switch_to(lang.code)}
-                                className="w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+                                className="min-h-11 w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
                                 style={{
                                     color: active ? "var(--color-primary)" : "var(--color-text)",
                                     fontWeight: active ? 600 : 400,

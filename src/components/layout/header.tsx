@@ -12,9 +12,8 @@ type HeaderProps = {
 export function Header({ locale, app_name }: HeaderProps) {
     return (
         <header
-            className="fixed left-0 right-0 z-40 flex items-center px-4 md:px-6"
+            className="shrink-0 z-40 flex items-center px-4 md:px-6"
             style={{
-                top: 0,
                 height: "var(--header-h)",
                 paddingTop: "var(--safe-area-top)",
                 background: "var(--color-surface)",

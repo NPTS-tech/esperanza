@@ -5,6 +5,8 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
     output: "standalone",
+    // Let other devices on the LAN (phone/iPad) load dev assets, e.g. ALLOWED_DEV_ORIGINS=192.168.1.233
+    allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS?.split(","),
     // Keep the libsql native driver external so standalone output tracing ships
     // its prebuilt binary instead of trying to bundle it.
     serverExternalPackages: ["@libsql/client", "@prisma/adapter-libsql"],

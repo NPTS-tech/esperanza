@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "@/lib/auth-client";
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 import { List, CalendarDays, ChevronDown, ChevronUp, Plus, Check, Star } from "lucide-react";
 import EventCard from "@/components/event_card";
 import CalendarView from "@/components/calendar_view";
@@ -52,6 +53,7 @@ function TimeFilterDropdown({
     <div ref={ref} style={{ position: "relative" }}>
       <button
         onClick={() => setOpen((o) => !o)}
+        className="min-h-9 pointer-coarse:min-h-11"
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -98,24 +100,11 @@ function TimeFilterDropdown({
                 setTimeFilter(option);
                 setOpen(false);
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: option === timeFilter ? 600 : 400,
-                background: option === timeFilter ? "var(--color-surface-hover)" : "transparent",
-                color: "var(--color-text)",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                fontFamily: "inherit",
-                transition: "background .1s",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = option === timeFilter ? "var(--color-surface-hover)" : "transparent")}
+              className={cn(
+                "flex items-center justify-between w-full text-left text-[13px] min-h-10 pointer-coarse:min-h-11 transition-colors",
+                option === timeFilter ? "font-semibold bg-[var(--color-surface-hover)]" : "font-normal hover:bg-[var(--color-surface-hover)]",
+              )}
+              style={{ padding: "8px 14px", color: "var(--color-text)", border: "none", cursor: "pointer", fontFamily: "inherit" }}
               role="option"
               aria-selected={option === timeFilter}
             >
@@ -180,7 +169,6 @@ function CategoryDropdown({
     padding: "8px 14px",
     fontSize: 13,
     fontWeight: selected ? 600 : 400,
-    background: selected ? "var(--color-surface-hover)" : "transparent",
     color: "var(--color-text)",
     border: "none",
     cursor: "pointer",
@@ -188,11 +176,14 @@ function CategoryDropdown({
     fontFamily: "inherit",
     transition: "background .1s",
   });
+  const row_class = (selected: boolean) =>
+    cn("min-h-10 pointer-coarse:min-h-11", selected ? "bg-[var(--color-surface-hover)]" : "hover:bg-[var(--color-surface-hover)]");
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
         onClick={() => set_open((o) => !o)}
+        className="min-h-9 pointer-coarse:min-h-11"
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -237,9 +228,8 @@ function CategoryDropdown({
           {/* All option */}
           <button
             onClick={() => { set_category(""); set_open(false); }}
+            className={row_class(!category)}
             style={row_style(!category)}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = !category ? "var(--color-surface-hover)" : "transparent")}
             role="option"
             aria-selected={!category}
           >
@@ -251,9 +241,8 @@ function CategoryDropdown({
           {show_interests && (
             <button
               onClick={() => { set_category("interests"); set_open(false); }}
+              className={row_class(category === "interests")}
               style={row_style(category === "interests")}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "var(--color-surface-hover)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = category === "interests" ? "var(--color-surface-hover)" : "transparent")}
               role="option"
               aria-selected={category === "interests"}
             >
@@ -281,14 +270,8 @@ function CategoryDropdown({
             return (
               <div
                 key={cat.id}
-                style={{
-                  display: "flex",
-                  alignItems: "stretch",
-                  background: is_sel ? "var(--color-surface-hover)" : "transparent",
-                  transition: "background .1s",
-                }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.background = "var(--color-surface-hover)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.background = is_sel ? "var(--color-surface-hover)" : "transparent")}
+                className={row_class(is_sel)}
+                style={{ display: "flex", alignItems: "stretch", transition: "background .1s" }}
               >
                 <button
                   onClick={() => { set_category(cat.id); set_open(false); }}
@@ -315,7 +298,7 @@ function CategoryDropdown({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: 34,
+                      width: 44,
                       flexShrink: 0,
                       background: "none",
                       border: "none",
@@ -363,33 +346,20 @@ function ViewToggle({
           <button
             key={v}
             onClick={() => set_view(v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 min-h-9 pointer-coarse:min-h-11 text-[13px] font-medium transition-colors",
+              active ? "bg-[var(--color-primary)] text-white" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]",
+            )}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 12px",
-              fontSize: 12,
-              fontWeight: 500,
+              padding: "6px 14px",
               cursor: "pointer",
               border: "none",
               borderLeft: i > 0 ? "1px solid var(--color-border)" : "none",
-              background: active ? "var(--color-primary)" : "transparent",
-              color: active ? "#fff" : "var(--color-text-secondary)",
-              transition: "background .12s, color .12s",
               fontFamily: "inherit",
-            }}
-            onMouseEnter={(e) => {
-              if (!active)
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "var(--color-surface-hover)";
-            }}
-            onMouseLeave={(e) => {
-              if (!active)
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
             }}
             aria-pressed={active}
           >
-            {v === "list" ? <List size={13} /> : <CalendarDays size={13} />}
+            {v === "list" ? <List size={14} /> : <CalendarDays size={14} />}
             {v === "list" ? "List" : "Calendar"}
           </button>
         );
@@ -524,21 +494,10 @@ export default function EventsPage() {
           {can_create && (
             <Link
               href="/events/create"
-              className="no-underline"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 600,
-                background: "var(--color-primary)",
-                color: "#fff",
-                borderRadius: 8,
-                border: "none",
-              }}
+              className="no-underline inline-flex items-center gap-1.5 min-h-9 pointer-coarse:min-h-11 text-[13px] font-semibold rounded-lg"
+              style={{ padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none" }}
             >
-              <Plus size={13} />
+              <Plus size={14} />
               {t("create_event")}
             </Link>
           )}
@@ -594,7 +553,7 @@ export default function EventsPage() {
       {!loading && !error && events.length > 0 && (
         <>
           {view === "list" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @xl:grid-cols-2 @4xl:grid-cols-3 gap-4">
               {events.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}

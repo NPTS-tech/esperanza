@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { ToastContainer, useToast } from "@/components/ui/toast";
-import { format_date } from "@/lib/utils";
+import { format_date_parts } from "@/lib/utils";
 import { category_label, type CategoryDto, use_categories } from "@/lib/event_categories";
 import type { LocationValue } from "@/components/location_picker";
 
@@ -408,7 +408,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             set_info_message("Some fields were auto-translated. Please review and submit again.");
             set_auto_translating(false);
             set_submitting(false);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            document.getElementById("main-content")?.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
 
@@ -503,7 +503,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             <ToastContainer toasts={toasts} dismiss={dismiss} />
 
             {/* Stat cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 @sm:grid-cols-2 @4xl:grid-cols-4 gap-4">
                 <StatCard label={props.my_total_events} value={events.length} icon={<CalendarDays size={20} />} iconColor="var(--color-primary)" />
                 <StatCard label={props.approved_events} value={approved_count} icon={<CheckCircle size={20} />} iconColor="var(--color-success)" />
                 <StatCard label={props.pending_events} value={pending_count} icon={<AlertCircle size={20} />} iconColor="var(--color-warning)" />
@@ -568,7 +568,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                     if (newly_translated.size > 0) {
                                         set_auto_translated_fields(prev => new Set([...prev, ...newly_translated]));
                                         set_info_message("Some fields were auto-translated. Please review and submit again.");
-                                        window.scrollTo({ top: 0, behavior: "smooth" });
+                                        document.getElementById("main-content")?.scrollTo({ top: 0, behavior: "smooth" });
                                     }
                                 } catch (err) {
                                     show_toast(
@@ -603,7 +603,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                             ✨ {info_message}
                         </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
                         <FormField label={props.title_en}>
                             <Input
                                 value={form.title_en}
@@ -627,7 +627,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                             )}
                         </FormField>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
                         <FormField label={props.description_en}>
                             <Textarea
                                 value={form.description_en}
@@ -684,7 +684,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                 {props.time_section_hint}
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
                             <FormField label={props.start_time} required>
                                 <Input type="datetime-local" step={900} value={form.start_time} onChange={(e) => update_form("start_time", e.target.value)} required />
                                 <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
@@ -781,7 +781,7 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             </div>
 
             {/* My events table */}
-            <div className="card p-4 md:p-6">
+            <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
                 <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--color-text)" }}>
                     {props.my_events}
                 </h2>
@@ -806,7 +806,10 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                         <td className="px-4 py-2">
                                             <Badge variant={get_category_badge_variant(evt.category)}>{category_label(evt.category, locale)}</Badge>
                                         </td>
-                                        <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>{format_date(evt.start_time)}</td>
+                                        <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>
+                                            <span className="block whitespace-nowrap">{format_date_parts(evt.start_time, locale).date}</span>
+                                            <span className="block whitespace-nowrap text-xs" style={{ color: "var(--color-text-secondary)" }}>{format_date_parts(evt.start_time, locale).time}</span>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <Badge variant={get_status_badge_variant(evt.status)}>{evt.status}</Badge>
                                         </td>

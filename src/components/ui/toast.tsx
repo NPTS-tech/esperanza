@@ -72,7 +72,7 @@ export function ToastContainer({ toasts, dismiss }: { toasts: ToastItem[]; dismi
     // Always render the region so the live region is in the DOM when toasts arrive
     return (
         <div
-            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex flex-col gap-2"
+            className="fixed bottom-20 right-4 md:bottom-[calc(1.5rem+var(--safe-area-bottom))] md:right-6 z-50 flex flex-col gap-2"
             aria-label="Notifications"
         >
             {toasts.map((t) => (

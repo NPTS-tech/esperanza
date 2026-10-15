@@ -1,67 +1,21 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import { Home, CalendarDays, Map, User, Plus, Bookmark, BarChart3 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { get_nav_items, get_active_href, type NavLabels } from "@/components/layout/nav-items";
 
-type BottomNavProps = {
+type BottomNavProps = NavLabels & {
     role: string;
     currentPath: string;
-    nav_home: string;
-    nav_events: string;
-    nav_map: string;
-    nav_profile: string;
-    nav_my_events: string;
-    nav_submit_event: string;
-    nav_analytics: string;
 };
-
-type NavItem = {
-    key: string;
-    label: string;
-    href: ComponentProps<typeof Link>["href"];
-    icon: React.ReactNode;
-};
-
-function get_nav_items(role: string, labels: BottomNavProps): NavItem[] {
-    const SZ = 22;
-    if (role === "ADMIN") {
-        return [
-            { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
-            { key: "events", label: labels.nav_events, href: "/admin", icon: <CalendarDays size={SZ} /> },
-            { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
-            { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
-        ];
-    }
-    if (role === "PROVIDER") {
-        return [
-            { key: "home", label: labels.nav_home, href: "/", icon: <Home size={SZ} /> },
-            { key: "my_events", label: labels.nav_my_events, href: "/provider", icon: <CalendarDays size={SZ} /> },
-            { key: "submit", label: labels.nav_submit_event, href: "/events/create", icon: <Plus size={SZ} /> },
-            { key: "analytics", label: labels.nav_analytics, href: "/analytics", icon: <BarChart3 size={SZ} /> },
-            { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
-        ];
-    }
-    return [
-        { key: "events", label: labels.nav_events, href: "/events", icon: <CalendarDays size={SZ} /> },
-        { key: "map", label: labels.nav_map, href: "/map", icon: <Map size={SZ} /> },
-        { key: "reservations", label: "Reservations", href: "/reservations", icon: <Bookmark size={SZ} /> },
-        { key: "profile", label: labels.nav_profile, href: "/profile", icon: <User size={SZ} /> },
-    ];
-}
 
 export function BottomNav(props: BottomNavProps) {
     const items = get_nav_items(props.role, props);
-    // Longest matching href wins, so "/admin" doesn't light up on "/admin/analytics".
-    const active_href = items
-        .map((item) => item.href as string)
-        .filter((href) => (href === "/" ? props.currentPath === "/" : props.currentPath.startsWith(href)))
-        .sort((a, b) => b.length - a.length)[0];
+    const active_href = get_active_href(items, props.currentPath);
 
     return (
         <nav
-            className="flex md:hidden fixed bottom-0 left-0 right-0 z-40 h-16"
+            className="flex md:hidden shrink-0 z-40 h-[calc(4rem+var(--safe-area-bottom))]"
             style={{
                 background: "var(--color-surface)",
                 borderTop: "1px solid var(--color-border)",
@@ -72,11 +26,12 @@ export function BottomNav(props: BottomNavProps) {
         >
             {items.map((item) => {
                 const is_active = item.href === active_href;
+                const Icon = item.icon;
                 return (
                     <Link
                         key={item.key}
                         href={item.href}
-                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
+                        className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
                         style={{
                             color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)",
                             textDecoration: "none",
@@ -85,11 +40,8 @@ export function BottomNav(props: BottomNavProps) {
                         aria-label={item.label}
                         aria-current={is_active ? "page" : undefined}
                     >
-                        <span
-                            className={cn("transition-transform", is_active && "scale-110")}
-                            aria-hidden="true"
-                        >
-                            {item.icon}
+                        <span className={cn("transition-transform", is_active && "scale-110")} aria-hidden="true">
+                            <Icon size={22} />
                         </span>
                         <span>{item.label}</span>
                     </Link>

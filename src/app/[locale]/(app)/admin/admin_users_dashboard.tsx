@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "next-intl";
+import { format_date_parts } from "@/lib/utils";
 
 export type AdminUsersDashboardProps = {
   title: string;
@@ -50,16 +51,6 @@ type ApiUser = {
   };
 };
 
-function format_date(iso_string: string, locale: string): string {
-  const d = new Date(iso_string);
-  return new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
 
 export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
   const locale = useLocale();
@@ -147,7 +138,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto py-8 space-y-6">
       {action_message && (
         <div
           className="card p-3 text-sm"
@@ -157,7 +148,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <Users size={20} style={{ color: "var(--color-primary)" }} />
@@ -179,7 +170,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
         </div>
       </div>
 
-      <div className="card p-4 md:p-6">
+      <div className="card p-4 md:p-6 pb-0 md:pb-0 overflow-hidden">
         <h2
           className="text-lg font-semibold mb-4"
           style={{ color: "var(--color-text)" }}
@@ -236,37 +227,37 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.email}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.role}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.created}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     RSVPs
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="hidden @3xl:table-cell text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     Age / County
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.actions}
@@ -280,12 +271,12 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                     style={{ borderBottom: "1px solid var(--color-border)" }}
                   >
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-3 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[240px] truncate"
                       style={{ color: "var(--color-text)" }}
                     >
                       {u.email}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <Select
                         value={u.role}
                         onChange={(e) =>
@@ -301,19 +292,19 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                       </Select>
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-3 py-2 text-sm whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
-                      {format_date(u.created_at, locale)}
+                      {format_date_parts(u.created_at, locale).date}
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {u._count.rsvps}
                     </td>
                     <td
-                      className="px-4 py-2 text-xs"
+                      className="hidden @3xl:table-cell px-3 py-2 text-xs whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {u.demographics &&
@@ -329,12 +320,12 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                             .join(" · ")
                         : "—"}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <button
                         type="button"
                         onClick={() => handle_delete_user(u.id)}
                         disabled={delete_user_loading_id === u.id}
-                        className="btn btn-danger text-sm"
+                        className="btn btn-danger text-sm whitespace-nowrap"
                       >
                         {delete_user_loading_id === u.id
                           ? props.deleting

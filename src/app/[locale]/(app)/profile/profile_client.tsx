@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { sign_out_action } from "@/app/actions/sign_out_action";
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -201,7 +200,6 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
     const pathname = usePathname();
     const router = useRouter();
     const auth_t = useTranslations("Auth");
-    const nav_t = useTranslations("Nav");
     const t = useTranslations("Profile");
     const { toasts, show_toast, dismiss } = useToast();
     const { categories } = use_categories();
@@ -347,19 +345,6 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
         }
     }
 
-    async function handle_sign_out() {
-        const login_url = `/${locale}/auth/login`;
-        const redirect = () => window.location.replace(login_url);
-        const timeout = window.setTimeout(redirect, 3000);
-        try {
-            await sign_out_action();
-        } catch {
-            // still redirect so UI never stays stuck
-        } finally {
-            window.clearTimeout(timeout);
-            redirect();
-        }
-    }
 
     async function handle_toggle_share_with_providers(next_value: boolean) {
         const previous_value = form.share_with_providers;
@@ -860,20 +845,6 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
 
                 <InstallButton />
 
-                <div className="card p-4 md:hidden">
-                    <button
-                        type="button"
-                        onClick={() => void handle_sign_out()}
-                        className="w-full px-4 py-2 rounded-lg text-sm font-medium"
-                        style={{
-                            color: "#ef4444",
-                            border: "1px solid var(--color-border)",
-                            background: "var(--color-surface)",
-                        }}
-                    >
-                        {nav_t("sign_out")}
-                    </button>
-                </div>
             </form>
 
             <Modal
