@@ -292,7 +292,9 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                     username: form.username.trim(),
                     language_pref: form.language_pref,
                     share_with_providers: form.share_with_providers,
-                    demographics: form.demographics,
+                    ...(profile?.role !== "PROVIDER"
+                        ? { demographics: form.demographics }
+                        : {}),
                 }),
             });
             const data = await res.json();
@@ -592,6 +594,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                     </div>
                 </div>
 
+                {profile.role !== "PROVIDER" && (
                 <div className="card p-6 space-y-5">
                     <div>
                         <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
@@ -740,6 +743,7 @@ export function ProfileClient({ vapid_public_key }: { vapid_public_key: string |
                         </div>
                     </div>
                 </div>
+                )}
 
                 <div className="card p-6 space-y-4">
                     <div>

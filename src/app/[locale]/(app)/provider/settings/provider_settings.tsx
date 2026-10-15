@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
+import { useLocale } from "next-intl";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
+import { category_label, use_categories } from "@/lib/event_categories";
 
 type ProviderSettingsProps = {
     provider_id: string;
@@ -20,6 +22,11 @@ type ProviderSettingsProps = {
     placeholder_contact_email: string;
     label_contact_phone: string;
     placeholder_contact_phone: string;
+    label_programs: string;
+    help_programs: string;
+    msg_programs_unavailable: string;
+    label_beneficiaries: string;
+    placeholder_beneficiaries: string;
     label_save: string;
     label_saving: string;
     msg_saved: string;
@@ -36,6 +43,16 @@ type ProfileForm = {
     website_url: string;
     contact_email: string;
     contact_phone: string;
+    beneficiaries: string;
+};
+
+type ProgramCategory = {
+    id: string;
+    slug: string;
+    name_en: string;
+    name_es: string;
+    color: string;
+    emoji: string;
 };
 
 const empty_form: ProfileForm = {
@@ -45,6 +62,7 @@ const empty_form: ProfileForm = {
     website_url: "",
     contact_email: "",
     contact_phone: "",
+    beneficiaries: "",
 };
 
 export function ProviderSettings({
@@ -61,6 +79,11 @@ export function ProviderSettings({
     placeholder_contact_email,
     label_contact_phone,
     placeholder_contact_phone,
+    label_programs,
+    help_programs,
+    msg_programs_unavailable,
+    label_beneficiaries,
+    placeholder_beneficiaries,
     label_save,
     label_saving,
     msg_saved,
@@ -69,7 +92,10 @@ export function ProviderSettings({
     label_view_public,
     label_back,
 }: ProviderSettingsProps) {
+    const locale = useLocale();
+    const { categories } = use_categories();
     const [form, set_form] = useState<ProfileForm>(empty_form);
+    const [program_ids, set_program_ids] = useState<string[]>([]);
     const [loading, set_loading] = useState(false);
     const [fetching, set_fetching] = useState(true);
     const { toasts, show_toast, dismiss } = useToast();
@@ -87,7 +113,12 @@ export function ProviderSettings({
                     website_url: data.website_url ?? "",
                     contact_email: data.contact_email ?? "",
                     contact_phone: data.contact_phone ?? "",
+                    beneficiaries: data.beneficiaries ?? "",
                 });
+                set_program_ids(
+                    (Array.isArray(data.programs) ? data.programs : [])
+                        .map((c: ProgramCategory) => c.id),
+                );
             } catch {
                 show_toast(msg_error_loading, "error");
             } finally {
@@ -102,10 +133,11 @@ export function ProviderSettings({
         e.preventDefault();
         set_loading(true);
         try {
-            const payload: Record<string, string | null> = {};
+            const payload: Record<string, string | string[] | null> = {};
             for (const [k, v] of Object.entries(form)) {
                 payload[k] = v.trim() === "" ? null : v.trim();
             }
+            payload.category_ids = program_ids;
             const res = await fetch(`/api/providers/${provider_id}/profile`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -122,6 +154,14 @@ export function ProviderSettings({
 
     function field(key: keyof ProfileForm, value: string) {
         set_form((prev) => ({ ...prev, [key]: value }));
+    }
+
+    function toggle_program(category_id: string) {
+        set_program_ids((current) =>
+            current.includes(category_id)
+                ? current.filter((id) => id !== category_id)
+                : [...current, category_id],
+        );
     }
 
     if (fetching) {
@@ -205,6 +245,56 @@ export function ProviderSettings({
                         onChange={(e) => field("contact_phone", e.target.value)}
                         placeholder={placeholder_contact_phone}
                         maxLength={30}
+                    />
+                </FormField>
+
+                <FormField label={label_programs} hint={help_programs}>
+                    {categories.length === 0 ? (
+                        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                            {msg_programs_unavailable}
+                        </p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map((cat) => {
+                                const selected = program_ids.includes(cat.id);
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        aria-pressed={selected}
+                                        onClick={() => toggle_program(cat.id)}
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            padding: "7px 12px",
+                                            borderRadius: 999,
+                                            fontSize: 13,
+                                            fontWeight: selected ? 600 : 400,
+                                            border: `1.5px solid ${selected ? cat.color : "var(--color-border)"}`,
+                                            background: selected ? `${cat.color}18` : "transparent",
+                                            color: selected ? cat.color : "var(--color-text)",
+                                            cursor: "pointer",
+                                            transition: "background .12s, border-color .12s",
+                                        }}
+                                    >
+                                        <span aria-hidden="true">{cat.emoji}</span>
+                                        {category_label(cat, locale)}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </FormField>
+
+                <FormField label={label_beneficiaries}>
+                    <textarea
+                        value={form.beneficiaries}
+                        onChange={(e) => field("beneficiaries", e.target.value)}
+                        placeholder={placeholder_beneficiaries}
+                        maxLength={500}
+                        rows={2}
+                        className="input resize-y"
                     />
                 </FormField>
 

@@ -7,6 +7,15 @@ import { Link, useRouter } from "@/i18n/routing";
 import { Globe, Mail, Phone, ExternalLink } from "lucide-react";
 import EventCard, { type EventData } from "@/components/event_card";
 
+type ProgramCategory = {
+    id: string;
+    slug: string;
+    name_en: string;
+    name_es: string;
+    color: string;
+    emoji: string;
+};
+
 type ProviderProfile = {
     user_id: string;
     email: string;
@@ -16,6 +25,8 @@ type ProviderProfile = {
     website_url: string | null;
     contact_email: string | null;
     contact_phone: string | null;
+    beneficiaries: string | null;
+    programs: ProgramCategory[];
 };
 
 export default function ProviderProfilePage() {
@@ -207,6 +218,53 @@ export default function ProviderProfilePage() {
                                     <Phone size={14} />
                                     {profile.contact_phone}
                                 </a>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Programs + intended beneficiaries */}
+                    {(profile.programs?.length > 0 || profile.beneficiaries) && (
+                        <div
+                            className="mt-5 pt-5 space-y-3"
+                            style={{ borderTop: "1px solid var(--color-border)" }}
+                        >
+                            {profile.programs?.length > 0 && (
+                                <div>
+                                    <h2 className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: "var(--color-text-secondary)" }}>
+                                        {t("programs")}
+                                    </h2>
+                                    <div className="flex flex-wrap gap-2">
+                                        {profile.programs.map((cat) => (
+                                            <span
+                                                key={cat.id}
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                    padding: "5px 11px",
+                                                    borderRadius: 999,
+                                                    fontSize: 13,
+                                                    border: `1.5px solid ${cat.color}`,
+                                                    background: `${cat.color}18`,
+                                                    color: cat.color,
+                                                }}
+                                            >
+                                                <span aria-hidden="true">{cat.emoji}</span>
+                                                {locale === "es" ? cat.name_es : cat.name_en}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {profile.beneficiaries && (
+                                <div>
+                                    <h2 className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: "var(--color-text-secondary)" }}>
+                                        {t("beneficiaries")}
+                                    </h2>
+                                    <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
+                                        {profile.beneficiaries}
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}

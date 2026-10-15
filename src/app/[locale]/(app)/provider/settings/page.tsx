@@ -40,6 +40,11 @@ export default async function ProviderSettingsPage() {
                 placeholder_contact_email={t("contact_email_placeholder")}
                 label_contact_phone={t("contact_phone")}
                 placeholder_contact_phone={t("contact_phone_placeholder")}
+                label_programs={t("programs")}
+                help_programs={t("programs_help")}
+                msg_programs_unavailable={t("programs_unavailable")}
+                label_beneficiaries={t("beneficiaries")}
+                placeholder_beneficiaries={t("beneficiaries_placeholder")}
                 label_save={t("save")}
                 label_saving={t("saving")}
                 msg_saved={t("saved")}

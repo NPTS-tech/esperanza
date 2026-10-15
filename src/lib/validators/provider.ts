@@ -9,4 +9,6 @@ export const update_provider_profile_schema = z.object({
     website_url: z.string().url("Must be a valid URL").optional().nullable(),
     contact_email: z.string().email("Must be a valid email").optional().nullable(),
     contact_phone: z.string().max(30).optional().nullable(),
+    beneficiaries: z.string().max(500).optional().nullable(),
+    category_ids: z.array(z.string().uuid()).max(50).optional(),
 });

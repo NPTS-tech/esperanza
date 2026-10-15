@@ -26,6 +26,21 @@ export async function GET(_request: NextRequest, context: RouteContext) {
                 email: true,
                 role: true,
                 provider_profile: true,
+                provider_programs: {
+                    orderBy: { created_at: "asc" as const },
+                    select: {
+                        category: {
+                            select: {
+                                id: true,
+                                slug: true,
+                                name_en: true,
+                                name_es: true,
+                                color: true,
+                                emoji: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 
@@ -42,9 +57,14 @@ export async function GET(_request: NextRequest, context: RouteContext) {
             website_url: null,
             contact_email: null,
             contact_phone: null,
+            beneficiaries: null,
         };
 
-        return NextResponse.json({ email: provider.email, ...profile });
+        return NextResponse.json({
+            email: provider.email,
+            ...profile,
+            programs: provider.provider_programs.map(({ category }) => category),
+        });
     } catch (error) {
         console.error("GET /api/providers/[id]/profile error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -95,11 +115,27 @@ export async function PUT(request: NextRequest, context: RouteContext) {
             );
         }
 
+        const { category_ids, ...profile_data } = parsed.data;
+
         const profile = await db.providerProfile.upsert({
             where: { user_id: id },
-            create: { user_id: id, ...parsed.data },
-            update: parsed.data,
+            create: { user_id: id, ...profile_data },
+            update: profile_data,
         });
+
+        if (category_ids !== undefined) {
+            const unique_ids = [...new Set(category_ids)];
+            const valid_ids = await db.eventCategory.findMany({
+                where: { id: { in: unique_ids } },
+                select: { id: true },
+            });
+            await db.$transaction([
+                db.providerProgramCategory.deleteMany({ where: { user_id: id } }),
+                db.providerProgramCategory.createMany({
+                    data: valid_ids.map(({ id: category_id }) => ({ user_id: id, category_id })),
+                }),
+            ]);
+        }
 
         return NextResponse.json(profile);
     } catch (error) {
