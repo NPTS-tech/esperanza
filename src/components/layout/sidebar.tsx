@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronRight, Sprout } from "lucide-react";
+import { Sprout } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/ui/language-toggle";
-import { sign_out_action } from "@/app/actions/sign_out_action";
 import { cn } from "@/lib/utils";
 import { get_nav_items, get_active_href, type NavItem, type NavLabels } from "@/components/layout/nav-items";
 
@@ -48,144 +46,6 @@ function NavLink({ item, is_active }: { item: NavItem; is_active: boolean }) {
     );
 }
 
-// ─── My Account popover ───────────────────────────────────────
-
-function MyAccount({
-    email,
-    locale,
-    sign_out_label,
-    profile_label,
-}: {
-    email: string;
-    locale: string;
-    sign_out_label: string;
-    profile_label: string;
-}) {
-    const [open, set_open]       = useState(false);
-    const [signing_out, set_so]  = useState(false);
-    const ref                    = useRef<HTMLDivElement>(null);
-    const initial                = email ? email[0].toUpperCase() : "?";
-
-    // Close on outside click
-    useEffect(() => {
-        if (!open) return;
-        function on_click(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                set_open(false);
-            }
-        }
-        document.addEventListener("mousedown", on_click);
-        return () => document.removeEventListener("mousedown", on_click);
-    }, [open]);
-
-    async function handle_sign_out() {
-        if (signing_out) return;
-        set_so(true);
-        const login_url = `/${locale}/auth/login`;
-        const redirect  = () => window.location.replace(login_url);
-        const timeout   = window.setTimeout(redirect, 3000);
-        try {
-            await sign_out_action();
-        } finally {
-            window.clearTimeout(timeout);
-            redirect();
-        }
-    }
-
-    return (
-        <div ref={ref} className="relative">
-            {/* Popover */}
-            {open && (
-                <div
-                    className="absolute bottom-full left-0 w-52 lg:w-auto lg:right-0 mb-2 rounded-xl overflow-hidden"
-                    style={{
-                        background: "var(--color-surface)",
-                        border: "1px solid var(--color-border)",
-                        boxShadow: "var(--shadow-md, 0 4px 16px rgba(0,0,0,0.12))",
-                        zIndex: 50,
-                    }}
-                    role="menu"
-                    aria-label="Account menu"
-                >
-                    <Link
-                        href="/profile"
-                        onClick={() => set_open(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-[var(--color-surface-hover)]"
-                        style={{ color: "var(--color-text)", textDecoration: "none" }}
-                        role="menuitem"
-                    >
-                        <User size={15} aria-hidden="true" />
-                        {profile_label}
-                    </Link>
-
-                    <div
-                        style={{
-                            height: 1,
-                            background: "var(--color-border)",
-                            margin: "0 12px",
-                        }}
-                    />
-
-                    <button
-                        onClick={handle_sign_out}
-                        disabled={signing_out}
-                        className="flex items-center gap-3 px-4 py-3 text-sm w-full text-left transition-colors hover:bg-[var(--color-surface-hover)]"
-                        style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}
-                        role="menuitem"
-                    >
-                        <LogOut size={15} aria-hidden="true" />
-                        {signing_out ? `${sign_out_label}…` : sign_out_label}
-                    </button>
-                </div>
-            )}
-
-            {/* Trigger card */}
-            <button
-                onClick={() => set_open(o => !o)}
-                className="flex items-center justify-center lg:justify-start gap-3 w-full px-2 lg:px-3 py-2 lg:py-2.5 min-h-11 rounded-xl transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
-                style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-border)",
-                    cursor: "pointer",
-                    outlineColor: "var(--color-primary)",
-                    textAlign: "left",
-                }}
-                aria-label="Open account menu"
-                aria-expanded={open}
-                aria-haspopup="menu"
-            >
-                {/* Avatar */}
-                <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                    style={{ background: "var(--color-primary)" }}
-                    aria-hidden="true"
-                >
-                    {initial}
-                </div>
-
-                {/* Label */}
-                <span
-                    className="hidden lg:block flex-1 text-sm font-medium"
-                    style={{ color: "var(--color-text)" }}
-                >
-                    My Account
-                </span>
-
-                {/* Chevron */}
-                <ChevronRight
-                    size={14}
-                    className="hidden lg:block"
-                    aria-hidden="true"
-                    style={{
-                        color: "var(--color-text-secondary)",
-                        transform: open ? "rotate(90deg)" : "none",
-                        transition: "transform .15s",
-                    }}
-                />
-            </button>
-        </div>
-    );
-}
 
 // ─── Sidebar ──────────────────────────────────────────────────
 
@@ -218,17 +78,10 @@ export function Sidebar(props: SidebarProps) {
                 ))}
             </nav>
 
-            <div className="flex flex-col gap-3 px-2 lg:px-3 pb-5 pt-4" style={{ paddingBottom: "calc(1.25rem + var(--safe-area-bottom))" }}>
+            <div className="hidden lg:flex flex-col gap-3 px-2 lg:px-3 pb-5 pt-4" style={{ paddingBottom: "calc(1.25rem + var(--safe-area-bottom))" }}>
                 <div className="hidden lg:block px-1">
                     <LanguageToggle locale={props.locale} variant="dropdown" />
                 </div>
-                <div className="hidden lg:block" style={{ height: 1, background: "var(--color-border)" }} />
-                <MyAccount
-                    email={props.email}
-                    locale={props.locale}
-                    sign_out_label={props.sign_out_label}
-                    profile_label={props.nav_profile}
-                />
             </div>
         </aside>
     );

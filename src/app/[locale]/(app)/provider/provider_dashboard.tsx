@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { ToastContainer, useToast } from "@/components/ui/toast";
-import { format_date } from "@/lib/utils";
+import { format_date_parts } from "@/lib/utils";
 import { category_label, type CategoryDto, use_categories } from "@/lib/event_categories";
 import type { LocationValue } from "@/components/location_picker";
 
@@ -806,7 +806,10 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                                         <td className="px-4 py-2">
                                             <Badge variant={get_category_badge_variant(evt.category)}>{category_label(evt.category, locale)}</Badge>
                                         </td>
-                                        <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>{format_date(evt.start_time)}</td>
+                                        <td className="px-4 py-2 text-sm" style={{ color: "var(--color-text)" }}>
+                                            <span className="block whitespace-nowrap">{format_date_parts(evt.start_time, locale).date}</span>
+                                            <span className="block whitespace-nowrap text-xs" style={{ color: "var(--color-text-secondary)" }}>{format_date_parts(evt.start_time, locale).time}</span>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <Badge variant={get_status_badge_variant(evt.status)}>{evt.status}</Badge>
                                         </td>

@@ -5,6 +5,7 @@ import { CalendarDays, AlertCircle, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { useLocale } from "next-intl";
+import { format_date_parts } from "@/lib/utils";
 import type { CategoryDto } from "@/lib/event_categories";
 
 export type AdminEventsDashboardProps = {
@@ -89,16 +90,6 @@ function get_status_label(
   return status;
 }
 
-function format_date(iso_string: string, locale: string): string {
-  const d = new Date(iso_string);
-  return new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
 
 function sort_by_created_desc(events: ApiEvent[]): ApiEvent[] {
   return [...events].sort(
@@ -278,37 +269,37 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
+                    className="text-left text-xs font-semibold px-3 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.event_title}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="hidden @4xl:table-cell text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.provider}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.category}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.date}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.status}
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-3 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.actions}
@@ -322,40 +313,41 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     style={{ borderBottom: "1px solid var(--color-border)" }}
                   >
                     <td
-                      className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[220px] truncate"
+                      className="px-3 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] min-w-[160px] max-w-[260px]"
                       style={{ color: "var(--color-text)" }}
                     >
                         <Link
                           href={`/events/${evt.id}`}
-                          className="font-medium underline underline-offset-2 decoration-transparent hover:decoration-current"
+                          className="font-medium underline underline-offset-2 decoration-transparent hover:decoration-current line-clamp-2"
                           style={{ color: "var(--color-text)" }}
                         >
                           {evt.title_en}
                         </Link>
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="hidden @4xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {evt.provider.email}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <span className={get_category_badge_class(evt.category)}>
                         {locale === "es" ? evt.category.name_es : evt.category.name_en}
                       </span>
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-3 py-2 text-sm"
                       style={{ color: "var(--color-text)" }}
                     >
-                      <span>{format_date(evt.start_time, locale)}</span>
+                      <span className="block whitespace-nowrap">{format_date_parts(evt.start_time, locale).date}</span>
+                      <span className="block whitespace-nowrap text-xs" style={{ color: "var(--color-text-secondary)" }}>{format_date_parts(evt.start_time, locale).time}</span>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <span className={get_status_badge_class(evt.status)}>
                         {get_status_label(evt.status, props)}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <div className="flex gap-2">
                         <Link
                           href={`/events/${evt.id}`}
@@ -397,37 +389,37 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
             <thead>
               <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
+                  className="text-left text-xs font-semibold px-3 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.event_title}
                 </th>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="hidden @4xl:table-cell text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.provider}
                 </th>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.category}
                 </th>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.date}
                 </th>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.status}
                 </th>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="text-left text-xs font-semibold px-3 py-2"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.actions}
@@ -441,34 +433,35 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                   style={{ borderBottom: "1px solid var(--color-border)" }}
                 >
                   <td
-                    className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[220px] truncate"
+                    className="px-3 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] min-w-[160px] max-w-[260px]"
                     style={{ color: "var(--color-text)" }}
                   >
                     {evt.title_en}
                   </td>
                   <td
-                    className="px-4 py-2 text-sm"
+                    className="hidden @4xl:table-cell px-3 py-2 text-sm whitespace-nowrap"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {evt.provider.email}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2">
                     <span className={get_category_badge_class(evt.category)}>
                       {locale === "es" ? evt.category.name_es : evt.category.name_en}
                     </span>
                   </td>
                   <td
-                    className="px-4 py-2 text-sm"
+                    className="px-3 py-2 text-sm"
                     style={{ color: "var(--color-text)" }}
                   >
-                    <span>{format_date(evt.start_time, locale)}</span>
+                    <span className="block whitespace-nowrap">{format_date_parts(evt.start_time, locale).date}</span>
+                      <span className="block whitespace-nowrap text-xs" style={{ color: "var(--color-text-secondary)" }}>{format_date_parts(evt.start_time, locale).time}</span>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2">
                     <span className={get_status_badge_class(evt.status)}>
                       {get_status_label(evt.status, props)}
                     </span>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2">
                     <div className="flex gap-2">
                       <Link
                         href={`/events/${evt.id}`}

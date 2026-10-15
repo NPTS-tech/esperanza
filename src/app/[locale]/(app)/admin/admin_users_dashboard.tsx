@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "next-intl";
+import { format_date_parts } from "@/lib/utils";
 
 export type AdminUsersDashboardProps = {
   title: string;
@@ -50,16 +51,6 @@ type ApiUser = {
   };
 };
 
-function format_date(iso_string: string, locale: string): string {
-  const d = new Date(iso_string);
-  return new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
 
 export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
   const locale = useLocale();
@@ -260,7 +251,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                     RSVPs
                   </th>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="hidden @3xl:table-cell text-left text-xs font-semibold px-4 py-2"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     Age / County
@@ -301,10 +292,10 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                       </Select>
                     </td>
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-4 py-2 text-sm whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
-                      {format_date(u.created_at, locale)}
+                      {format_date_parts(u.created_at, locale).date}
                     </td>
                     <td
                       className="px-4 py-2 text-sm"
@@ -313,7 +304,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                       {u._count.rsvps}
                     </td>
                     <td
-                      className="px-4 py-2 text-xs"
+                      className="hidden @3xl:table-cell px-4 py-2 text-xs whitespace-nowrap"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
                       {u.demographics &&
@@ -334,7 +325,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                         type="button"
                         onClick={() => handle_delete_user(u.id)}
                         disabled={delete_user_loading_id === u.id}
-                        className="btn btn-danger text-sm"
+                        className="btn btn-danger text-sm whitespace-nowrap"
                       >
                         {delete_user_loading_id === u.id
                           ? props.deleting
