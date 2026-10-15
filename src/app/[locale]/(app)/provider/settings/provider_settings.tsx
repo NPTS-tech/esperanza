@@ -34,6 +34,8 @@ type ProviderSettingsProps = {
     msg_error_loading: string;
     label_view_public: string;
     label_back: string;
+    title?: string;
+    subtitle?: string;
 };
 
 type ProfileForm = {
@@ -91,6 +93,8 @@ export function ProviderSettings({
     msg_error_loading,
     label_view_public,
     label_back,
+    title,
+    subtitle,
 }: ProviderSettingsProps) {
     const locale = useLocale();
     const { categories } = use_categories();
@@ -177,6 +181,18 @@ export function ProviderSettings({
             <ToastContainer toasts={toasts} dismiss={dismiss} />
 
             <form onSubmit={handle_submit} className="card p-6 space-y-5">
+                {title && (
+                    <div>
+                        <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                            {title}
+                        </h2>
+                        {subtitle && (
+                            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                {subtitle}
+                            </p>
+                        )}
+                    </div>
+                )}
                 {/* Logo preview + URL */}
                 {form.logo_url && (
                     <div className="flex items-center gap-4 mb-2">
