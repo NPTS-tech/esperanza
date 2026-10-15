@@ -291,14 +291,8 @@ export default function LocationPicker({
                     e.preventDefault();
                     handle_select(s);
                   }}
-                  className="block w-full text-left px-3 py-2 text-sm"
+                  className="block w-full text-left px-3 py-2 min-h-10 pointer-coarse:min-h-11 text-sm hover:bg-[var(--color-surface-hover)]"
                   style={{ color: "var(--color-text, #1e293b)" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "var(--color-surface-hover, #f1f5f9)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
                 >
                   {s.label}
                 </button>

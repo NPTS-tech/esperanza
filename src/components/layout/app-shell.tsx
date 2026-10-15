@@ -6,8 +6,9 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { KioskIdleHandler } from "@/components/layout/kiosk-idle-handler";
+import type { NavLabels } from "@/components/layout/nav-items";
 
-type AppShellProps = {
+type AppShellProps = NavLabels & {
     children: React.ReactNode;
     role: string;
     email: string;
@@ -15,79 +16,31 @@ type AppShellProps = {
     app_name: string;
     sign_out_label: string;
     language_toggle_label: string;
-    nav_home: string;
-    nav_events: string;
-    nav_map: string;
-    nav_profile: string;
-    nav_my_events: string;
-    nav_submit_event: string;
-    nav_users: string;
-    nav_analytics: string;
 };
 
-export function AppShell({
-    children,
-    role,
-    email,
-    locale,
-    app_name,
-    sign_out_label,
-    language_toggle_label,
-    nav_home,
-    nav_events,
-    nav_map,
-    nav_profile,
-    nav_my_events,
-    nav_submit_event,
-    nav_users,
-    nav_analytics,
-}: AppShellProps) {
+export function AppShell({ children, ...props }: AppShellProps) {
     const currentPath = usePathname();
+    const nav_props = { ...props, currentPath };
 
-    const nav_props = {
-        role,
-        email,
-        locale,
-        currentPath,
-        app_name,
-        sign_out_label,
-        language_toggle_label,
-        nav_home,
-        nav_events,
-        nav_map,
-        nav_profile,
-        nav_my_events,
-        nav_submit_event,
-        nav_users,
-        nav_analytics,
-    };
 
     return (
-        <div className="min-h-screen flex flex-col" style={{ background: "var(--color-bg)" }}>
+        <div className="h-dvh flex flex-col overflow-hidden" style={{ background: "var(--color-bg)" }}>
             <a href="#main-content" className="skip-link">
                 Skip to main content
             </a>
 
-            {/* Header — mobile only. Desktop navigation lives entirely in the sidebar. */}
-            <div className="md:hidden">
-                <Header
-                    locale={locale}
-                    app_name={app_name}
-                />
+            {/* Header — phone + tablet rail. At lg+ the full sidebar carries logo + language. */}
+            <div className="shrink-0 lg:hidden">
+                <Header locale={props.locale} app_name={props.app_name} />
             </div>
 
-            {/*
-                Mobile:  paddingTop clears the fixed header.
-                Desktop: no header → no padding needed (md:pt-0).
-            */}
-            <div
-                className="flex flex-1 [padding-top:var(--header-h)] md:pt-0"
-            >
+            {/* Shell is pinned to the viewport; only <main> scrolls (no iOS whole-page bounce). */}
+            <div className="flex flex-1 min-h-0">
                 <Sidebar {...nav_props} />
 
                 <main
                     id="main-content"
-                    className="flex-1 min-w-0 overflow-auto pb-16 md:pb-0 px-4 py-6 md:px-6"
+                    className="@container flex-1 min-w-0 overflow-y-auto overscroll-contain px-4 py-6 md:px-6 md:pb-[calc(1.5rem+var(--safe-area-bottom))]"
                     tabIndex={-1}
                     aria-label="Main content"
                 >
@@ -97,7 +50,7 @@ export function AppShell({
 
             <BottomNav {...nav_props} />
             <Suspense fallback={null}>
-                <KioskIdleHandler role={role} locale={locale} />
+                <KioskIdleHandler role={props.role} locale={props.locale} />
             </Suspense>
         </div>
     );

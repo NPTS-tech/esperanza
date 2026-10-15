@@ -407,7 +407,7 @@ export default function EventForm({
       set_info_message(t("fields_auto_translated"));
       set_loading(false);
       set_auto_translating(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.getElementById("main-content")?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -602,7 +602,7 @@ export default function EventForm({
                     (prev) => new Set([...prev, ...newlyTranslated]),
                   );
                   set_info_message(t("fields_auto_translated"));
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  document.getElementById("main-content")?.scrollTo({ top: 0, behavior: "smooth" });
                 }
               } catch {
                 set_error(t("translation_failed"));
@@ -616,7 +616,7 @@ export default function EventForm({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
         <div>
           <label
             className="block text-sm font-medium mb-1"
@@ -684,7 +684,7 @@ export default function EventForm({
       </div>
 
       {/* Descriptions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 @xl:grid-cols-2 gap-4">
         <div>
           <label
             className="block text-sm font-medium mb-1"
@@ -821,7 +821,7 @@ export default function EventForm({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @sm:grid-cols-2 @2xl:grid-cols-3 gap-4">
           <div>
             <label
               className="block text-sm font-medium mb-1"

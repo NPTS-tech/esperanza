@@ -169,7 +169,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
   }, [fetch_events]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto py-8 space-y-6">
       {loading && (
         <div
           className="card p-4 text-sm"
@@ -190,7 +190,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 @xl:grid-cols-3 gap-4">
         <Link href="/events" className="no-underline block">
         <div className="card p-4" style={{ cursor: "pointer" }}>
           <div className="flex items-center gap-3">
@@ -278,7 +278,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.event_title}
@@ -322,7 +322,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     style={{ borderBottom: "1px solid var(--color-border)" }}
                   >
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[220px] truncate"
                       style={{ color: "var(--color-text)" }}
                     >
                         <Link
@@ -359,7 +359,8 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                       <div className="flex gap-2">
                         <Link
                           href={`/events/${evt.id}`}
-                          className="inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground"
+                          className="btn btn-secondary text-[0.8rem] no-underline"
+                          style={{ padding: "6px 12px" }}
                         >
                           {review_label}
                         </Link>
@@ -396,7 +397,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
             <thead>
               <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                 <th
-                  className="text-left text-xs font-semibold px-4 py-2"
+                  className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                   style={{ color: "var(--color-text-secondary)" }}
                 >
                   {props.event_title}
@@ -440,7 +441,7 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                   style={{ borderBottom: "1px solid var(--color-border)" }}
                 >
                   <td
-                    className="px-4 py-2 text-sm"
+                    className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[220px] truncate"
                     style={{ color: "var(--color-text)" }}
                   >
                     {evt.title_en}
@@ -471,7 +472,8 @@ export function AdminEventsDashboard(props: AdminEventsDashboardProps) {
                     <div className="flex gap-2">
                       <Link
                         href={`/events/${evt.id}`}
-                        className="inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted hover:text-foreground"
+                        className="btn btn-secondary text-[0.8rem] no-underline"
+                        style={{ padding: "6px 12px" }}
                       >
                         {review_label}
                       </Link>

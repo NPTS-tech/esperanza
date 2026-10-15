@@ -147,7 +147,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto py-8 space-y-6">
       {action_message && (
         <div
           className="card p-3 text-sm"
@@ -157,7 +157,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="card p-4">
           <div className="flex items-center gap-3">
             <Users size={20} style={{ color: "var(--color-primary)" }} />
@@ -236,7 +236,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
                   <th
-                    className="text-left text-xs font-semibold px-4 py-2"
+                    className="text-left text-xs font-semibold px-4 py-2 sticky left-0 z-[1] bg-[var(--color-surface)]"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
                     {props.email}
@@ -280,7 +280,7 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
                     style={{ borderBottom: "1px solid var(--color-border)" }}
                   >
                     <td
-                      className="px-4 py-2 text-sm"
+                      className="px-4 py-2 text-sm sticky left-0 z-[1] bg-[var(--color-surface)] max-w-[240px] truncate"
                       style={{ color: "var(--color-text)" }}
                     >
                       {u.email}

@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             nav_submit_event={t("submit_event")}
             nav_users={t("users")}
             nav_analytics={t("analytics")}
+            nav_reservations={t("reservations")}
         >
             {children}
         </AppShell>

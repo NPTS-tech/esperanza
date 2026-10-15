@@ -287,11 +287,11 @@ export function MapPageClient({
   // CSS Grid on desktop / flex-col on mobile rearranges the other
   // elements around it without ever unmounting / remounting the map.
   //
-  // Desktop (md+)
+  // Desktop (lg+)
   //   2-column grid: [map — col 1, spans all rows] | [sidebar — col 2]
   //   Outer container has a fixed viewport-relative height.
   //
-  // Mobile (< md)
+  // Phone + iPad portrait (< lg)
   //   Flex-col with `order` to achieve:
   //   search → categories → map (fixed px height) → count → cards (2-col grid)
   //
@@ -305,34 +305,34 @@ export function MapPageClient({
         // Mobile: flex column
         "flex flex-col gap-3",
         // Desktop: 2-col grid, viewport-height container
-        "md:grid md:gap-4",
-        "md:grid-cols-[1fr_300px]",
-        "md:grid-rows-[auto_auto_auto_1fr]",
-        "md:h-[calc(100vh_-_10rem)]",
+        "lg:grid lg:gap-4",
+        "lg:grid-cols-[1fr_320px]",
+        "lg:grid-rows-[auto_auto_auto_1fr]",
+        "lg:h-[calc(100dvh_-_10rem)]",
       ].join(" ")}
     >
       {/* ── Search ── mobile: order 1 / desktop: col 2 row 1 */}
-      <div className="order-1 md:col-start-2 md:row-start-1">
+      <div className="order-1 lg:col-start-2 lg:row-start-1">
         {search_el}
       </div>
 
       {/* ── Category filter ── mobile: order 2 / desktop: col 2 row 2 */}
-      <div className="order-2 md:col-start-2 md:row-start-2">
+      <div className="order-2 lg:col-start-2 lg:row-start-2">
         {cats_el}
       </div>
 
       {/* ── Map ─────────────────────────────────────────────────────────
-           Mobile:  order 3, fixed 380 px height
+           Mobile:  order 3, 50dvh (min 320 px) height
            Desktop: col 1, spans all 4 rows → fills entire grid height
           ──────────────────────────────────────────────────────────────── */}
       <div
         className={[
           "order-3",
           "rounded-xl overflow-hidden",
-          "h-[380px]",
+          "h-[50dvh] min-h-[320px]",
           // Desktop overrides
-          "md:col-start-1 md:row-start-1 md:row-span-4",
-          "md:h-full",
+          "lg:col-start-1 lg:row-start-1 lg:row-span-4",
+          "lg:h-full",
         ].join(" ")}
       >
         <MapView
@@ -344,7 +344,7 @@ export function MapPageClient({
       </div>
 
       {/* ── Count label ── mobile: order 4 / desktop: col 2 row 3 */}
-      <div className="order-4 md:col-start-2 md:row-start-3">
+      <div className="order-4 lg:col-start-2 lg:row-start-3">
         {count_el}
       </div>
 
@@ -355,15 +355,15 @@ export function MapPageClient({
       <div
         className={[
           "order-5",
-          "md:col-start-2 md:row-start-4",
-          "md:overflow-y-auto",
+          "lg:col-start-2 lg:row-start-4",
+          "lg:overflow-y-auto",
         ].join(" ")}
       >
         {sidebar_events.length === 0 ? (
           empty_el
         ) : (
           <div
-            className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-2"
+            className="grid grid-cols-2 @2xl:grid-cols-3 lg:grid-cols-1 gap-2"
           >
             {cards_el}
           </div>
@@ -409,7 +409,7 @@ function MiniEventCard({
         background:  "var(--color-surface)",
         border:      `1.5px solid ${is_selected ? cfg.color : "var(--color-border)"}`,
         borderRadius: "var(--radius)",
-        padding:     "9px 11px",
+        padding:     "12px 12px",
         cursor:      "pointer",
         display:     "flex",
         flexDirection: "column",
@@ -432,7 +432,7 @@ function MiniEventCard({
         />
         <span
           style={{
-            fontSize: 9.5,
+            fontSize: 11,
             fontWeight: 700,
             color: cfg.color,
             textTransform: "uppercase",

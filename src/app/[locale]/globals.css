@@ -82,7 +82,7 @@ body {
     background: var(--color-bg);
     color: var(--color-text);
     margin: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* component utility classes */
@@ -508,8 +508,47 @@ input[type="checkbox"]:focus {
 @media (display-mode: standalone) {
     /* Status-bar gap is already baked into --header-h via --safe-area-top.
        Prevent double-counting by resetting any legacy pt-14 utility in <main>. */
-    body {
-        /* Ensure the very bottom of the viewport is always accessible */
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Bottom safe area is handled by the bottom nav / <main> / sidebar, not body
+       (body padding made the pinned shell overflow and the page bounce). */
+}
+
+/* ==========================================================================
+   Tablet / touch — Part A (shell). Part B appends its own block below this.
+   ========================================================================== */
+/* 44px minimum targets whenever the primary input is a finger (iPad at every width). */
+@media (pointer: coarse) {
+    .btn,
+    .input,
+    .select,
+    select.select {
+        min-height: 44px;
+    }
+}
+
+/* The app shell pins itself to the viewport and scrolls <main>; stop iOS rubber-banding the whole page. */
+html,
+body {
+    overscroll-behavior: none;
+}
+
+/* Card lift is hover-only; on touch the :hover state sticks after a tap. */
+@media (hover: none) {
+    .card:hover {
+        box-shadow: var(--shadow-sm);
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   Tablet / touch — Part B (pages). Appended only; Part A owns everything above.
+   ========================================================================== */
+/* react-big-calendar toolbar buttons are third-party markup. */
+@media (pointer: coarse) {
+    .rbc-toolbar button {
+        min-height: 44px;
+        padding: 8px 14px;
+    }
+    .rbc-toolbar {
+        gap: 8px;
     }
 }

@@ -49,14 +49,14 @@ export default function CalendarView({ events }: CalendarViewProps) {
 
   if (mapped.length === 0) {
     return (
-      <div className="h-[700px] w-full flex items-center justify-center">
+      <div className="h-[min(700px,75dvh)] w-full flex items-center justify-center">
         <p>No events to display in calendar</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[700px] w-full">
+    <div className="h-[min(700px,75dvh)] w-full">
       <Calendar
         localizer={localizer}
         events={mapped}

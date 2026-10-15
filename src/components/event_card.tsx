@@ -60,22 +60,8 @@ export default function EventCard({ event }: EventCardProps) {
   return (
     <Link href={`/events/${event.id}`} className="block no-underline group">
       <div
-        className="card p-4 h-full flex flex-col"
-        style={{
-          cursor: "pointer",
-          border: "1px solid var(--color-border)",
-          transition: "border-color .15s, box-shadow .15s",
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.borderColor = "var(--color-primary)";
-          el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.borderColor = "var(--color-border)";
-          el.style.boxShadow = "";
-        }}
+        className="card p-4 h-full flex flex-col hover:border-[var(--color-primary)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
+        style={{ cursor: "pointer", transition: "border-color .15s, box-shadow .15s" }}
       >
         {/* Image */}
         <div

@@ -50,6 +50,14 @@ export const metadata: Metadata = {
                 url: "/icons/icon-512.png",
                 media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
             },
+            // iPad mini 6 (744×1133 pt @2x)
+            { url: "/icons/icon-512.png", media: "(device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2)" },
+            // iPad 10th gen / Air 11" (820×1180 pt @2x)
+            { url: "/icons/icon-512.png", media: "(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2)" },
+            // iPad Pro 11" (834×1194 pt @2x)
+            { url: "/icons/icon-512.png", media: "(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" },
+            // iPad Pro 12.9"/13" (1024×1366 pt @2x)
+            { url: "/icons/icon-512.png", media: "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" },
         ],
     },
     other: {

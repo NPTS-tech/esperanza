@@ -1,40 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-    Home,
-    CalendarDays,
-    Map,
-    Bookmark,
-    User,
-    Users,
-    BarChart3,
-    Plus,
-    LogOut,
-    ChevronRight,
-    Sprout,
-    ClipboardList,
-} from "lucide-react";
+import { User, LogOut, ChevronRight, Sprout } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { sign_out_action } from "@/app/actions/sign_out_action";
 import { cn } from "@/lib/utils";
+import { get_nav_items, get_active_href, type NavItem, type NavLabels } from "@/components/layout/nav-items";
 
 // ─── Types ────────────────────────────────────────────────────
 
-type NavItem = {
-    key: string;
-    label: string;
-    href: string;
-    icon: React.ReactNode;
-};
-
-type NavSection = {
-    section_label?: string;
-    items: NavItem[];
-};
-
-type SidebarProps = {
+type SidebarProps = NavLabels & {
     role: string;
     email: string;
     locale: string;
@@ -42,114 +18,32 @@ type SidebarProps = {
     app_name: string;
     sign_out_label: string;
     language_toggle_label: string;
-    nav_home: string;
-    nav_events: string;
-    nav_map: string;
-    nav_profile: string;
-    nav_my_events: string;
-    nav_submit_event: string;
-    nav_users: string;
-    nav_analytics: string;
 };
-
-const SZ = 18;
-
-// ─── Nav config per role ──────────────────────────────────────
-
-function get_nav_sections(role: string, labels: SidebarProps): NavSection[] {
-    if (role === "ADMIN") {
-        return [
-            {
-                items: [
-                    { key: "events",    label: labels.nav_events,    href: "/admin/events",    icon: <CalendarDays size={SZ} /> },
-                    { key: "analytics", label: labels.nav_analytics, href: "/admin/analytics", icon: <BarChart3 size={SZ} /> },
-                    { key: "users",     label: labels.nav_users,     href: "/admin/users",   icon: <Users size={SZ} /> },
-                ],
-            },
-        ];
-    }
-
-    if (role === "PROVIDER") {
-        return [
-            {
-                section_label: "PLATFORM",
-                items: [
-                    { key: "home",     label: labels.nav_home,         href: "/",             icon: <Home size={SZ} /> },
-                    { key: "myevents", label: labels.nav_my_events,    href: "/events",      icon: <CalendarDays size={SZ} /> },
-                    { key: "submit",   label: labels.nav_submit_event, href: "/events/create", icon: <Plus size={SZ} /> },
-                    { key: "analytics", label: labels.nav_analytics,   href: "/analytics",   icon: <BarChart3 size={SZ} /> },
-                ],
-            },
-        ];
-    }
-
-    // USER (default)
-    return [
-        {
-            items: [
-                { key: "home",         label: "Dashboard",    href: "/",       icon: <Home size={SZ} /> },
-                { key: "events",       label: labels.nav_events, href: "/events", icon: <CalendarDays size={SZ} /> },
-                { key: "map",          label: labels.nav_map, href: "/map",    icon: <Map size={SZ} /> },
-                { key: "reservations", label: "Reservations", href: "/reservations", icon: <Bookmark size={SZ} /> },
-            ],
-        },
-    ];
-}
 
 // ─── NavLink ──────────────────────────────────────────────────
 
-function NavLink({
-    item,
-    currentPath,
-}: {
-    item: NavItem;
-    currentPath: string;
-}) {
-    let is_active: boolean;
-    if (item.href === "/") {
-        is_active = currentPath === "/";
-    } else if (item.href === "/admin/users") {
-        is_active = currentPath.startsWith("/admin/users");
-    } else if (item.href === "/admin/events") {
-        is_active = currentPath.startsWith("/admin/events");
-    } else if (item.href === "/admin/analytics") {
-        is_active = currentPath.startsWith("/admin/analytics");
-    } else if (item.href === "/admin") {
-        is_active = currentPath === "/admin" || (currentPath.startsWith("/admin") && !currentPath.startsWith("/admin/events") && !currentPath.startsWith("/admin/analytics") && !currentPath.startsWith("/admin/users"));
-    } else if (item.href === "/analytics") {
-        is_active = currentPath.startsWith("/analytics");
-    } else if (item.href === "/events") {
-        is_active = currentPath.startsWith("/events");
-    } else {
-        is_active = item.href !== "#" && currentPath.startsWith(item.href);
-    }
-
+function NavLink({ item, is_active }: { item: NavItem; is_active: boolean }) {
+    const Icon = item.icon;
     return (
         <Link
-            href={item.href as any}
+            href={item.href}
             className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full focus-visible:outline-2 focus-visible:outline-offset-2",
-                is_active
-                    ? "bg-[var(--color-surface-hover)]"
-                    : "hover:bg-[var(--color-surface-hover)]",
+                // rail (md): icon over 10px label, centered. full (lg): icon beside 14px label.
+                "flex flex-col lg:flex-row items-center lg:items-center gap-1 lg:gap-3 px-1 lg:px-3 py-2 lg:py-2.5 min-h-11 rounded-lg text-[10px] lg:text-sm leading-tight text-center lg:text-left font-medium transition-colors w-full focus-visible:outline-2 focus-visible:outline-offset-2",
+                is_active ? "bg-[var(--color-surface-hover)]" : "hover:bg-[var(--color-surface-hover)]",
             )}
             style={{
-                color: is_active
-                    ? "var(--color-primary)"
-                    : "var(--color-text-secondary)",
+                color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)",
                 textDecoration: "none",
                 outlineColor: "var(--color-primary)",
             }}
             aria-current={is_active ? "page" : undefined}
         >
-            <span
-                className="shrink-0"
-                aria-hidden="true"
-                style={{ color: is_active ? "var(--color-primary)" : "var(--color-text-secondary)" }}
-            >
-                {item.icon}
+            <span className="shrink-0" aria-hidden="true">
+                <Icon size={20} className="lg:hidden" />
+                <Icon size={18} className="hidden lg:block" />
             </span>
-            <span>{item.label}</span>
+            <span className="line-clamp-2 lg:line-clamp-none">{item.label}</span>
         </Link>
     );
 }
@@ -203,7 +97,7 @@ function MyAccount({
             {/* Popover */}
             {open && (
                 <div
-                    className="absolute bottom-full left-0 right-0 mb-2 rounded-xl overflow-hidden"
+                    className="absolute bottom-full left-0 w-52 lg:w-auto lg:right-0 mb-2 rounded-xl overflow-hidden"
                     style={{
                         background: "var(--color-surface)",
                         border: "1px solid var(--color-border)",
@@ -248,7 +142,7 @@ function MyAccount({
             {/* Trigger card */}
             <button
                 onClick={() => set_open(o => !o)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="flex items-center justify-center lg:justify-start gap-3 w-full px-2 lg:px-3 py-2 lg:py-2.5 min-h-11 rounded-xl transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                 style={{
                     background: "var(--color-surface-hover)",
                     border: "1px solid var(--color-border)",
@@ -271,7 +165,7 @@ function MyAccount({
 
                 {/* Label */}
                 <span
-                    className="flex-1 text-sm font-medium"
+                    className="hidden lg:block flex-1 text-sm font-medium"
                     style={{ color: "var(--color-text)" }}
                 >
                     My Account
@@ -280,6 +174,7 @@ function MyAccount({
                 {/* Chevron */}
                 <ChevronRight
                     size={14}
+                    className="hidden lg:block"
                     aria-hidden="true"
                     style={{
                         color: "var(--color-text-secondary)",
@@ -295,80 +190,39 @@ function MyAccount({
 // ─── Sidebar ──────────────────────────────────────────────────
 
 export function Sidebar(props: SidebarProps) {
-    const sections = get_nav_sections(props.role, props);
+    const items = get_nav_items(props.role, props);
+    const active_href = get_active_href(items, props.currentPath);
 
     return (
         <aside
-            className="hidden md:flex flex-col shrink-0 border-r"
-            style={{
-                width: 220,
-                height: "100vh",
-                position: "sticky",
-                top: 0,
-                background: "var(--color-surface)",
-                borderColor: "var(--color-border)",
-                overflowY: "auto",
-            }}
+            className={cn(
+                "hidden md:flex flex-col shrink-0 border-r overflow-y-auto",
+                // rail: 72px under the header. full: 220px, pads iOS status bar. Height comes from the shell row.
+                "w-[72px] lg:w-[220px]",
+                "lg:pt-[var(--safe-area-top)]",
+            )}
+            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
             aria-label="Sidebar navigation"
         >
-            {/* ── Logo ── */}
-            <div
-                className="flex items-center gap-2.5 px-4"
-                style={{ paddingTop: 24, paddingBottom: 24 }}
-            >
-                <Sprout
-                    size={22}
-                    aria-hidden="true"
-                    style={{ color: "var(--color-primary)", flexShrink: 0 }}
-                />
-                <span
-                    className="font-bold text-base"
-                    style={{ color: "var(--color-primary)" }}
-                >
+            {/* Logo — full sidebar only (rail users see it in the header) */}
+            <div className="hidden lg:flex items-center gap-2.5 px-4 py-6">
+                <Sprout size={22} aria-hidden="true" style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+                <span className="font-bold text-base" style={{ color: "var(--color-primary)" }}>
                     {props.app_name}
                 </span>
             </div>
 
-            {/* ── Nav sections ── */}
-            <nav
-                className="flex flex-col gap-5 flex-1 px-3"
-                aria-label="Main navigation"
-            >
-                {sections.map((section, si) => (
-                    <div key={si} className="flex flex-col gap-0.5">
-                        {section.section_label && (
-                            <p
-                                className="text-[10px] font-semibold tracking-widest px-3 mb-1"
-                                style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}
-                            >
-                                {section.section_label}
-                            </p>
-                        )}
-                        {section.items.map(item => (
-                            <NavLink
-                                key={item.key}
-                                item={item}
-                                currentPath={props.currentPath}
-                            />
-                        ))}
-                    </div>
+            <nav className="flex flex-col gap-1 lg:gap-0.5 flex-1 px-2 lg:px-3 pt-3 lg:pt-0" aria-label="Main navigation">
+                {items.map((item) => (
+                    <NavLink key={item.key} item={item} is_active={item.href === active_href} />
                 ))}
             </nav>
 
-            {/* ── Bottom ── */}
-            <div
-                className="flex flex-col gap-3 px-3"
-                style={{ paddingBottom: 20, paddingTop: 16 }}
-            >
-                {/* Language toggle */}
-                <div className="px-1">
+            <div className="flex flex-col gap-3 px-2 lg:px-3 pb-5 pt-4" style={{ paddingBottom: "calc(1.25rem + var(--safe-area-bottom))" }}>
+                <div className="hidden lg:block px-1">
                     <LanguageToggle locale={props.locale} variant="dropdown" />
                 </div>
-
-                {/* Divider */}
-                <div style={{ height: 1, background: "var(--color-border)" }} />
-
-                {/* My Account */}
+                <div className="hidden lg:block" style={{ height: 1, background: "var(--color-border)" }} />
                 <MyAccount
                     email={props.email}
                     locale={props.locale}

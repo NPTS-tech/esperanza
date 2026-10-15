@@ -67,7 +67,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                             onClick={() => switch_to(lang.code)}
                             aria-pressed={active}
                             aria-label={`Switch to ${lang.label}`}
-                            className="px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                            className="min-h-9 pointer-coarse:min-h-11 px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                             style={{
                                 background: active ? "var(--color-primary)" : "var(--color-surface)",
                                 color: active ? "white" : "var(--color-text-secondary)",
@@ -91,7 +91,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Language: ${current.label}. Click to change`}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="min-h-9 pointer-coarse:min-h-11 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-2 focus-visible:outline-offset-2"
                 style={{
                     color: "var(--color-text-secondary)",
                     border: "1px solid var(--color-border)",
@@ -144,7 +144,7 @@ export function LanguageToggle({ locale, variant = "dropdown" }: LanguageToggleP
                                 role="option"
                                 aria-selected={active}
                                 onClick={() => switch_to(lang.code)}
-                                className="w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+                                className="min-h-11 w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
                                 style={{
                                     color: active ? "var(--color-primary)" : "var(--color-text)",
                                     fontWeight: active ? 600 : 400,
