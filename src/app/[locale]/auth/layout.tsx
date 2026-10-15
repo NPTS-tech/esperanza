@@ -1,6 +1,13 @@
 import { Sprout } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { getSession } from "@/lib/auth";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+    // Signed-in users skip the auth pages. Checked against the real session, not just
+    // cookie presence: a stale cookie used to bounce between here and / forever.
+    if (await getSession()) redirect(`/${await getLocale()}`);
+
     return (
         <div
             className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
