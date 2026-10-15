@@ -29,10 +29,6 @@ export default function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL(`/${locale}/auth/login`, req.nextUrl.origin));
     }
 
-    if (has_session && is_auth_route) {
-        return NextResponse.redirect(new URL(`/${locale}`, req.nextUrl.origin));
-    }
-
     return handleI18nRouting(req);
 }
 
