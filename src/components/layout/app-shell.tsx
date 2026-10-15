@@ -40,7 +40,7 @@ export function AppShell({ children, ...props }: AppShellProps) {
 
                 <main
                     id="main-content"
-                    className="@container flex-1 min-w-0 overflow-y-auto overscroll-contain px-4 py-6 md:px-6 md:pb-[calc(1.5rem+var(--safe-area-bottom))]"
+                    className="@container relative flex-1 min-w-0 overflow-y-auto overscroll-contain px-4 py-6 md:px-6 md:pb-[calc(1.5rem+var(--safe-area-bottom))]"
                     tabIndex={-1}
                     aria-label="Main content"
                 >
