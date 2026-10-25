@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Users } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { useLocale } from "next-intl";
 import { format_date_parts } from "@/lib/utils";
@@ -31,6 +33,18 @@ export type AdminUsersDashboardProps = {
   role_provider: string;
   role_admin: string;
   deleting: string;
+  create_user: string;
+  create_user_title: string;
+  username_label: string;
+  email_label: string;
+  password_label: string;
+  role_label: string;
+  language_label: string;
+  create: string;
+  creating: string;
+  cancel: string;
+  create_user_success: string;
+  create_user_error: string;
 };
 
 type ApiUser = {
@@ -67,6 +81,17 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
     string | null
   >(null);
   const [action_message, set_action_message] = useState<string | null>(null);
+
+  const [create_modal_open, set_create_modal_open] = useState(false);
+  const [create_username, set_create_username] = useState("");
+  const [create_email, set_create_email] = useState("");
+  const [create_password, set_create_password] = useState("");
+  const [create_role, set_create_role] = useState<"USER" | "PROVIDER">(
+    "PROVIDER",
+  );
+  const [create_language, set_create_language] = useState<"en" | "es">("en");
+  const [creating, set_creating] = useState(false);
+  const [create_error, set_create_error] = useState<string | null>(null);
 
   const fetch_users = useCallback(async () => {
     set_users_loading(true);
@@ -137,6 +162,57 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
     }
   }
 
+  function reset_create_form() {
+    set_create_username("");
+    set_create_email("");
+    set_create_password("");
+    set_create_role("PROVIDER");
+    set_create_language("en");
+    set_create_error(null);
+  }
+
+  async function handle_create_user() {
+    set_creating(true);
+    set_create_error(null);
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: create_username.trim(),
+          email: create_email.trim(),
+          password: create_password,
+          role: create_role,
+          language_pref: create_language,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        const details = data.details
+          ? Object.values(data.details as Record<string, string[]>)
+              .flat()
+              .join(" ")
+          : "";
+        throw new Error(
+          [data.error, details].filter(Boolean).join(": ") ||
+            "Failed to create user",
+        );
+      }
+      set_create_modal_open(false);
+      reset_create_form();
+      await fetch_users();
+      set_action_message(props.create_user_success);
+    } catch (e) {
+      set_create_error(
+        e instanceof Error && e.message !== "Failed to fetch"
+          ? e.message
+          : props.create_user_error,
+      );
+    } finally {
+      set_creating(false);
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto py-8 space-y-6">
       {action_message && (
@@ -148,8 +224,142 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        <div className="card p-4">
+      <Modal
+        open={create_modal_open}
+        onClose={() => {
+          set_create_modal_open(false);
+          reset_create_form();
+        }}
+        title={props.create_user_title}
+      >
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handle_create_user();
+          }}
+        >
+          <div>
+            <label
+              htmlFor="create-user-username"
+              className="text-xs font-medium mb-1 block"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {props.username_label}
+            </label>
+            <Input
+              id="create-user-username"
+              type="text"
+              value={create_username}
+              onChange={(e) => set_create_username(e.target.value)}
+              maxLength={50}
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="create-user-email"
+              className="text-xs font-medium mb-1 block"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {props.email_label}
+            </label>
+            <Input
+              id="create-user-email"
+              type="email"
+              value={create_email}
+              onChange={(e) => set_create_email(e.target.value)}
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="create-user-password"
+              className="text-xs font-medium mb-1 block"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {props.password_label}
+            </label>
+            <Input
+              id="create-user-password"
+              type="text"
+              value={create_password}
+              onChange={(e) => set_create_password(e.target.value)}
+              minLength={8}
+              maxLength={128}
+              autoComplete="off"
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="create-user-role"
+              className="text-xs font-medium mb-1 block"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {props.role_label}
+            </label>
+            <Select
+              id="create-user-role"
+              value={create_role}
+              onChange={(e) =>
+                set_create_role(e.target.value as "USER" | "PROVIDER")
+              }
+              className="select"
+            >
+              <option value="PROVIDER">{props.role_provider}</option>
+              <option value="USER">{props.role_user}</option>
+            </Select>
+          </div>
+          <div>
+            <label
+              htmlFor="create-user-language"
+              className="text-xs font-medium mb-1 block"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {props.language_label}
+            </label>
+            <Select
+              id="create-user-language"
+              value={create_language}
+              onChange={(e) => set_create_language(e.target.value as "en" | "es")}
+              className="select"
+            >
+              <option value="en">English</option>
+              <option value="es">Español</option>
+            </Select>
+          </div>
+          {create_error && (
+            <p
+              className="text-sm"
+              style={{ color: "var(--color-danger)" }}
+            >
+              {create_error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                set_create_modal_open(false);
+                reset_create_form();
+              }}
+            >
+              {props.cancel}
+            </Button>
+            <Button type="submit" disabled={creating}>
+              {creating ? props.creating : props.create}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <div className="card p-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Users size={20} style={{ color: "var(--color-primary)" }} />
             <div>
@@ -167,6 +377,10 @@ export function AdminUsersDashboard(props: AdminUsersDashboardProps) {
               </p>
             </div>
           </div>
+          <Button onClick={() => set_create_modal_open(true)}>
+            <UserPlus size={16} aria-hidden="true" />
+            {props.create_user}
+          </Button>
         </div>
       </div>
 

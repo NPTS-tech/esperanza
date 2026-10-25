@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ const FOCUSABLE =
 
 export function Modal({ open, onClose, title, children, footer, size = "md" }: ModalProps) {
     const panel_ref = useRef<HTMLDivElement>(null);
-    const title_id = useRef(`modal-title-${Math.random().toString(36).slice(2)}`).current;
+    const title_id = useId();
 
     // Focus trap — keep Tab/Shift+Tab cycling inside the panel
     const trap_focus = useCallback((e: KeyboardEvent) => {
@@ -49,12 +49,21 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
         }
     }, []);
 
+    // Keep the key handler stable so the open/close effect below doesn't
+    // re-run (and re-focus) on every render — callers pass inline onClose
+    // closures, which would otherwise re-trigger it on each keystroke.
+    const on_close_ref = useRef(onClose);
+
+    useEffect(() => {
+        on_close_ref.current = onClose;
+    });
+
     const handle_key = useCallback(
         (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") on_close_ref.current();
             trap_focus(e);
         },
-        [onClose, trap_focus]
+        [trap_focus]
     );
 
     useEffect(() => {
@@ -62,12 +71,19 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: M
         document.addEventListener("keydown", handle_key);
         document.body.style.overflow = "hidden";
 
-        // Move focus into the panel on open
+        // Move focus into the panel on open. Prefer the first real input over
+        // the close button so typing can start immediately.
         const raf = requestAnimationFrame(() => {
             const panel = panel_ref.current;
             if (!panel) return;
-            const first_focusable = panel.querySelector<HTMLElement>(FOCUSABLE);
-            first_focusable?.focus();
+            const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
+            const first_input = focusable.find(
+                (el) =>
+                    el.tagName === "INPUT" ||
+                    el.tagName === "TEXTAREA" ||
+                    el.tagName === "SELECT",
+            );
+            (first_input ?? focusable[0])?.focus();
         });
 
         return () => {

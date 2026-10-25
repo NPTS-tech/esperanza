@@ -11,6 +11,28 @@ export const update_user_role_schema = z.object({
     }),
 });
 
+export const admin_create_user_schema = z
+    .object({
+        username: username_schema,
+        email: z
+            .string()
+            .email("Invalid email address"),
+        password: z
+            .string()
+            .min(8, "Password must be at least 8 characters")
+            .max(128, "Password must be less than 128 characters"),
+        role: z.enum(["USER", "PROVIDER", "ADMIN"], {
+            required_error: "Role is required",
+        }),
+        language_pref: z
+            .enum(["en", "es"])
+            .default("en"),
+    })
+    .refine((data) => data.role !== "ADMIN", {
+        message: "Admins cannot create other admin accounts",
+        path: ["role"],
+    });
+
 export const user_query_schema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
