@@ -6,7 +6,6 @@ import {
     User,
     Users,
     BarChart3,
-    Plus,
     Tags,
     type LucideIcon,
 } from "lucide-react";
@@ -17,7 +16,6 @@ export type NavLabels = {
     nav_map: string;
     nav_profile: string;
     nav_my_events: string;
-    nav_submit_event: string;
     nav_users: string;
     nav_analytics: string;
     nav_reservations: string;
@@ -46,7 +44,6 @@ export function get_nav_items(role: string, l: NavLabels): NavItem[] {
         return [
             { key: "home",      href: "/",              label: l.nav_home,         icon: Home },
             { key: "my_events", href: "/provider",      label: l.nav_my_events,    icon: CalendarDays },
-            { key: "submit",    href: "/events/create", label: l.nav_submit_event, icon: Plus },
             { key: "analytics", href: "/analytics",     label: l.nav_analytics,    icon: BarChart3 },
             { key: "profile",   href: "/profile",       label: l.nav_profile,      icon: User },
         ];
