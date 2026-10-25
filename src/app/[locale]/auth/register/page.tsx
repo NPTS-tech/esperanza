@@ -20,6 +20,7 @@ import {
 } from "@/lib/dallas_county_profile_options";
 import { get_default_primary_language_for_locale } from "@/lib/dallas_county_profile";
 import { category_label, use_categories } from "@/lib/event_categories";
+import { DEFAULT_EVENT_CATEGORY } from "@/lib/constants";
 import { register_schema } from "@/lib/validators/auth";
 
 export type Locale = "en" | "es";
@@ -528,7 +529,13 @@ export default function RegisterPage() {
                                 </p>
                             ) : (
                                 <div className="flex flex-wrap gap-2">
-                                    {categories.map((cat) => {
+                                    {categories
+                                        .filter(
+                                            (cat) =>
+                                                cat.slug !==
+                                                DEFAULT_EVENT_CATEGORY.slug,
+                                        )
+                                        .map((cat) => {
                                         const selected = category_ids.includes(cat.id);
                                         return (
                                             <button

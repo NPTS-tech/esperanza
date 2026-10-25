@@ -29,6 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             nav_users={t("users")}
             nav_analytics={t("analytics")}
             nav_reservations={t("reservations")}
+            nav_categories={t("categories")}
         >
             {children}
         </AppShell>

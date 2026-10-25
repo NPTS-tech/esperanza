@@ -7,6 +7,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { category_label, use_categories } from "@/lib/event_categories";
+import { DEFAULT_EVENT_CATEGORY } from "@/lib/constants";
 
 type ProviderSettingsProps = {
     provider_id: string;
@@ -271,7 +272,12 @@ export function ProviderSettings({
                         </p>
                     ) : (
                         <div className="flex flex-wrap gap-2">
-                            {categories.map((cat) => {
+                            {categories
+                                .filter(
+                                    (cat) =>
+                                        cat.slug !== DEFAULT_EVENT_CATEGORY.slug,
+                                )
+                                .map((cat) => {
                                 const selected = program_ids.includes(cat.id);
                                 return (
                                     <button

@@ -22,6 +22,7 @@ import {
 } from "../src/lib/dallas_county_profile_options";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { DEFAULT_EVENT_CATEGORY } from "../src/lib/constants";
 
 // Standalone client (not src/lib/db) so this runs inside the migration Lambda,
 // which bundles prisma/ + src/lib + the generated client but resolves no "@/" alias.
@@ -76,6 +77,8 @@ const SEED_CATEGORIES: SeedCategory[] = [
   { slug: "education", name_en: "Education", name_es: "Educación", color: "#eab308", emoji: "📚" },
   { slug: "children", name_en: "Children", name_es: "Niños", color: "#ec4899", emoji: "🧸" },
   { slug: "housing", name_en: "Housing", name_es: "Vivienda", color: "#f59e0b", emoji: "🏠" },
+  // Catch-all that events fall back to when their category is deleted.
+  DEFAULT_EVENT_CATEGORY,
 ];
 
 // Interests for the demo resident account so the "Interests" filter has data.

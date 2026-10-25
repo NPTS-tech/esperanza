@@ -61,3 +61,14 @@ export const INDUSTRY_OPTIONS = [
 
 // Event reminder lead times offered in Profile settings, in minutes (default 60).
 export const REMINDER_LEAD_OPTIONS = [15, 30, 60, 120, 1440] as const;
+
+// Catch-all category that events fall back to when their category is deleted
+// (see DELETE /api/categories/[id]). Seeded like any other EventCategory row so
+// every event.category consumer keeps working; must not be deletable.
+export const DEFAULT_EVENT_CATEGORY = {
+    slug: "no_category",
+    name_en: "No Category",
+    name_es: "Sin Categoría",
+    color: "#6b7280",
+    emoji: "❔",
+} as const;

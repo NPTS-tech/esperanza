@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { InstallButton } from "@/components/pwa/install-button";
 import { category_label, use_categories } from "@/lib/event_categories";
+import { DEFAULT_EVENT_CATEGORY } from "@/lib/constants";
 import { ReminderSettings, type ReminderPrefs } from "@/components/reminder_settings";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
@@ -766,7 +767,11 @@ export function ProfileClient({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        {categories.map((cat) => {
+                        {categories
+                            .filter(
+                                (cat) => cat.slug !== DEFAULT_EVENT_CATEGORY.slug,
+                            )
+                            .map((cat) => {
                             const selected = interest_ids.has(cat.id);
                             return (
                                 <button
