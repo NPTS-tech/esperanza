@@ -75,6 +75,10 @@ const BREAKDOWN_CARD_FIELDS = [
   { key: "age_band", label_key: "age_band" },
   { key: "county_of_residence", label_key: "county" },
   { key: "employment_status", label_key: "employment_status" },
+  { key: "annual_income_bracket", label_key: "annual_income_bracket" },
+  { key: "education_level", label_key: "education" },
+  { key: "primary_language", label_key: "primary_language" },
+  { key: "marital_status", label_key: "marital_status" },
 ] as const;
 
 const ANALYTICS_PERIOD_OPTIONS: AnalyticsPeriod[] = [
