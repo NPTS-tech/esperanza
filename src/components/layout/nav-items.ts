@@ -54,8 +54,8 @@ export function get_nav_items(role: string, l: NavLabels): NavItem[] {
     return [
         { key: "home",         href: "/",             label: l.nav_home,         icon: Home },
         { key: "events",       href: "/events",       label: l.nav_events,       icon: CalendarDays },
-        { key: "map",          href: "/map",          label: l.nav_map,          icon: Map },
         { key: "reservations", href: "/reservations", label: l.nav_reservations, icon: Bookmark },
+        { key: "map",          href: "/map",          label: l.nav_map,          icon: Map },
         { key: "profile",      href: "/profile",      label: l.nav_profile,      icon: User },
     ];
 }
