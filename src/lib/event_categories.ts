@@ -76,3 +76,9 @@ function useEventCategories() {
 }
 
 export const use_categories = useEventCategories;
+
+// Drops the module-level cache so the next use_categories() call refetches.
+// Admin mutations (create/delete category) call this after a successful write.
+export function clear_categories_cache(): void {
+    cached_categories = null;
+}

@@ -69,6 +69,18 @@ export default async function AdminUsersPage() {
         role_provider={t_admin("role_provider")}
         role_admin={t_admin("role_admin")}
         deleting={t_admin("deleting")}
+        create_user={t_admin("create_user")}
+        create_user_title={t_admin("create_user_title")}
+        username_label={t_admin("username_label")}
+        email_label={t_admin("email_label")}
+        password_label={t_admin("password_label")}
+        role_label={t_admin("role_label")}
+        language_label={t_admin("language_label")}
+        create={t_admin("create")}
+        creating={t_admin("creating")}
+        cancel={t_admin("cancel")}
+        create_user_success={t_admin("create_user_success")}
+        create_user_error={t_admin("create_user_error")}
       />
     </div>
   );

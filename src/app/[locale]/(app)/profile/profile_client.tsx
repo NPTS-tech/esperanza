@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ToastContainer, useToast } from "@/components/ui/toast";
 import { InstallButton } from "@/components/pwa/install-button";
 import { category_label, use_categories } from "@/lib/event_categories";
+import { DEFAULT_EVENT_CATEGORY } from "@/lib/constants";
 import { ReminderSettings, type ReminderPrefs } from "@/components/reminder_settings";
 import {
     EMPTY_DALLAS_COUNTY_DEMOGRAPHICS,
@@ -218,7 +219,9 @@ export function ProfileClient({
     const [load_error, set_load_error] = useState("");
     const [saving_profile, set_saving_profile] = useState(false);
     const [saving_sharing, set_saving_sharing] = useState(false);
-    const [is_editing, set_is_editing] = useState(false);
+    const [editing_section, set_editing_section] = useState<
+        "account" | "demographics" | null
+    >(null);
     const [password_modal_open, set_password_modal_open] = useState(false);
     const [saving_password, set_saving_password] = useState(false);
     const [pw_form, set_pw_form] = useState({ current: "", new_pw: "", confirm: "" });
@@ -236,13 +239,13 @@ export function ProfileClient({
         set_profile(data);
         set_form(build_profile_form_state(data));
         set_interest_ids(new Set(data.interests));
-        set_is_editing(false);
+        set_editing_section(null);
     }, []);
 
     function cancel_editing() {
         if (!profile) return;
         set_form(build_profile_form_state(profile));
-        set_is_editing(false);
+        set_editing_section(null);
     }
 
     const fetch_profile = useCallback(async () => {
@@ -453,7 +456,9 @@ export function ProfileClient({
         profile?.email?.[0] ??
         "?"
     ).toUpperCase();
-    const form_disabled = !is_editing || saving_profile;
+    const account_editing = editing_section === "account";
+    const demographics_editing = editing_section === "demographics";
+    const form_disabled = saving_profile;
     const select_placeholder = auth_t("select_placeholder");
     const optional_placeholder = auth_t("optional_placeholder");
     const language_options: SelectOption[] = [
@@ -514,24 +519,6 @@ export function ProfileClient({
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {is_editing ? (
-                            <button
-                                type="button"
-                                onClick={cancel_editing}
-                                className="btn btn-secondary"
-                                disabled={saving_profile}
-                            >
-                                {t("cancel_editing")}
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => set_is_editing(true)}
-                                className="btn btn-primary"
-                            >
-                                {t("edit_profile")}
-                            </button>
-                        )}
                         <button
                             type="button"
                             onClick={() => set_password_modal_open(true)}
@@ -549,22 +536,53 @@ export function ProfileClient({
             <form id="profile-form" onSubmit={handle_save_profile} />
             <div className="space-y-4">
                 <div className="card p-6 space-y-5">
-                    <div>
-                        <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
-                            {t("account_section")}
-                        </h2>
-                        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                            {t("account_section_help")}
-                        </p>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                                {t("account_section")}
+                            </h2>
+                            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("account_section_help")}
+                            </p>
+                        </div>
+                        {account_editing ? (
+                            <div className="flex gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={cancel_editing}
+                                    className="btn btn-secondary"
+                                    disabled={saving_profile}
+                                >
+                                    {t("cancel_editing")}
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="profile-form"
+                                    className="btn btn-primary"
+                                    disabled={saving_profile}
+                                >
+                                    {saving_profile ? t("saving_profile") : t("save_profile")}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => set_editing_section("account")}
+                                className="btn btn-primary shrink-0"
+                                disabled={editing_section !== null}
+                            >
+                                {t("edit_profile")}
+                            </button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                             label={auth_t("username")}
                             hint={t("username_hint")}
-                            required={is_editing}
+                            required={account_editing}
                         >
-                            {is_editing ? (
+                            {account_editing ? (
                                 <Input
                                     type="text"
                                     value={form.username}
@@ -587,7 +605,7 @@ export function ProfileClient({
                         </FormField>
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={account_editing}
                             label={t("language_pref")}
                             value={form.language_pref}
                             options={language_options}
@@ -606,18 +624,49 @@ export function ProfileClient({
 
                 {profile.role === "PROVIDER" ? org_section : (
                 <div className="card p-6 space-y-5">
-                    <div>
-                        <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
-                            {t("demographics_section")}
-                        </h2>
-                        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                            {t("demographics_section_help")}
-                        </p>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                                {t("demographics_section")}
+                            </h2>
+                            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                                {t("demographics_section_help")}
+                            </p>
+                        </div>
+                        {demographics_editing ? (
+                            <div className="flex gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={cancel_editing}
+                                    className="btn btn-secondary"
+                                    disabled={saving_profile}
+                                >
+                                    {t("cancel_editing")}
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="profile-form"
+                                    className="btn btn-primary"
+                                    disabled={saving_profile}
+                                >
+                                    {saving_profile ? t("saving_profile") : t("save_profile")}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => set_editing_section("demographics")}
+                                className="btn btn-primary shrink-0"
+                                disabled={editing_section !== null}
+                            >
+                                {t("edit_profile")}
+                            </button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("race")}
                             value={form.demographics.race}
                             options={DALLAS_COUNTY_RACE_OPTIONS.map(demographic_option)}
@@ -628,7 +677,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("gender")}
                             value={form.demographics.gender}
                             options={DALLAS_COUNTY_GENDER_OPTIONS.map(demographic_option)}
@@ -639,7 +688,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("ethnicity")}
                             value={form.demographics.ethnicity ?? ""}
                             options={DALLAS_COUNTY_ETHNICITY_OPTIONS.map(demographic_option)}
@@ -649,7 +698,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("age_band")}
                             value={form.demographics.age_band}
                             options={DALLAS_COUNTY_AGE_BAND_OPTIONS.map(demographic_option)}
@@ -660,7 +709,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("marital_status")}
                             value={form.demographics.marital_status ?? ""}
                             options={DALLAS_COUNTY_MARITAL_STATUS_OPTIONS.map(demographic_option)}
@@ -670,7 +719,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("county")}
                             value={form.demographics.county_of_residence}
                             options={DALLAS_COUNTY_COUNTY_OPTIONS.map(demographic_option)}
@@ -681,7 +730,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("employment_status")}
                             value={form.demographics.employment_status ?? ""}
                             options={DALLAS_COUNTY_EMPLOYMENT_STATUS_OPTIONS.map(demographic_option)}
@@ -691,7 +740,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("annual_income_bracket")}
                             value={form.demographics.annual_income_bracket ?? ""}
                             options={DALLAS_COUNTY_ANNUAL_INCOME_OPTIONS.map(demographic_option)}
@@ -701,7 +750,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("education")}
                             value={form.demographics.education_level ?? ""}
                             options={DALLAS_COUNTY_EDUCATION_LEVEL_OPTIONS.map(demographic_option)}
@@ -711,7 +760,7 @@ export function ProfileClient({
                         />
 
                         <ProfileSelectField
-                            editing={is_editing}
+                            editing={demographics_editing}
                             label={auth_t("primary_language")}
                             value={form.demographics.primary_language}
                             options={DALLAS_COUNTY_PRIMARY_LANGUAGE_OPTIONS.map(demographic_option)}
@@ -728,7 +777,7 @@ export function ProfileClient({
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <ProfileNumberField
-                                editing={is_editing}
+                                editing={demographics_editing}
                                 label={auth_t("children_under_5_count")}
                                 value={form.demographics.children_under_5_count}
                                 onChange={(value) => set_demographic("children_under_5_count", value)}
@@ -736,7 +785,7 @@ export function ProfileClient({
                             />
 
                             <ProfileNumberField
-                                editing={is_editing}
+                                editing={demographics_editing}
                                 label={auth_t("children_5_to_18_count")}
                                 value={form.demographics.children_5_to_18_count}
                                 onChange={(value) => set_demographic("children_5_to_18_count", value)}
@@ -744,7 +793,7 @@ export function ProfileClient({
                             />
 
                             <ProfileNumberField
-                                editing={is_editing}
+                                editing={demographics_editing}
                                 label={auth_t("children_over_18_count")}
                                 value={form.demographics.children_over_18_count}
                                 onChange={(value) => set_demographic("children_over_18_count", value)}
@@ -766,7 +815,11 @@ export function ProfileClient({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        {categories.map((cat) => {
+                        {categories
+                            .filter(
+                                (cat) => cat.slug !== DEFAULT_EVENT_CATEGORY.slug,
+                            )
+                            .map((cat) => {
                             const selected = interest_ids.has(cat.id);
                             return (
                                 <button
@@ -836,27 +889,6 @@ export function ProfileClient({
                         show_toast(ok ? t("profile_updated") : t("profile_update_error"), ok ? "success" : "error")
                     }
                 />
-
-                {is_editing && (
-                    <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={cancel_editing}
-                            disabled={saving_profile}
-                        >
-                            {t("cancel_editing")}
-                        </button>
-                        <button
-                            type="submit"
-                            form="profile-form"
-                            className="btn btn-primary"
-                            disabled={saving_profile}
-                        >
-                            {saving_profile ? t("saving_profile") : t("save_profile")}
-                        </button>
-                    </div>
-                )}
 
                 <InstallButton />
 

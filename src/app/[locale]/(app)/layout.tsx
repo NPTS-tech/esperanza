@@ -25,10 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             nav_map={t("map")}
             nav_profile={t("profile")}
             nav_my_events={t("my_events")}
-            nav_submit_event={t("submit_event")}
             nav_users={t("users")}
             nav_analytics={t("analytics")}
             nav_reservations={t("reservations")}
+            nav_categories={t("categories")}
         >
             {children}
         </AppShell>
