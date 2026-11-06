@@ -51,6 +51,7 @@
     },
     "devDependencies": {
         "@capacitor/android": "^8.6.0",
+        "@capacitor/assets": "^4.0.0",
         "@capacitor/cli": "^8.6.0",
         "@capacitor/ios": "^8.6.0",
         "@tailwindcss/postcss": "^4",
@@ -62,6 +63,7 @@
         "eslint": "^9",
         "eslint-config-next": "16.1.6",
         "prisma": "7.10.0",
+        "sharp": "^0.35.5",
         "tailwindcss": "^4",
         "tsx": "^4",
         "typescript": "^5"
