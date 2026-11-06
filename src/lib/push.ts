@@ -30,6 +30,12 @@ export async function send_push(user_id: string, payload: PushPayload): Promise<
 
     await Promise.all(
         subs.map(async (sub) => {
+            // Native device tokens (APNs / FCM) use synthetic endpoints (native://<platform>/<token>)
+            // and are delivered via their native push adapters once credentials are configured.
+            if (sub.endpoint.startsWith("native://")) {
+                return;
+            }
+
             try {
                 await webpush.sendNotification(
                     { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },

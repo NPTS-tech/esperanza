@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
   server: {
     url: serverUrl,
     cleartext: isDev,
+    errorPath: 'offline.html',
     allowNavigation: [
       'esperanza.npts.tech',
       '*.npts.tech',
