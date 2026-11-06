@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import AuthSessionProvider from "@/components/session_provider";
 import PWASetup from "@/components/pwa_setup";
+import NativeMobileBridge from "@/components/native_mobile_bridge";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -90,6 +91,7 @@ export default async function RootLayout({
                 <AuthSessionProvider>
                     <NextIntlClientProvider locale={locale} messages={messages}>
                         <PWASetup />
+                        <NativeMobileBridge />
                         {children}
                     </NextIntlClientProvider>
                 </AuthSessionProvider>
