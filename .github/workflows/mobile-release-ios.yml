@@ -1,0 +1,90 @@
+name: Mobile Release - iOS (TestFlight)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*-ios'
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  release-ios:
+    name: Build & Deploy iOS IPA to TestFlight
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync Capacitor iOS
+        run: pnpm exec cap sync ios
+
+      - name: Set up Ruby & Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      - name: Install Fastlane
+        run: gem install fastlane --no-document
+
+      - name: Import Apple Distribution Certificate
+        if: env.APPLE_CERTIFICATE_BASE64 != ''
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: "temporary-keychain-pass"
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 -d > $RUNNER_TEMP/cert.p12
+          security import $RUNNER_TEMP/cert.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t agg -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+      - name: Install Provisioning Profile
+        if: env.APPLE_PROVISIONING_PROFILE_BASE64 != ''
+        env:
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROVISIONING_PROFILE_BASE64" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Run Fastlane Beta (Build & TestFlight Upload)
+        working-directory: ios/App
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          bundle exec fastlane beta || fastlane beta
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-release-ipa
+          path: ios/App/build/Esperanza.ipa
+          if-no-files-found: ignore
