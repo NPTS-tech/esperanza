@@ -92,9 +92,6 @@ model Verification {
   @@map("verifications")
 }
 
-// TODO: Currently, Demographics is required for all users that sign up. 
-// The UI hides that providers don't need to
-// Need to fix how providers are created to begin with. 
 model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
