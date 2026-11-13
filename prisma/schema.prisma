@@ -210,6 +210,8 @@ model Rsvp {
   created_at       DateTime  @default(now())
   // Set when the reminder goes out; cleared when the event's start_time changes.
   reminder_sent_at DateTime?
+  // Stamp of the attendee's QR check-in; null until they scan in at the event.
+  checked_in_at    DateTime?
   event            Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
   user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 

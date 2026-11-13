@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useLocale } from "next-intl";
-import { CalendarDays, CheckCircle, AlertCircle, Ticket, UploadCloud } from "lucide-react";
+import { CalendarDays, CheckCircle, AlertCircle, Ticket, UploadCloud, ChevronDown } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge, get_category_badge_variant, get_status_badge_variant } from "@/components/ui/badge";
 import { FormField } from "@/components/ui/form-field";
@@ -212,6 +212,9 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
     const [auto_translated_fields, set_auto_translated_fields] = useState<Set<string>>(new Set());
     const [info_message, set_info_message] = useState<string | null>(null);
     const [submitting, set_submitting] = useState(false);
+    // The submit form starts collapsed so it doesn't push the events table
+    // below the fold; the header toggles it open.
+    const [form_open, set_form_open] = useState(false);
     const image_input_id = "provider-event-image-upload";
     const { toasts, show_toast, dismiss } = useToast();
 
@@ -461,6 +464,8 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
             set_auto_translated_fields(new Set());
             set_info_message(null);
             await load_provider_events();
+            // Collapse the form again so the freshly updated events table is visible.
+            set_form_open(false);
             show_toast(props.event_submitted, "success");
         } catch (error) {
             show_toast(
@@ -510,12 +515,35 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                 <StatCard label={props.total_rsvps} value={total_rsvp_sum} icon={<Ticket size={20} />} iconColor="var(--color-accent)" />
             </div>
 
-            {/* Submit event form */}
-            <div className="card card-no-hover p-4 md:p-6">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                    <h2 className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
-                        {props.submit_event}
-                    </h2>
+            {/* Submit event form — starts collapsed so the events table below
+                stays visible; expands when the provider clicks the header. */}
+            <div className="card card-no-hover">
+                <h2 className="m-0">
+                    <button
+                        type="button"
+                        onClick={() => set_form_open((o) => !o)}
+                        aria-expanded={form_open}
+                        aria-controls="submit-event-panel"
+                        className="w-full flex items-center justify-between gap-3 p-4 md:p-6 cursor-pointer"
+                        style={{ background: "none", border: "none", textAlign: "left", fontFamily: "inherit" }}
+                    >
+                        <span className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
+                            {props.submit_event}
+                        </span>
+                        <ChevronDown
+                            size={18}
+                            style={{
+                                color: "var(--color-text-secondary)",
+                                flexShrink: 0,
+                                transform: form_open ? "rotate(180deg)" : "none",
+                                transition: "transform .15s",
+                            }}
+                        />
+                    </button>
+                </h2>
+                {form_open && (
+                <div id="submit-event-panel" className="px-4 md:px-6 pb-4 md:pb-6">
+                <div className="flex items-center justify-end gap-3 mb-4">
                     {has_any_source_text && has_any_missing_bilingual_field && (
                         <button
                             type="button"
@@ -778,6 +806,8 @@ export function ProviderDashboard(props: ProviderDashboardProps) {
                         {auto_translating ? "Translating..." : submitting ? "Submitting..." : props.submit}
                     </button>
                 </form>
+                </div>
+                )}
             </div>
 
             {/* My events table */}

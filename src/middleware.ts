@@ -26,7 +26,19 @@ export default function middleware(req: NextRequest) {
     const has_session = Boolean(getSessionCookie(req));
 
     if (!has_session && !is_auth_route) {
-        return NextResponse.redirect(new URL(`/${locale}/auth/login`, req.nextUrl.origin));
+        const login_url = new URL(`/${locale}/auth/login`, req.nextUrl.origin);
+        // Preserve the destination so post-login redirects return the user to
+        // where they were headed (e.g. a QR check-in link scanned before
+        // signing in). Only relative, app-internal paths are forwarded.
+        const destination = req.nextUrl.pathname + req.nextUrl.search;
+        if (
+            destination.startsWith("/") &&
+            !destination.startsWith("//") &&
+            !destination.startsWith("/api")
+        ) {
+            login_url.searchParams.set("next", destination);
+        }
+        return NextResponse.redirect(login_url);
     }
 
     return handleI18nRouting(req);
