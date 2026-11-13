@@ -40,6 +40,14 @@ export default function LoginPage() {
             return;
         }
 
+        // Preserve an in-app destination across login (e.g. a QR check-in page
+        // reached while signed out; middleware stashes it in ?next=).
+        const next = new URLSearchParams(window.location.search).get("next");
+        if (next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/api")) {
+            window.location.href = next;
+            return;
+        }
+
         const role = (data.user as { role?: string }).role;
         const is_kiosk = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("kiosk") === "true";
         if (role === "ADMIN") {
