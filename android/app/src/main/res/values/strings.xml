@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Esperanza</string>
+    <string name="title_activity_main">Esperanza</string>
+    <string name="package_name">tech.npts.esperanza</string>
+    <string name="custom_url_scheme">tech.npts.esperanza</string>
+</resources>

@@ -485,16 +485,16 @@ export default function EventsPage() {
     <div className="max-w-6xl mx-auto">
 
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
         <h1 className="text-xl font-bold" style={{ color: "var(--color-text)" }}>
           {t("page_title")}
         </h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {can_create && (
             <Link
               href="/events/create"
-              className="no-underline inline-flex items-center gap-1.5 min-h-9 pointer-coarse:min-h-11 text-[13px] font-semibold rounded-lg"
+              className="no-underline inline-flex items-center gap-1.5 min-h-9 pointer-coarse:min-h-11 text-[13px] font-semibold rounded-lg whitespace-nowrap"
               style={{ padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none" }}
             >
               <Plus size={14} />

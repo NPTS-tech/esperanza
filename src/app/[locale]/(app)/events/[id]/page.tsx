@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useSession } from "@/lib/auth-client";
 import { Link, useRouter } from "@/i18n/routing";
 import dynamic from "next/dynamic";
-import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Navigation, Pencil, CheckCircle2, CalendarPlus, Trash2, Check, X, BarChart3, ChevronRight, QrCode } from "lucide-react";
 import type { EventData } from "@/components/event_card";
 
 const EventMap = dynamic(() => import("@/components/event_map"), {
@@ -486,15 +486,24 @@ export default function EventDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Left side buttons */}
             <div className="flex flex-wrap gap-2">
-              {/* For providers: show Event Analytics */}
+              {/* For providers: show Event Analytics + check-in QR */}
               {is_own && !is_admin && (
-                <Link
-                  href={`/analytics/${event.id}`}
-                  className="btn btn-primary no-underline"
-                >
-                  <BarChart3 size={15} />
-                  {locale === "es" ? "Analíticas" : "Event Analytics"}
-                </Link>
+                <>
+                  <Link
+                    href={`/analytics/${event.id}`}
+                    className="btn btn-primary no-underline"
+                  >
+                    <BarChart3 size={15} />
+                    {locale === "es" ? "Analíticas" : "Event Analytics"}
+                  </Link>
+                  <Link
+                    href={`/events/${event.id}/checkin-qr`}
+                    className="btn btn-secondary no-underline"
+                  >
+                    <QrCode size={15} />
+                    {t("checkin_qr")}
+                  </Link>
+                </>
               )}
               
               {/* For regular users: show RSVP + Get Directions + Add to Calendar */}

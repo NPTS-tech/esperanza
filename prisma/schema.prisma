@@ -92,9 +92,6 @@ model Verification {
   @@map("verifications")
 }
 
-// TODO: Currently, Demographics is required for all users that sign up. 
-// The UI hides that providers don't need to
-// Need to fix how providers are created to begin with. 
 model Demographics {
   id                      String  @id @default(uuid())
   user_id                 String  @unique
@@ -213,6 +210,8 @@ model Rsvp {
   created_at       DateTime  @default(now())
   // Set when the reminder goes out; cleared when the event's start_time changes.
   reminder_sent_at DateTime?
+  // Stamp of the attendee's QR check-in; null until they scan in at the event.
+  checked_in_at    DateTime?
   event            Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
   user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 

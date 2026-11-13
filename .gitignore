@@ -39,3 +39,21 @@ Thumbs.db
 
 # typescript incremental build cache
 *.tsbuildinfo
+
+# mobile build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+ios/App/build/
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+
+# mobile signing keys and secrets (NEVER commit)
+*.keystore
+*.jks
+*keystore_base64*
+*.p12
+*.mobileprovision
+*.p8
